@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { processIncomingMessage } from '@/lib/agent'
+
+export const maxDuration = 60
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('hub.mode')
@@ -34,15 +36,24 @@ export async function POST(request: NextRequest) {
         const messages = change.value?.messages ?? []
         for (const message of messages) {
           if (message.type === 'text' && message.from && message.text?.body) {
-            processIncomingMessage(message.from, message.text.body).catch(
-              (err) => console.error('Agent processing error:', err)
-            )
+            const from = String(message.from)
+            const text = String(message.text.body)
+            console.log('[webhook] Mensaje recibido:', from, text)
+
+            after(async () => {
+              try {
+                await processIncomingMessage(from, text)
+                console.log('[webhook] Respuesta enviada a:', from)
+              } catch (err) {
+                console.error('[webhook] Error del agente:', err)
+              }
+            })
           }
         }
       }
     }
   } catch (error) {
-    console.error('Webhook parse error:', error)
+    console.error('[webhook] Error parseando payload:', error)
   }
 
   return NextResponse.json({ status: 'ok' })
