@@ -3,15 +3,21 @@ import { processIncomingMessage } from '@/lib/agent'
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('hub.mode')
-  const token = request.nextUrl.searchParams.get('hub.verify_token')
+  const token = request.nextUrl.searchParams.get('hub.verify_token')?.trim()
   const challenge = request.nextUrl.searchParams.get('hub.challenge')
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN?.trim()
 
   if (
     mode === 'subscribe' &&
-    token === process.env.WHATSAPP_VERIFY_TOKEN &&
+    token &&
+    verifyToken &&
+    token === verifyToken &&
     challenge
   ) {
-    return new NextResponse(challenge, { status: 200 })
+    return new NextResponse(challenge, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    })
   }
 
   return new NextResponse('Forbidden', { status: 403 })
