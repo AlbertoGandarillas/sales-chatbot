@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { processIncomingMessage } from '@/lib/agent'
+
+export async function GET(request: NextRequest) {
+  const mode = request.nextUrl.searchParams.get('hub.mode')
+  const token = request.nextUrl.searchParams.get('hub.verify_token')
+  const challenge = request.nextUrl.searchParams.get('hub.challenge')
+
+  if (
+    mode === 'subscribe' &&
+    token === process.env.WHATSAPP_VERIFY_TOKEN &&
+    challenge
+  ) {
+    return new NextResponse(challenge, { status: 200 })
+  }
+
+  return new NextResponse('Forbidden', { status: 403 })
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const entries = body.entry ?? []
+
+    for (const entry of entries) {
+      const changes = entry.changes ?? []
+      for (const change of changes) {
+        const messages = change.value?.messages ?? []
+        for (const message of messages) {
+          if (message.type === 'text' && message.from && message.text?.body) {
+            processIncomingMessage(message.from, message.text.body).catch(
+              (err) => console.error('Agent processing error:', err)
+            )
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Webhook parse error:', error)
+  }
+
+  return NextResponse.json({ status: 'ok' })
+}
