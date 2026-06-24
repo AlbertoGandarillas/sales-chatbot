@@ -6,7 +6,7 @@ import type {
 import { CRUJE_BUSINESS_ID, createServiceClient } from '@/lib/supabase'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 
-const PRIMARY_MODEL = 'gpt-5.4-mini'
+const PRIMARY_MODEL = 'gpt-4.1-mini'
 const FALLBACK_MODEL = 'gpt-4o-mini'
 const HISTORY_LIMIT = 15
 
@@ -451,11 +451,16 @@ function getOpenAI(): OpenAI {
   return openaiClient
 }
 
-function isModelNotFoundError(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status?: number }).status === 404
-  }
-  return false
+function shouldFallbackModel(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const status = (error as { status?: number }).status
+  const message = String((error as { message?: string }).message ?? '').toLowerCase()
+  return (
+    status === 404 ||
+    status === 400 ||
+    message.includes('model') ||
+    message.includes('does not exist')
+  )
 }
 
 async function createChatCompletion(
@@ -484,7 +489,26 @@ export async function processIncomingMessage(
 
   await saveMessage(conversationId, 'user', text)
 
-  const history = await loadHistory(conversationId)
+  try {
+    const reply = await generateReply(ctx)
+    await saveMessage(conversationId, 'assistant', reply)
+    await sendWhatsAppMessage(customerPhone, reply)
+  } catch (error) {
+    console.error('[agent] Error procesando mensaje:', error)
+    const fallback =
+      '¡Hola! Gracias por escribir a Cruje 🥐 Hubo un problemita técnico, pero ya estamos revisando. ¿Puedes intentar de nuevo en un momento?'
+    try {
+      await saveMessage(conversationId, 'assistant', fallback)
+      await sendWhatsAppMessage(customerPhone, fallback)
+    } catch (sendError) {
+      console.error('[agent] Error enviando fallback:', sendError)
+      throw sendError
+    }
+  }
+}
+
+async function generateReply(ctx: AgentContext): Promise<string> {
+  const history = await loadHistory(ctx.conversationId)
   const messages: ChatCompletionMessageParam[] = [
     { role: 'system', content: buildContextPrompt(ctx) },
     ...history,
@@ -496,7 +520,7 @@ export async function processIncomingMessage(
   try {
     response = await createChatCompletion(messages, model)
   } catch (error) {
-    if (isModelNotFoundError(error)) {
+    if (shouldFallbackModel(error)) {
       model = FALLBACK_MODEL
       modelFallbackUsed = true
       console.warn(
@@ -539,7 +563,7 @@ export async function processIncomingMessage(
     try {
       response = await createChatCompletion(messages, model)
     } catch (error) {
-      if (!modelFallbackUsed && isModelNotFoundError(error)) {
+      if (!modelFallbackUsed && shouldFallbackModel(error)) {
         model = FALLBACK_MODEL
         modelFallbackUsed = true
         response = await createChatCompletion(messages, model)
@@ -549,12 +573,10 @@ export async function processIncomingMessage(
     }
   }
 
-  const reply =
+  return (
     response.choices[0]?.message?.content?.trim() ||
     'Disculpa, no pude procesar tu mensaje. ¿Puedes intentar de nuevo?'
-
-  await saveMessage(conversationId, 'assistant', reply)
-  await sendWhatsAppMessage(customerPhone, reply)
+  )
 }
 
 export function wasModelFallbackUsed(): boolean {

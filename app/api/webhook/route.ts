@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { processIncomingMessage } from '@/lib/agent'
 
 export const maxDuration = 60
@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
             const text = String(message.text.body)
             console.log('[webhook] Mensaje recibido:', from, text)
 
-            after(async () => {
-              try {
-                await processIncomingMessage(from, text)
-                console.log('[webhook] Respuesta enviada a:', from)
-              } catch (err) {
-                console.error('[webhook] Error del agente:', err)
-              }
-            })
+            // Meta tolera hasta ~20s antes de reintentar; await es más fiable
+            // que after() en el plan Hobby de Vercel (límite ~10s).
+            try {
+              await processIncomingMessage(from, text)
+              console.log('[webhook] Respuesta enviada a:', from)
+            } catch (err) {
+              console.error('[webhook] Error del agente:', err)
+            }
           }
         }
       }
