@@ -3,8 +3,16 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
-import { CRUJE_BUSINESS_ID, createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
+import type { Business } from '@/lib/business-resolver'
+
+function waCreds(business: Business) {
+  return {
+    token: business.whatsapp_token,
+    phoneNumberId: business.whatsapp_phone_number_id,
+  }
+}
 
 const PRIMARY_MODEL = 'gpt-4.1-mini'
 const FALLBACK_MODEL = 'gpt-4o-mini'
@@ -166,7 +174,7 @@ interface CustomOrderDetails {
 interface AgentContext {
   conversationId: string
   customerPhone: string
-  businessId: string
+  business: Business
 }
 
 function buildContextPrompt(ctx: AgentContext): string {
@@ -175,16 +183,17 @@ function buildContextPrompt(ctx: AgentContext): string {
 CONVERSACIÓN ACTUAL:
 - conversation_id: ${ctx.conversationId}
 - customer_phone: ${ctx.customerPhone}
-- business_id: ${ctx.businessId}`
+- business_id: ${ctx.business.id}
+- negocio: ${ctx.business.name}`
 }
 
-async function getOrCreateConversation(customerPhone: string) {
+async function getOrCreateConversation(businessId: string, customerPhone: string) {
   const db = createServiceClient()
 
   const { data: existing } = await db
     .from('conversations')
     .select('id')
-    .eq('business_id', CRUJE_BUSINESS_ID)
+    .eq('business_id', businessId)
     .eq('customer_phone', customerPhone)
     .maybeSingle()
 
@@ -193,7 +202,7 @@ async function getOrCreateConversation(customerPhone: string) {
   const { data: created, error } = await db
     .from('conversations')
     .insert({
-      business_id: CRUJE_BUSINESS_ID,
+      business_id: businessId,
       customer_phone: customerPhone,
       status: 'active',
     })
@@ -241,14 +250,14 @@ async function loadHistory(
     }))
 }
 
-async function buscarProductos(query: string) {
+async function buscarProductos(businessId: string, query: string) {
   const db = createServiceClient()
   const trimmed = query.trim()
 
   let request = db
     .from('products')
     .select('id, name, description, category, price_soles, is_custom_order')
-    .eq('business_id', CRUJE_BUSINESS_ID)
+    .eq('business_id', businessId)
     .eq('available', true)
 
   if (trimmed && trimmed !== '*') {
@@ -277,7 +286,7 @@ async function crearPedido(
       .from('products')
       .select('id, name, price_soles, is_custom_order, available')
       .eq('id', item.product_id)
-      .eq('business_id', CRUJE_BUSINESS_ID)
+      .eq('business_id', ctx.business.id)
       .single()
 
     if (error || !product) {
@@ -305,7 +314,7 @@ async function crearPedido(
   const { data: order, error: orderError } = await db
     .from('orders')
     .insert({
-      business_id: CRUJE_BUSINESS_ID,
+      business_id: ctx.business.id,
       conversation_id: ctx.conversationId,
       status: 'pending',
       items: orderItems,
@@ -334,7 +343,7 @@ async function iniciarEncargoPersonalizado(
   const { data: order, error } = await db
     .from('orders')
     .insert({
-      business_id: CRUJE_BUSINESS_ID,
+      business_id: ctx.business.id,
       conversation_id: ctx.conversationId,
       status: 'pending',
       items: [],
@@ -347,7 +356,7 @@ async function iniciarEncargoPersonalizado(
 
   if (error) throw error
 
-  const ownerMessage = `🎂 Nuevo encargo personalizado — Cruje
+  const ownerMessage = `🎂 Nuevo encargo personalizado — ${ctx.business.name}
 
 Tipo: ${details.tipo}
 Tamaño: ${details.tamaño}
@@ -357,13 +366,15 @@ Notas: ${details.notas || '—'}
 Cliente: ${ctx.customerPhone}
 Pedido ID: ${order.id}`
 
-  await notifyOwner(ownerMessage)
+  await notifyOwner(ownerMessage, {
+    ownerNumber: ctx.business.owner_whatsapp_number,
+    ...waCreds(ctx.business),
+  })
 
   return {
     order_id: order.id,
     status: 'pending',
-    message:
-      'Encargo registrado. El equipo de Cruje te contactará para confirmar precio y detalles.',
+    message: `Encargo registrado. El equipo de ${ctx.business.name} te contactará para confirmar precio y detalles.`,
   }
 }
 
@@ -416,7 +427,7 @@ async function executeTool(
 ): Promise<unknown> {
   switch (name) {
     case 'buscar_productos':
-      return buscarProductos(String(args.query ?? ''))
+      return buscarProductos(ctx.business.id, String(args.query ?? ''))
     case 'crear_pedido':
       return crearPedido(
         ctx,
@@ -477,14 +488,15 @@ async function createChatCompletion(
 }
 
 export async function processIncomingMessage(
+  business: Business,
   customerPhone: string,
   text: string
 ): Promise<void> {
-  const conversationId = await getOrCreateConversation(customerPhone)
+  const conversationId = await getOrCreateConversation(business.id, customerPhone)
   const ctx: AgentContext = {
     conversationId,
     customerPhone,
-    businessId: CRUJE_BUSINESS_ID,
+    business,
   }
 
   await saveMessage(conversationId, 'user', text)
@@ -492,14 +504,13 @@ export async function processIncomingMessage(
   try {
     const reply = await generateReply(ctx)
     await saveMessage(conversationId, 'assistant', reply)
-    await sendWhatsAppMessage(customerPhone, reply)
+    await sendWhatsAppMessage(customerPhone, reply, waCreds(business))
   } catch (error) {
     console.error('[agent] Error procesando mensaje:', error)
-    const fallback =
-      '¡Hola! Gracias por escribir a Cruje 🥐 Hubo un problemita técnico, pero ya estamos revisando. ¿Puedes intentar de nuevo en un momento?'
+    const fallback = `¡Hola! Gracias por escribir a ${business.name}. Hubo un problemita técnico, pero ya estamos revisando. ¿Puedes intentar de nuevo en un momento?`
     try {
       await saveMessage(conversationId, 'assistant', fallback)
-      await sendWhatsAppMessage(customerPhone, fallback)
+      await sendWhatsAppMessage(customerPhone, fallback, waCreds(business))
     } catch (sendError) {
       console.error('[agent] Error enviando fallback:', sendError)
       throw sendError

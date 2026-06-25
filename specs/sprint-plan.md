@@ -12,131 +12,78 @@ Metodología: spec-driven. Cada fase se implementa siguiendo los specs en `/spec
 
 ---
 
-## Fase 1 — Supabase (migraciones + cliente)
+## Fase 1 — Supabase (migraciones + cliente) ✅
 
 **Spec de referencia**: `data-model.md`
 
-**Tareas**:
-
-1. `npx supabase init` si no existe `/supabase`
-2. Crear migración `supabase/migrations/00001_initial_schema.sql` con el SQL de `data-model.md`
-3. Documentar comandos para el usuario:
-   - `npx supabase login` (autenticación CLI)
-   - `npx supabase link --project-ref <ref>` (enlazar proyecto remoto)
-4. Tras confirmación del usuario: `npx supabase db push`
-5. Crear seed (`supabase/seed.sql` o migración `00002_seed_cruje.sql`) con negocio Cruje + 8+ productos
-6. Aplicar seed con CLI
-7. Actualizar `lib/supabase.ts`:
-   - Cliente público (anon key)
-   - Cliente de servicio (`createServiceClient`) con service role key
-
-**Checkpoint para el usuario**: solo login/link del CLI (las env vars de Supabase ya están configuradas).
+**Archivos implementados**:
+- `supabase/migrations/20250624100000_initial_schema.sql`
+- `supabase/migrations/20250624100001_seed_cruje.sql`
+- `lib/supabase.ts`
 
 **Criterio de aceptación**:
-- [ ] Tablas creadas en Supabase remoto
-- [ ] Seed con Cruje y catálogo visible en dashboard de Supabase
-- [ ] `lib/supabase.ts` exporta ambos clientes
+- [x] Tablas creadas en Supabase remoto
+- [x] Seed con Cruje y catálogo visible en dashboard de Supabase
+- [x] `lib/supabase.ts` exporta ambos clientes
 
 ---
 
-## Fase 2 — Variables de entorno completas
+## Fase 2 — Variables de entorno completas ✅
 
-**Tareas**:
-
-1. Crear `.env.local.example` con todas las variables documentadas
-2. **Checkpoint consolidado** para el usuario (una sola vez):
-
-   ```
-   CHECKPOINT — necesito que pegues esto en .env.local:
-
-   OPENAI_API_KEY=
-   (OpenAI Platform → API Keys → Create new secret key)
-
-   WHATSAPP_TOKEN=
-   (Meta for Developers → tu app → WhatsApp → API Setup → Temporary access token o System User token permanente)
-
-   WHATSAPP_PHONE_NUMBER_ID=
-   (Meta for Developers → WhatsApp → API Setup → Phone number ID)
-
-   WHATSAPP_VERIFY_TOKEN=
-   (Lo inventas tú; string aleatorio seguro, ej: cruje_wh_verify_8f3k2m9x)
-
-   OWNER_WHATSAPP_NUMBER=
-   (Tu número con código de país, sin +, ej: 51999888777)
-   ```
-
-3. Esperar confirmación del usuario antes de continuar
+**Archivos implementados**: `.env.local.example`
 
 **Criterio de aceptación**:
-- [ ] `.env.local` con todas las variables
-- [ ] `.env.local.example` en el repo (sin valores reales)
+- [x] `.env` / `.env.local` con todas las variables
+- [x] `.env.local.example` en el repo (sin valores reales)
+- [x] Variables copiadas a Vercel + redeploy
 
 ---
 
-## Fase 3 — Webhook de WhatsApp
+## Fase 3 — Webhook de WhatsApp ✅
 
-**Spec de referencia**: `architecture.md`
+**Archivos implementados**: `app/api/webhook/route.ts`
 
-**Tareas**:
-
-1. Crear `app/api/webhook/route.ts`
-2. **GET**: verificación Meta (`hub.mode`, `hub.verify_token`, `hub.challenge`)
-3. **POST**: parsear payload, extraer mensajes de texto, llamar stub del agente, responder `200 OK` inmediato
-4. Manejar solo mensajes `type: "text"`; ignorar status/delivery receipts
+**Comportamiento implementado** (ver `CHANGELOG.md`):
+- GET: verificación Meta con `.trim()` en tokens
+- POST: `await processIncomingMessage()` y luego `200 OK` (no fire-and-forget)
 
 **Criterio de aceptación**:
-- [ ] GET devuelve challenge cuando verify_token coincide
-- [ ] POST responde 200 sin esperar al agente
-- [ ] Logs muestran número y texto extraídos
+- [x] GET devuelve challenge cuando verify_token coincide
+- [x] POST procesa mensajes y responde 200
+- [x] Logs muestran número y texto extraídos
 
 ---
 
-## Fase 4 — Cliente de WhatsApp
+## Fase 4 — Cliente de WhatsApp ✅
 
-**Spec de referencia**: `architecture.md`
+**Archivos implementados**: `lib/whatsapp.ts`
 
-**Tareas**:
-
-1. Crear `lib/whatsapp.ts`
-2. `sendWhatsAppMessage(to, text)` — POST Graph API v21.0
-3. `notifyOwner(message)` — envía a `OWNER_WHATSAPP_NUMBER`
-4. Documentar configuración en Meta for Developers (URL webhook, verify token, campos a suscribir)
+**Configuración Meta (obligatorio)**:
+- Webhook URL: `https://sales-chatbot-pink.vercel.app/api/webhook`
+- Verify token: valor de `WHATSAPP_VERIFY_TOKEN`
+- **Suscribir campo `messages`** en la tabla de campos del webhook (sin esto no llegan mensajes del celular)
 
 **Criterio de aceptación**:
-- [ ] Función de envío probada (puede ser script de prueba o integración en Fase 5)
-- [ ] `notifyOwner` formatea mensajes legibles
-
-**Configuración Meta (instrucciones al usuario)**:
-- Webhook URL: `https://<tu-dominio-vercel>/api/webhook`
-- Verify token: el valor de `WHATSAPP_VERIFY_TOKEN`
-- Campos suscritos: `messages`
-- Para desarrollo local: usar ngrok o similar, o probar directo en Vercel
+- [x] `sendWhatsAppMessage` envía mensajes
+- [x] `notifyOwner` formatea mensajes legibles
+- [x] Webhook verificado en Meta
+- [x] Campo `messages` suscrito
 
 ---
 
-## Fase 5 — Agente con OpenAI (function calling)
+## Fase 5 — Agente con OpenAI (function calling) ✅
 
-**Spec de referencia**: `agent-spec.md`
+**Archivos implementados**: `lib/agent.ts`, `package.json` (openai)
 
-**Tareas**:
-
-1. `npm install openai`
-2. Crear `lib/agent.ts` con `processIncomingMessage(phone, text)`
-3. Implementar las 4 tools según `agent-spec.md`
-4. Ciclo multi-turno completo (tool_calls → ejecutar → reenviar → respuesta final)
-5. Persistir mensajes en `messages`
-6. Límite de 15 mensajes de historial
-7. Modelo: `gpt-5.4-mini` (fallback `gpt-4o-mini`)
-8. `iniciar_encargo_personalizado` llama a `notifyOwner()`
-9. Conectar webhook con `processIncomingMessage`
+**Modelo**: `gpt-4.1-mini` (fallback `gpt-4o-mini`) — ver `CHANGELOG.md`
 
 **Criterio de aceptación**:
-- [ ] Saludo responde con bienvenida de Cruje
-- [ ] Búsqueda de productos devuelve catálogo real
-- [ ] Pedido se guarda en `orders`
-- [ ] Encargo personalizado notifica al dueño
-- [ ] Consulta de estado devuelve pedidos de la conversación
-- [ ] Mensajes persistidos en BD
+- [x] Saludo responde con bienvenida de Cruje
+- [x] Búsqueda de productos devuelve catálogo real
+- [x] Pedido se guarda en `orders`
+- [x] Encargo personalizado notifica al dueño
+- [x] Consulta de estado devuelve pedidos de la conversación
+- [x] Mensajes persistidos en BD
 
 **Checklist de pruebas (celular, número de prueba Meta)**:
 
@@ -150,58 +97,31 @@ Metodología: spec-driven. Cada fase se implementa siguiendo los specs en `/spec
 
 ---
 
-## Fase 6 — Dashboard mínimo
+## Fase 6 — Dashboard mínimo ✅
 
-**Spec de referencia**: `architecture.md`, `data-model.md`
-
-**Tareas**:
-
-1. Crear `app/dashboard/page.tsx`
-2. Listar pedidos de Cruje ordenados por `created_at DESC`
-3. Suscripción Supabase Realtime a `orders`
-4. Botones: marcar pagado, marcar entregado
-5. Sección separada o badge para encargos personalizados (`is_custom_order`)
-6. UI mínima con Tailwind (tabla o cards)
+**Archivos implementados**: `app/dashboard/page.tsx`
 
 **Criterio de aceptación**:
-- [ ] Pedidos aparecen en tiempo real al crearse desde WhatsApp
-- [ ] Marcar pago/entrega actualiza la BD y la UI
-- [ ] Encargos personalizados visibles con detalle expandible
+- [x] Pedidos aparecen en tiempo real al crearse desde WhatsApp
+- [x] Marcar pago/entrega actualiza la BD y la UI
+- [x] Encargos personalizados visibles con detalle
 
 ---
 
-## Fase 7 — Pruebas end-to-end
+## Fase 7 — Pruebas end-to-end ✅
 
-**Tareas**:
-
-1. Desplegar a Vercel con todas las env vars
-2. Configurar webhook en Meta apuntando a producción
-3. Ejecutar checklist de Fase 5 desde celular
-4. Verificar dashboard refleja pedidos en vivo
-5. Verificar notificación al dueño en encargo personalizado
-6. Revisar logs en Vercel Functions para errores
+**URL producción**: `https://sales-chatbot-pink.vercel.app`
 
 **Criterio de aceptación**:
-- [ ] Flujo completo funciona en producción
-- [ ] Sin errores 5xx en webhook
-- [ ] Tiempos de respuesta < 30 s (Meta timeout)
+- [x] Flujo completo funciona en producción
+- [x] Sin errores 5xx en webhook
+- [x] Respuesta por WhatsApp en < 20 s
 
 ---
 
-## Fase 8 — Checklist de migración a producción (solo documentación)
+## Fase 8 — Checklist de migración a producción (documentación) 📋
 
-**No implementar código.** Documentar en `specs/production-checklist.md`:
-
-- [ ] Cambiar número de prueba Meta por número de producción verificado
-- [ ] Generar token permanente (System User) en Meta Business Suite
-- [ ] Configurar webhook en producción con URL final
-- [ ] Copiar todas las env vars a Vercel (Settings → Environment Variables)
-- [ ] Activar RLS más restrictivo (autenticación en dashboard)
-- [ ] Configurar dominio personalizado en Vercel
-- [ ] Revisar límites de rate de OpenAI y Meta
-- [ ] Backup de BD Supabase
-- [ ] Monitoreo: Vercel Analytics + logs de Supabase
-- [ ] Política de privacidad / consentimiento de datos (Perú — Ley de Protección de Datos Personales)
+**Archivo**: `specs/production-checklist.md` — creado, pendiente de ejecutar en producción real.
 
 ---
 
@@ -223,13 +143,14 @@ Fase 0 (specs)
 
 ## Archivos que se crearán por fase
 
-| Fase | Archivos nuevos/modificados |
+| Fase | Archivos |
 |---|---|
-| 1 | `supabase/config.toml`, `supabase/migrations/*`, `supabase/seed.sql`, `lib/supabase.ts` |
+| 1 | `supabase/config.toml`, `supabase/migrations/20250624100000_*.sql`, `supabase/migrations/20250624100001_*.sql`, `lib/supabase.ts` |
 | 2 | `.env.local.example` |
 | 3 | `app/api/webhook/route.ts` |
 | 4 | `lib/whatsapp.ts` |
 | 5 | `lib/agent.ts`, `package.json` (openai) |
 | 6 | `app/dashboard/page.tsx` |
-| 7 | — (solo pruebas) |
+| 7 | — (pruebas E2E en producción) |
 | 8 | `specs/production-checklist.md` |
+| docs | `specs/README.md`, `specs/CHANGELOG.md` |

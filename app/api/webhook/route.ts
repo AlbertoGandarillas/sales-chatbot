@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { processIncomingMessage } from '@/lib/agent'
+import { resolveBusinessFromWebhook } from '@/lib/business-resolver'
 
 export const maxDuration = 60
 
@@ -28,8 +29,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const entries = body.entry ?? []
 
+    // Multi-tenant: resolver el negocio por phone_number_id del payload.
+    const business = await resolveBusinessFromWebhook(body)
+    if (!business) {
+      console.warn('[webhook] phone_number_id sin negocio asociado; se ignora.')
+      return NextResponse.json({ status: 'ok' })
+    }
+
+    const entries = body.entry ?? []
     for (const entry of entries) {
       const changes = entry.changes ?? []
       for (const change of changes) {
@@ -38,12 +46,12 @@ export async function POST(request: NextRequest) {
           if (message.type === 'text' && message.from && message.text?.body) {
             const from = String(message.from)
             const text = String(message.text.body)
-            console.log('[webhook] Mensaje recibido:', from, text)
+            console.log(`[webhook] Mensaje recibido (${business.name}):`, from, text)
 
             // Meta tolera hasta ~20s antes de reintentar; await es más fiable
             // que after() en el plan Hobby de Vercel (límite ~10s).
             try {
-              await processIncomingMessage(from, text)
+              await processIncomingMessage(business, from, text)
               console.log('[webhook] Respuesta enviada a:', from)
             } catch (err) {
               console.error('[webhook] Error del agente:', err)

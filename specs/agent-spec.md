@@ -308,9 +308,21 @@ Cuando el cliente salude por primera vez, dale la bienvenida a Cruje y pregúnta
 6. Enviar texto por WhatsApp
 ```
 
-**Modelo**: `gpt-5.4-mini` (fallback: `gpt-4o-mini`).
+**Modelo**: `gpt-4.1-mini` (fallback: `gpt-4o-mini`).
 
-**Límite de historial**: 15 mensajes (`user` + `assistant` + `tool` excluyendo system).
+**Límite de historial**: 15 mensajes (`user` + `assistant`; no se persisten mensajes `tool` en BD).
+
+---
+
+## Manejo de errores
+
+Si OpenAI o el envío por WhatsApp fallan después de guardar el mensaje del usuario:
+
+1. Se registra el error en logs (`[agent] Error procesando mensaje`).
+2. Se intenta enviar un mensaje de disculpa al cliente por WhatsApp.
+3. Se guarda ese mensaje como `assistant` en `messages`.
+
+Esto evita que el cliente se quede sin respuesta en silencio cuando hay fallos técnicos.
 
 ---
 

@@ -1,11 +1,20 @@
 const GRAPH_API_VERSION = 'v21.0'
 
-export async function sendWhatsAppMessage(to: string, text: string): Promise<void> {
-  const token = process.env.WHATSAPP_TOKEN
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+export interface WhatsAppCredentials {
+  token?: string | null
+  phoneNumberId?: string | null
+}
+
+export async function sendWhatsAppMessage(
+  to: string,
+  text: string,
+  creds: WhatsAppCredentials = {}
+): Promise<void> {
+  const token = creds.token ?? process.env.WHATSAPP_TOKEN
+  const phoneNumberId = creds.phoneNumberId ?? process.env.WHATSAPP_PHONE_NUMBER_ID
 
   if (!token || !phoneNumberId) {
-    throw new Error('Missing WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID')
+    throw new Error('Missing WhatsApp token or phone number id')
   }
 
   const response = await fetch(
@@ -32,10 +41,16 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<voi
   }
 }
 
-export async function notifyOwner(message: string): Promise<void> {
-  const ownerNumber = process.env.OWNER_WHATSAPP_NUMBER
+export async function notifyOwner(
+  message: string,
+  opts: WhatsAppCredentials & { ownerNumber?: string | null } = {}
+): Promise<void> {
+  const ownerNumber = opts.ownerNumber ?? process.env.OWNER_WHATSAPP_NUMBER
   if (!ownerNumber) {
-    throw new Error('Missing OWNER_WHATSAPP_NUMBER')
+    throw new Error('Missing owner WhatsApp number')
   }
-  await sendWhatsAppMessage(ownerNumber, message)
+  await sendWhatsAppMessage(ownerNumber, message, {
+    token: opts.token,
+    phoneNumberId: opts.phoneNumberId,
+  })
 }

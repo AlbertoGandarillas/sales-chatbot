@@ -15,8 +15,8 @@
        │                           │  POST → recibe mensaje    │
        │                           └────────────┬─────────────┘
        │                                        │
-       │                          responde 200 OK inmediato
-       │                          (procesa en background)
+       │                          await agente, luego 200 OK
+       │                          (Meta tolera hasta ~20 s)
        │                                        ▼
        │                           ┌──────────────────────────┐
        │                           │       lib/agent.ts        │
@@ -62,7 +62,7 @@
 
 1. El cliente envía un mensaje de texto por WhatsApp.
 2. Meta reenvía el payload al webhook (`POST /api/webhook`).
-3. El webhook extrae `from` (número) y `text.body`, responde `200 OK` de inmediato y delega el procesamiento al agente (sin bloquear la respuesta HTTP).
+3. El webhook extrae `from` (número) y `text.body`, **espera** a que el agente termine (`await processIncomingMessage`), y luego responde `200 OK`. Meta tolera hasta ~20 s; en Vercel Hobby el procesamiento en background no es fiable.
 4. El agente busca o crea una `conversation` asociada al número del cliente y al negocio Cruje.
 5. El agente persiste el mensaje del cliente en `messages`.
 6. El agente carga los últimos 15 mensajes de la conversación y los envía a OpenAI junto con el system prompt y las definiciones de tools.
@@ -76,8 +76,9 @@
 
 - Exportar dos clientes del SDK `@supabase/supabase-js`:
   - **Cliente público** (`createClient` con `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`) — para el dashboard en el navegador.
-  - **Cliente de servicio** (`createClient` con `SUPABASE_SERVICE_ROLE_KEY`) — para el agente y el webhook en el servidor (bypass RLS).
-- Tipos TypeScript derivados del esquema (opcional en Fase 1, recomendado en Fase 5).
+  - **Cliente de servicio** (`createServiceClient` con `SUPABASE_SERVICE_ROLE_KEY`) — para el agente en el servidor (bypass RLS).
+- **Importante (Next.js)**: las variables `NEXT_PUBLIC_*` deben leerse con acceso estático (`process.env.NEXT_PUBLIC_SUPABASE_URL`), no vía `process.env[nombreVariable]`, o no se inyectan en el bundle del navegador.
+- Constante `CRUJE_BUSINESS_ID` para el único negocio del MVP.
 - No contiene lógica de negocio; solo instanciación de clientes.
 
 ### `lib/whatsapp.ts`
@@ -94,11 +95,14 @@
 - Ciclo completo de function calling multi-turno con OpenAI.
 - Implementación de las 4 tools: `buscar_productos`, `crear_pedido`, `iniciar_encargo_personalizado`, `consultar_estado_pedido`.
 - Límite de historial: últimos 15 mensajes enviados al modelo.
+- Modelo: `gpt-4.1-mini` (fallback `gpt-4o-mini`).
+- Si falla OpenAI o el envío, intenta enviar mensaje de disculpa al cliente y guardarlo en BD.
 
 ### `app/api/webhook/route.ts`
 
-- **GET**: verificación del webhook de Meta (`hub.mode`, `hub.verify_token`, `hub.challenge`). Compara `hub.verify_token` contra `WHATSAPP_VERIFY_TOKEN`; si coincide, devuelve `hub.challenge` como texto plano con status 200.
-- **POST**: parsea el body JSON de Meta, extrae mensajes de texto entrantes, ignora otros tipos de evento (status, etc.), invoca `processIncomingMessage` de forma asíncrona y responde `200 OK` sin esperar al agente.
+- **GET**: verificación del webhook de Meta (`hub.mode`, `hub.verify_token`, `hub.challenge`). Compara `hub.verify_token` contra `WHATSAPP_VERIFY_TOKEN` (con `.trim()`); si coincide, devuelve `hub.challenge` como texto plano con status 200.
+- **POST**: parsea el body JSON de Meta, extrae mensajes de texto entrantes, ignora otros tipos de evento (status, etc.), **await** `processIncomingMessage`, luego responde `200 OK`.
+- `export const maxDuration = 60` (límite de función en Vercel; en Hobby el tope efectivo es menor).
 
 ### `app/dashboard/page.tsx`
 
@@ -123,8 +127,10 @@
 
 ## Decisiones de diseño
 
-- **Respuesta HTTP inmediata al webhook**: Meta reintenta si no recibe 200 en ~20 s; el procesamiento del agente puede tardar varios segundos.
+- **Webhook await (no fire-and-forget)**: el spec original proponía responder 200 OK inmediato; en la implementación se hace `await` al agente porque Vercel Hobby cortaba el procesamiento en background. Meta tolera ~20 s. Ver `CHANGELOG.md`.
 - **Service role en servidor**: el agente necesita escribir sin sesión de usuario; el dashboard usa anon key con políticas RLS permisivas en el MVP.
 - **Sin librería de WhatsApp**: fetch directo a Graph API para minimizar dependencias.
 - **Historial limitado a 15 mensajes**: control de costos de tokens en OpenAI.
 - **Moneda**: soles peruanos (`price_soles`, `total_soles`); el agente comunica precios en formato "S/ X.XX".
+- **Meta webhook**: además de verificar la URL, hay que suscribir el campo **`messages`** o no llegan mensajes del celular.
+- **Vercel**: tras agregar variables de entorno, es obligatorio **Redeploy** para que el código las vea.
