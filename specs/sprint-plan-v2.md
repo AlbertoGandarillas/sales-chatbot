@@ -140,8 +140,10 @@ M1 (esquema + alta usuarios/negocios)
 4. Upsert por `(business_id, external_id)`, `needs_review=true`, parseo de tallas.
 
 **Criterio de aceptación**:
-- [ ] Resync trae catálogo Shopify sin duplicar.
-- [ ] Tallas en rango / parseadas de body_html / null+review según el caso.
+- [x] Resync trae catálogo Shopify sin duplicar (upsert por `business_id,external_id`).
+- [x] Tallas en rango / parseadas de body_html / null+review según el caso (validado en dry-run contra Betta: 20 `option1`, 1 `body_html`, 1 `none`).
+
+**Estado**: ✅ Completado. `lib/shopify-ingestion.ts` (`fetchShopifyProducts`, `mapShopifyProductsToRows`, `parseSize`, `htmlToText`, `ingestShopifyCatalog`); Server Action `resyncCatalog` (verifica dueño + service-role); botón "Resincronizar catálogo" activo en `/dashboard/catalogo` con feedback (insertados/actualizados/por revisar); `maxDuration=60` en la página. Dry-run validado con `scripts/test-shopify.mjs`. La carga real del catálogo de Betta se ejecuta en **M10**.
 
 ---
 

@@ -4,6 +4,22 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — M7: Ingestión Shopify + resync
+
+**Spec** (`catalog-ingestion-spec-v2.md`).
+
+**Implementación real**:
+- `lib/shopify-ingestion.ts`: `fetchShopifyProducts(domain)` (pagina `/products.json?limit=250`), `mapShopifyProductsToRows` (pura), `parseSize` (option1 → body_html → none), `htmlToText`, e `ingestShopifyCatalog(businessId, domain)` que clasifica insert/update y hace **upsert por `(business_id, external_id)`** con service-role. Todo entra con `needs_review=true`.
+- Server Action `resyncCatalog` en `app/dashboard/catalogo/actions.ts`: obtiene el negocio del dueño (RLS), exige `shopify_domain`, ejecuta la ingestión y devuelve `IngestResult`.
+- Botón "Resincronizar catálogo" activado (antes deshabilitado en M6), con feedback "X nuevos · Y actualizados · Z por revisar". `maxDuration=60` en la página.
+- `scripts/test-shopify.mjs`: dry-run de validación (no escribe BD).
+
+**Validación con datos reales** (Betta, pág. 1: 22 variantes): 20 con rango en `option1`, 1 extraído de `body_html`, 1 sin rango (`null` + nota de revisión). Confirma los 3 caminos del spec.
+
+**Nota de alcance**: M7 construye y valida la capacidad sin poblar la BD de Betta; la **carga real** del catálogo de Betta es **M10**.
+
+---
+
 ## 2026-06-24 — M6: Dashboard (resumen + catálogo + perfil) + limpieza
 
 **Spec** (`auth-dashboard-spec-v2.md`).

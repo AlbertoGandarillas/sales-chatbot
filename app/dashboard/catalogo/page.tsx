@@ -2,6 +2,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
 import { CatalogClient, type Product } from './catalog-client'
 
+export const maxDuration = 60
+
 export default async function CatalogoPage() {
   const business = await getOwnerBusiness()
   if (!business) return null

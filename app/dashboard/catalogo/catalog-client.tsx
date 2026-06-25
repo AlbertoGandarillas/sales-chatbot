@@ -6,7 +6,9 @@ import {
   saveProduct,
   deleteProduct,
   toggleAvailable,
+  resyncCatalog,
   type CatalogState,
+  type ResyncState,
 } from './actions'
 
 export interface Product {
@@ -25,6 +27,31 @@ export interface Product {
 }
 
 const initialState: CatalogState = { error: null, ok: false }
+const resyncInitial: ResyncState = { error: null, result: null }
+
+function ResyncButton() {
+  const [state, formAction, pending] = useActionState(resyncCatalog, resyncInitial)
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <form action={formAction}>
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 disabled:opacity-50"
+        >
+          {pending ? 'Sincronizando…' : 'Resincronizar catálogo'}
+        </button>
+      </form>
+      {state.result && (
+        <p className="text-xs text-green-700">
+          {state.result.inserted} nuevos · {state.result.updated} actualizados ·{' '}
+          {state.result.needsReviewCount} por revisar
+        </p>
+      )}
+      {state.error && <p className="text-xs text-red-600">{state.error}</p>}
+    </div>
+  )
+}
 
 const BAKERY_CATEGORIES = [
   ['panes', 'Panes'],
@@ -204,16 +231,7 @@ export function CatalogClient({
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-stone-900">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2">
-          {shopifyDomain && (
-            <button
-              type="button"
-              disabled
-              title="La sincronización con Shopify se habilita en una próxima versión (M7)."
-              className="cursor-not-allowed rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-400"
-            >
-              Resincronizar catálogo
-            </button>
-          )}
+          {shopifyDomain && <ResyncButton />}
           <button
             type="button"
             onClick={() => {

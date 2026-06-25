@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { ingestShopifyCatalog, type IngestResult } from '@/lib/shopify-ingestion'
 
 const BAKERY_CATEGORIES = ['panes', 'pasteleria', 'tortas', 'bebidas', 'otros']
 
@@ -88,4 +89,27 @@ export async function toggleAvailable(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase()
   await supabase.from('products').update({ available: next }).eq('id', id)
   revalidatePath('/dashboard/catalogo')
+}
+
+export type ResyncState = { error: string | null; result: IngestResult | null }
+
+export async function resyncCatalog(
+  _prev: ResyncState,
+  _formData: FormData
+): Promise<ResyncState> {
+  const supabase = await createServerSupabase()
+  // RLS garantiza que solo se obtiene el negocio del usuario autenticado.
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id, shopify_domain')
+    .maybeSingle()
+
+  if (!business) return { error: 'Sesión sin negocio.', result: null }
+  if (!business.shopify_domain) {
+    return { error: 'Este negocio no tiene dominio Shopify configurado.', result: null }
+  }
+
+  const result = await ingestShopifyCatalog(business.id, business.shopify_domain)
+  revalidatePath('/dashboard/catalogo')
+  return { error: result.errors[0] ?? null, result }
 }
