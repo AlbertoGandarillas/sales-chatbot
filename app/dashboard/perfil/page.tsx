@@ -1,5 +1,6 @@
 import { getOwnerBusiness } from '@/lib/dashboard'
 import { PerfilForm } from './perfil-form'
+import { ChangePasswordForm } from './change-password-form'
 
 export default async function PerfilPage() {
   const business = await getOwnerBusiness()
@@ -12,6 +13,7 @@ export default async function PerfilPage() {
         Ajusta la información que el agente usa al conversar con tus clientes.
       </p>
       <PerfilForm business={business} />
+      <ChangePasswordForm />
     </main>
   )
 }

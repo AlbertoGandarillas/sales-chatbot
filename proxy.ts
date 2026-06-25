@@ -29,15 +29,21 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
-  // Proteger rutas autenticadas: sin sesión → /signup
-  if (!user && (path.startsWith('/dashboard') || path.startsWith('/onboarding'))) {
+  // Proteger rutas autenticadas: sin sesión → /login
+  const isProtected =
+    path.startsWith('/dashboard') ||
+    path.startsWith('/onboarding') ||
+    path === '/reset-password'
+
+  if (!user && isProtected) {
     const url = request.nextUrl.clone()
-    url.pathname = '/signup'
+    url.pathname = '/login'
     url.searchParams.set('next', path)
     return NextResponse.redirect(url)
   }
 
-  // Si ya hay sesión y entra a /signup o /login, mandarlo al dashboard
+  // Si ya hay sesión y entra a /login o /signup, mandarlo al dashboard.
+  // (/reset-password se permite aunque haya sesión: es para cambiar la clave.)
   if (user && (path === '/signup' || path === '/login')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
@@ -49,5 +55,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding/:path*', '/signup', '/login'],
+  matcher: [
+    '/dashboard/:path*',
+    '/onboarding/:path*',
+    '/reset-password',
+    '/signup',
+    '/login',
+  ],
 }

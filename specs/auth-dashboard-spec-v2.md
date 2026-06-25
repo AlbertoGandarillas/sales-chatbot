@@ -4,9 +4,14 @@
 
 ## Autenticación
 
-- **Supabase Auth con magic link** (`signInWithOtp`), sin contraseña. Más simple para clientes no técnicos.
+> **Actualización (2026-06-25):** el método principal es **email + contraseña** (`signInWithPassword`), con **magic link** (`signInWithOtp`) como alternativa opcional. Incluye registro con contraseña, recuperación (`resetPasswordForEmail` → `/reset-password`) y cambio de contraseña en el perfil. Ver entrada en `CHANGELOG.md`.
+
+- Email + contraseña como método estándar; magic link opcional (toggle en `/login` y `/signup`).
+- Recuperación de contraseña: `/forgot-password` → correo → `/auth/callback` → `/reset-password`.
+- Cambio de contraseña: sección "Seguridad" en `/dashboard/perfil`.
 - Un solo `owner_user_id` por negocio. **Sin roles de empleado** por ahora.
-- El cliente del navegador usa `@supabase/ssr` (o helpers de sesión) para mantener la sesión en cookies y que las Server Actions/route handlers la lean.
+- El cliente del navegador usa `@supabase/ssr` para mantener la sesión en cookies y que las Server Actions/route handlers la lean.
+- Rutas de auth: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`, `/auth/signout`.
 
 > El flujo público de registro/login (landing, `/signup`, `/auth/callback`, `/onboarding`) está en `landing-signup-spec-v2.md`. Aquí se cubre el dashboard ya autenticado y las RLS.
 

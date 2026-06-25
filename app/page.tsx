@@ -8,7 +8,7 @@ export default function Home() {
         <span className="text-xl font-bold tracking-tight">Aynibot</span>
         <nav className="flex items-center gap-3 text-sm">
           <Link
-            href="/signup"
+            href="/login"
             className="rounded-lg border border-stone-300 px-4 py-2 font-medium text-stone-700 hover:bg-stone-100"
           >
             Iniciar sesión
@@ -45,7 +45,7 @@ export default function Home() {
                 Empezar con Aynibot
               </Link>
               <Link
-                href="/signup"
+                href="/login"
                 className="flex h-12 items-center justify-center rounded-lg border border-stone-300 px-6 font-medium text-stone-700 hover:bg-stone-100"
               >
                 Ya tengo cuenta

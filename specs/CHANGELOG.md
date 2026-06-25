@@ -4,6 +4,26 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — Auth: login email+password (magic link pasa a opcional)
+
+**Cambio de alcance pedido por el usuario.** El spec v2 definía solo magic link; ahora el método principal es **email + contraseña**, con magic link como alternativa.
+
+**Implementación real**:
+- `/login`: `signInWithPassword` + toggle "Entrar con enlace mágico" (`signInWithOtp`) + enlace a recuperación.
+- `/signup`: registro con `signUp` (email+password, valida confirmación y longitud) + toggle magic link. Si el proyecto no exige confirmación de correo, entra directo a `/onboarding`; si la exige, muestra "revisa tu correo".
+- `/forgot-password`: `resetPasswordForEmail` con `redirectTo=/auth/callback?next=/reset-password`.
+- `/reset-password`: `updateUser({ password })` (requiere sesión de recovery; protegida por proxy).
+- `/dashboard/perfil`: sección "Seguridad" con `ChangePasswordForm` (`updateUser({ password })`).
+- `proxy.ts`: rutas protegidas → redirigen a `/login` (antes `/signup`); protege también `/reset-password`; authenticated en `/login`/`/signup` → `/dashboard`.
+- `/auth/callback` (de M4) ya cubre `code` y `token_hash` (incluye `type=recovery`), así que sirve para magic link y para el enlace de reseteo.
+- Landing: "Iniciar sesión" → `/login`; "Crear cuenta" → `/signup`.
+
+**Datos de prueba**: `scripts/set-passwords.mjs` asignó la contraseña **`password2026`** a `acgl2015@gmail.com` (Cruje) y `albertogandarillas@hotmail.com` (Betta), mismos correos.
+
+**Nota**: para registro instantáneo sin confirmar correo, en Supabase → Authentication → Providers → Email se puede desactivar "Confirm email". El rate limit del correo integrado sigue aplicando al magic link y a los correos de confirmación/reseteo (se mitiga con SMTP propio).
+
+---
+
 ## 2026-06-25 — M7: Ingestión Shopify + resync
 
 **Spec** (`catalog-ingestion-spec-v2.md`).
