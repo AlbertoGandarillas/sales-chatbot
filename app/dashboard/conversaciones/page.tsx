@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { Badge, EmptyState, PageHeader } from '@/components/ui'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('es-PE', {
@@ -25,37 +26,31 @@ export default async function ConversacionesList() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-stone-900">Conversaciones</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        Abre una conversación para ver el chat, tomar el control o gestionar sus
-        pedidos.
-      </p>
+      <PageHeader
+        title="Conversaciones"
+        description="Abre una conversación para ver el chat, tomar el control o gestionar sus pedidos."
+      />
 
       <div className="mt-6 space-y-2">
         {conversations.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
-            Aún no hay conversaciones.
-          </p>
+          <EmptyState
+            title="Aún no hay conversaciones"
+            description="Cuando un cliente escriba a tu WhatsApp, la conversación aparecerá aquí."
+          />
         ) : (
           conversations.map((c) => (
             <Link
               key={c.id}
               href={`/dashboard/conversaciones/${c.id}`}
-              className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 hover:bg-stone-50"
+              className="flex items-center justify-between rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted"
             >
               <div>
-                <p className="font-medium text-stone-900">{c.customer_phone}</p>
-                <p className="text-xs text-stone-600">{formatDate(c.updated_at)}</p>
+                <p className="font-medium text-foreground">{c.customer_phone}</p>
+                <p className="text-xs text-muted">{formatDate(c.updated_at)}</p>
               </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  c.mode === 'human'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-stone-100 text-stone-700'
-                }`}
-              >
+              <Badge tone={c.mode === 'human' ? 'warning' : 'neutral'} dot>
                 {c.mode === 'human' ? 'Humano' : 'Bot'}
-              </span>
+              </Badge>
             </Link>
           ))
         )}

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react'
 import type { OwnerBusiness } from '@/lib/dashboard'
 import { updateProfile, type ProfileState } from './actions'
+import { Alert, Button, Field, Input, Textarea } from '@/components/ui'
 
 const initialState: ProfileState = { error: null, ok: false }
 
@@ -20,75 +21,70 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
   }, [state.ok])
 
   return (
-    <form action={formAction} className="mt-6 space-y-5">
-      <label className="block text-sm">
-        <span className="font-medium text-stone-700">Nombre del negocio</span>
-        <input
-          name="name"
-          required
-          defaultValue={business.name}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-        />
-      </label>
+    <form action={formAction} className="space-y-5">
+      <Field label="Nombre del negocio" htmlFor="name">
+        <Input id="name" name="name" required defaultValue={business.name} />
+      </Field>
 
-      <label className="block text-sm">
-        <span className="font-medium text-stone-700">
-          Información específica del negocio
-        </span>
-        <span className="mt-0.5 block text-xs text-stone-600">
-          Horario, políticas, tono, datos de entrega/pago. El agente usa esto como
-          contexto adicional. Las reglas base del bot no se editan aquí.
-        </span>
-        <textarea
+      <Field
+        label="Información específica del negocio"
+        htmlFor="system_prompt_custom"
+        hint="Horario, políticas, tono, datos de entrega/pago. El agente usa esto como contexto adicional. Las reglas base del bot no se editan aquí."
+      >
+        <Textarea
+          id="system_prompt_custom"
           name="system_prompt_custom"
           rows={6}
           defaultValue={business.system_prompt_custom ?? ''}
           placeholder="Ej: Atendemos de lunes a sábado 9–18h. Envíos a todo Lima. Pagos por Yape al 999..."
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
         />
-      </label>
+      </Field>
 
-      <label className="block text-sm">
-        <span className="font-medium text-stone-700">WhatsApp del dueño</span>
-        <span className="mt-0.5 block text-xs text-stone-600">
-          Para recibir notificaciones (encargos, escalamientos). Formato internacional, ej. 51999000111.
-        </span>
-        <input
+      <Field
+        label="WhatsApp del dueño"
+        htmlFor="owner_whatsapp_number"
+        hint="Para recibir notificaciones (encargos, escalamientos). Formato internacional, ej. 51999000111."
+      >
+        <Input
+          id="owner_whatsapp_number"
           name="owner_whatsapp_number"
           defaultValue={business.owner_whatsapp_number ?? ''}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
         />
-      </label>
+      </Field>
 
       {isRetail && (
-        <label className="block text-sm">
-          <span className="font-medium text-stone-700">Dominio Shopify</span>
-          <span className="mt-0.5 block text-xs text-stone-600">
-            Para sincronizar el catálogo. Ej: www.tutienda.com
-          </span>
-          <input
+        <Field
+          label="Dominio Shopify"
+          htmlFor="shopify_domain"
+          hint="Para sincronizar el catálogo. Ej: www.tutienda.com"
+        >
+          <Input
+            id="shopify_domain"
             name="shopify_domain"
             defaultValue={business.shopify_domain ?? ''}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
           />
-        </label>
+        </Field>
       )}
 
-      <div className="rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
+      <div className="rounded-lg bg-surface-muted p-3 text-xs text-muted">
         No editable desde aquí: tipo de negocio ({isRetail ? 'retail' : 'panadería'}),
         número de WhatsApp del bot y credenciales técnicas.
       </div>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-      {saved && <p className="text-sm text-green-700">Cambios guardados.</p>}
+      {state.error && (
+        <Alert tone="danger" live>
+          {state.error}
+        </Alert>
+      )}
+      {saved && (
+        <Alert tone="success" live>
+          Cambios guardados.
+        </Alert>
+      )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? 'Guardando…' : 'Guardar cambios'}
-      </button>
+      </Button>
     </form>
   )
 }

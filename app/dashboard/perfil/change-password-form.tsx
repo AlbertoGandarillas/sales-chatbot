@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { Alert, Button, Field, Input } from '@/components/ui'
 
 export function ChangePasswordForm() {
   const [password, setPassword] = useState('')
@@ -35,53 +36,38 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <section className="mt-10 border-t border-stone-200 pt-8">
-      <h2 className="text-lg font-semibold text-stone-900">Seguridad</h2>
-      <p className="mt-1 text-sm text-stone-600">Cambia tu contraseña de acceso.</p>
+    <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
+      <Field label="Nueva contraseña" htmlFor="new-password">
+        <Input
+          id="new-password"
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Mínimo 6 caracteres"
+          autoComplete="new-password"
+        />
+      </Field>
+      <Field label="Confirmar contraseña" htmlFor="confirm-password">
+        <Input
+          id="confirm-password"
+          type="password"
+          required
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          autoComplete="new-password"
+        />
+      </Field>
 
-      <form onSubmit={handleSubmit} className="mt-4 max-w-sm space-y-4">
-        <div>
-          <label htmlFor="new-password" className="block text-sm font-medium text-stone-700">
-            Nueva contraseña
-          </label>
-          <input
-            id="new-password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="confirm-password" className="block text-sm font-medium text-stone-700">
-            Confirmar contraseña
-          </label>
-          <input
-            id="confirm-password"
-            type="password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-          />
-        </div>
+      {message && (
+        <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live>
+          {message.text}
+        </Alert>
+      )}
 
-        {message && (
-          <p className={`text-sm ${message.kind === 'error' ? 'text-red-600' : 'text-green-700'}`}>
-            {message.text}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-        >
-          {busy ? 'Guardando…' : 'Cambiar contraseña'}
-        </button>
-      </form>
-    </section>
+      <Button type="submit" disabled={busy}>
+        {busy ? 'Guardando…' : 'Cambiar contraseña'}
+      </Button>
+    </form>
   )
 }

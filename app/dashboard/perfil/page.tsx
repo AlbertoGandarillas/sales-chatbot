@@ -1,4 +1,5 @@
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { Card, CardContent, CardHeader, CardTitle, PageHeader } from '@/components/ui'
 import { PerfilForm } from './perfil-form'
 import { ChangePasswordForm } from './change-password-form'
 
@@ -7,13 +8,27 @@ export default async function PerfilPage() {
   if (!business) return null
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-stone-900">Perfil del negocio</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        Ajusta la información que el agente usa al conversar con tus clientes.
-      </p>
-      <PerfilForm business={business} />
-      <ChangePasswordForm />
+    <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+      <PageHeader
+        title="Perfil del negocio"
+        description="Ajusta la información que el agente usa al conversar con tus clientes."
+      />
+
+      <Card>
+        <CardContent>
+          <PerfilForm business={business} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Seguridad</CardTitle>
+          <p className="mt-1 text-sm text-muted">Cambia tu contraseña de acceso.</p>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
     </main>
   )
 }

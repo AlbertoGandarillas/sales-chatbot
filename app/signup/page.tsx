@@ -4,6 +4,8 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { AuthShell } from '@/components/auth-shell'
+import { Alert, Button, Field, Input } from '@/components/ui'
 
 function SignupForm() {
   const router = useRouter()
@@ -42,7 +44,6 @@ function SignupForm() {
       return
     }
 
-    // Si el proyecto no exige confirmación de correo, hay sesión inmediata.
     if (data.session) {
       router.push('/onboarding')
       router.refresh()
@@ -73,107 +74,88 @@ function SignupForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
-        <Link href="/" className="text-lg font-bold tracking-tight text-stone-900">
-          Aynibot
-        </Link>
-        <h1 className="mt-4 text-2xl font-bold text-stone-900">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-stone-600">
-          {magic
-            ? 'Te enviaremos un enlace mágico a tu correo.'
-            : 'Regístrate con tu correo y una contraseña.'}
-        </p>
-
-        <form
-          onSubmit={magic ? handleMagicLink : handlePasswordSignup}
-          className="mt-6 space-y-4"
-        >
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-stone-700">
-              Correo
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tucorreo@ejemplo.com"
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-            />
-          </div>
-
-          {!magic && (
-            <>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-stone-700">
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirm" className="block text-sm font-medium text-stone-700">
-                  Confirmar contraseña
-                </label>
-                <input
-                  id="confirm"
-                  type="password"
-                  required
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-                />
-              </div>
-            </>
-          )}
-
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-          >
-            {busy ? 'Procesando…' : magic ? 'Enviar enlace de acceso' : 'Crear cuenta'}
-          </button>
-        </form>
-
-        <button
-          type="button"
-          onClick={() => {
-            setMagic((v) => !v)
-            setMessage(null)
-          }}
-          className="mt-4 w-full text-center text-sm text-stone-600 hover:text-stone-800"
-        >
-          {magic ? 'Usar contraseña' : 'Registrarme con enlace mágico'}
-        </button>
-
-        {message && (
-          <p
-            className={`mt-4 text-sm ${
-              message.kind === 'error' ? 'text-red-600' : 'text-green-700'
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
-
-        <p className="mt-6 text-center text-sm text-stone-600">
+    <AuthShell
+      title="Crear cuenta"
+      subtitle={
+        magic
+          ? 'Te enviaremos un enlace mágico a tu correo.'
+          : 'Regístrate con tu correo y una contraseña.'
+      }
+      footer={
+        <>
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="font-medium text-stone-900 hover:underline">
+          <Link href="/login" className="font-medium text-primary hover:underline">
             Iniciar sesión
           </Link>
-        </p>
-      </div>
-    </main>
+        </>
+      }
+    >
+      <form
+        onSubmit={magic ? handleMagicLink : handlePasswordSignup}
+        className="space-y-4"
+      >
+        <Field label="Correo" htmlFor="email">
+          <Input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tucorreo@ejemplo.com"
+            autoComplete="email"
+          />
+        </Field>
+
+        {!magic && (
+          <>
+            <Field label="Contraseña" htmlFor="password">
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                autoComplete="new-password"
+              />
+            </Field>
+            <Field label="Confirmar contraseña" htmlFor="confirm">
+              <Input
+                id="confirm"
+                type="password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+              />
+            </Field>
+          </>
+        )}
+
+        <Button type="submit" disabled={busy} className="w-full">
+          {busy ? 'Procesando…' : magic ? 'Enviar enlace de acceso' : 'Crear cuenta'}
+        </Button>
+      </form>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setMagic((v) => !v)
+          setMessage(null)
+        }}
+        className="mt-3 w-full"
+      >
+        {magic ? 'Usar contraseña' : 'Registrarme con enlace mágico'}
+      </Button>
+
+      {message && (
+        <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live className="mt-4">
+          {message.text}
+        </Alert>
+      )}
+    </AuthShell>
   )
 }
 

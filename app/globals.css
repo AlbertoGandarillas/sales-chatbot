@@ -1,13 +1,66 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────
+   Aynibot — Design tokens (light). Cálido, claro y confiable.
+   Los componentes consumen estos tokens vía utilidades semánticas
+   (bg-surface, text-muted, border-border, bg-primary, etc.) en lugar
+   de hardcodear colores. Listos para añadir un tema oscuro luego.
+   ─────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f5;
+  --surface: #ffffff;
+  --surface-muted: #f4f1ec;
+  --foreground: #1c1917;
+  --muted-foreground: #57534e;
+
+  --border: #e7e2da;
+  --border-strong: #b9b2a7;
+
+  --primary: #9a3412;
+  --primary-foreground: #ffffff;
+  --primary-hover: #7c2d12;
+
+  --ring: #c2410c;
+
+  --success: #15803d;
+  --success-surface: #ecfdf3;
+  --warning: #b45309;
+  --warning-surface: #fef6e7;
+  --danger: #b91c1c;
+  --danger-surface: #fef2f2;
+  --info: #1d4ed8;
+  --info-surface: #eff4ff;
+
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted-foreground);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+
+  --radius-card: var(--radius);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -15,11 +68,30 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Contraste de placeholders ≥ 4.5:1 sobre blanco (WCAG 2 AA). stone-500 = #78716c */
+/* Contraste de placeholders ≥ 4.5:1 sobre superficies claras (WCAG 1.4.3) */
 ::placeholder {
-  color: #78716c;
+  color: var(--muted-foreground);
   opacity: 1;
+}
+
+/* Foco visible consistente para teclado (WCAG 2.4.7 / 2.4.11) */
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+
+/* Respetar preferencia de movimiento reducido (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

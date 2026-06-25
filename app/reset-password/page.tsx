@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { AuthShell } from '@/components/auth-shell'
+import { Alert, Button, Field, Input } from '@/components/ui'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -39,61 +41,43 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-stone-900">Nueva contraseña</h1>
-        <p className="mt-1 text-sm text-stone-600">
-          Define tu nueva contraseña para acceder.
-        </p>
+    <AuthShell
+      title="Nueva contraseña"
+      subtitle="Define tu nueva contraseña para acceder."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Nueva contraseña" htmlFor="password">
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mínimo 6 caracteres"
+            autoComplete="new-password"
+          />
+        </Field>
+        <Field label="Confirmar contraseña" htmlFor="confirm">
+          <Input
+            id="confirm"
+            type="password"
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-stone-700">
-              Nueva contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="confirm" className="block text-sm font-medium text-stone-700">
-              Confirmar contraseña
-            </label>
-            <input
-              id="confirm"
-              type="password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-            />
-          </div>
+        <Button type="submit" disabled={busy} className="w-full">
+          {busy ? 'Guardando…' : 'Guardar contraseña'}
+        </Button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-          >
-            {busy ? 'Guardando…' : 'Guardar contraseña'}
-          </button>
-        </form>
-
-        {message && (
-          <p
-            className={`mt-4 text-sm ${
-              message.kind === 'error' ? 'text-red-600' : 'text-green-700'
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
-      </div>
-    </main>
+      {message && (
+        <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live className="mt-4">
+          {message.text}
+        </Alert>
+      )}
+    </AuthShell>
   )
 }

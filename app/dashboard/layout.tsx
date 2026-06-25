@@ -1,14 +1,8 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
-
-const NAV = [
-  { href: '/dashboard', label: 'Resumen' },
-  { href: '/dashboard/conversaciones', label: 'Conversaciones' },
-  { href: '/dashboard/catalogo', label: 'Catálogo' },
-  { href: '/dashboard/perfil', label: 'Perfil' },
-]
+import { Badge, Button } from '@/components/ui'
+import { DashboardNav } from './dashboard-nav'
 
 export default async function DashboardLayout({
   children,
@@ -25,40 +19,32 @@ export default async function DashboardLayout({
   if (!business) redirect('/onboarding')
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-stone-900">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+              {business.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="text-sm font-semibold text-foreground">
               {business.name}
             </span>
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
+            <Badge tone="primary">
               {business.vertical === 'retail' ? 'Retail' : 'Panadería'}
-            </span>
+            </Badge>
           </div>
-          <div className="flex items-center gap-3 text-sm text-stone-600">
-            <span className="hidden sm:inline">{user.email}</span>
+          <div className="flex items-center gap-3 text-sm text-muted">
+            <span className="hidden max-w-[180px] truncate sm:inline">
+              {user.email}
+            </span>
             <form action="/auth/signout" method="post">
-              <button
-                type="submit"
-                className="rounded-lg border border-stone-300 px-3 py-1.5 text-stone-700 hover:bg-stone-100"
-              >
+              <Button type="submit" variant="outline" size="sm">
                 Cerrar sesión
-              </button>
+              </Button>
             </form>
           </div>
         </div>
-        <nav className="flex gap-1 px-4">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <DashboardNav />
       </header>
       {children}
     </div>

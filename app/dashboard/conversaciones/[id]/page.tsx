@@ -99,7 +99,7 @@ export default async function ConversationDetail({
   return (
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[1fr_320px]">
       {/* Columna del chat */}
-      <section className="flex h-[75vh] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <section className="flex h-[75vh] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-sm">
         {/* Encabezado tipo WhatsApp */}
         <header className="flex items-center justify-between gap-3 border-b border-stone-200 bg-emerald-700 px-4 py-3 text-white">
           <div className="flex items-center gap-3">
@@ -128,7 +128,7 @@ export default async function ConversationDetail({
         {/* Mensajes */}
         <div className="flex-1 space-y-2 overflow-y-auto bg-[#efeae2] px-4 py-4">
           {messages.length === 0 ? (
-            <p className="mt-10 text-center text-sm text-stone-600">
+            <p className="mt-10 text-center text-sm text-muted">
               Sin mensajes todavía.
             </p>
           ) : (
@@ -171,11 +171,11 @@ export default async function ConversationDetail({
 
       {/* Columna de pedidos */}
       <aside className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
           Pedidos de esta conversación
         </h2>
         {orderViews.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
+          <p className="rounded-card border border-dashed border-border-strong bg-surface p-6 text-center text-sm text-muted">
             Sin pedidos asociados.
           </p>
         ) : (

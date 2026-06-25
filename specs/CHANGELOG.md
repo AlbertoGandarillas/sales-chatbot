@@ -4,6 +4,32 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — Rediseño UI/UX (design system, sin cambios de lógica)
+
+**Spec** (`design-system-v2.md`). Mejora visual integral manteniendo intactos
+lógica, contratos, rutas y flujos. **Aclaración**: la app no usaba shadcn/ui (solo
+Tailwind v4 + clases sueltas); se introdujo una capa de primitivos propia.
+
+- **F0 Fundaciones**: `app/globals.css` con tokens semánticos (`:root` + `@theme`),
+  acento **terracota**; `html lang="es"` (fix WCAG 3.1.1); foco visible global
+  (`:focus-visible`), `::placeholder` AA y `prefers-reduced-motion`.
+- **F1 Primitivos** (`components/ui/`, sin deps nuevas): `Button`, `Card`, `Badge`
+  (con `dot`), `Input`/`Textarea`, `Field`/`Label`, `Alert` (`aria-live`),
+  `EmptyState`, `Skeleton`, `PageHeader`; util `lib/cn.ts`.
+- **F2 Chrome**: `dashboard/layout.tsx` con marca + `DashboardNav` (estado activo,
+  `aria-current`); `AuthShell` compartido.
+- **F3 Pantallas migradas a tokens/primitivos**: login, signup, forgot/reset,
+  onboarding, perfil (+ cambio de contraseña), dashboard resumen (métricas, empty
+  states), catálogo (chips con `aria-pressed`, formularios, badges), conversaciones
+  (lista + chat; se conserva a propósito el look WhatsApp del hilo), y landing
+  (hero premium; copy de "sin contraseñas" corregido a email+password).
+- **F4**: auditoría a11y (contraste, foco, estados no solo color, mensajes con
+  `role`/`aria-live`) + `tsc` y `next build` verdes.
+
+Sin migraciones ni cambios de comportamiento.
+
+---
+
 ## 2026-06-25 — M9: Handoff humano + fecha de entrega + pagos + detalle de conversación
 
 **Spec** (`operations-spec-v2.md`). Las columnas (`conversations.mode`,

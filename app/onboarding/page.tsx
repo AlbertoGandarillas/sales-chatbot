@@ -18,10 +18,12 @@ export default async function OnboardingPage() {
   if (business) redirect('/dashboard')
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-stone-900">Crea tu negocio</h1>
-        <p className="mt-1 text-sm text-stone-600">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-md rounded-card border border-border bg-surface p-8 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Crea tu negocio
+        </h1>
+        <p className="mt-1 text-sm text-muted">
           Un último paso para empezar a usar Aynibot.
         </p>
         <OnboardingForm />

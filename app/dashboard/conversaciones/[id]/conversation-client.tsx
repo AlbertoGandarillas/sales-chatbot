@@ -9,21 +9,19 @@ import {
   toggleMode,
   type ReplyState,
 } from './actions'
+import { Badge, Button, Input } from '@/components/ui'
+import type { ButtonProps } from '@/components/ui'
 
 function SubmitButton({
   children,
-  className,
   pendingText,
-}: {
-  children: React.ReactNode
-  className: string
-  pendingText?: string
-}) {
+  ...props
+}: ButtonProps & { pendingText?: string }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className={className}>
+    <Button type="submit" disabled={pending} {...props}>
       {pending ? pendingText ?? 'Procesando…' : children}
-    </button>
+    </Button>
   )
 }
 
@@ -40,12 +38,9 @@ export function ModeToggle({
       <input type="hidden" name="conversationId" value={conversationId} />
       <input type="hidden" name="nextMode" value={nextMode} />
       <SubmitButton
+        size="sm"
         pendingText="Cambiando…"
-        className={
-          mode === 'human'
-            ? 'rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800'
-            : 'rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100'
-        }
+        className="border-0 bg-surface text-foreground hover:bg-surface-muted"
       >
         {mode === 'human' ? 'Devolver al bot' : 'Pausar bot (tomar control)'}
       </SubmitButton>
@@ -72,9 +67,9 @@ export function ReplyBox({
 
   if (mode !== 'human') {
     return (
-      <div className="border-t border-stone-200 bg-white px-4 py-3 text-sm text-stone-600">
+      <div className="border-t border-border bg-surface px-4 py-3 text-sm text-muted">
         El bot está atendiendo esta conversación. Pulsa{' '}
-        <span className="font-medium text-stone-900">
+        <span className="font-medium text-foreground">
           “Pausar bot (tomar control)”
         </span>{' '}
         arriba para responder tú.
@@ -86,7 +81,7 @@ export function ReplyBox({
     <form
       ref={formRef}
       action={formAction}
-      className="border-t border-stone-200 bg-white px-4 py-3"
+      className="border-t border-border bg-surface px-4 py-3"
     >
       <input type="hidden" name="conversationId" value={conversationId} />
       <div className="flex items-end gap-2">
@@ -95,17 +90,17 @@ export function ReplyBox({
           rows={1}
           required
           placeholder="Escribe un mensaje…"
-          className="min-h-[42px] flex-1 resize-y rounded-2xl border border-stone-300 px-4 py-2 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+          aria-label="Mensaje para el cliente"
+          className="min-h-[42px] flex-1 resize-y rounded-2xl border border-border-strong bg-surface px-4 py-2 text-sm text-foreground transition-colors placeholder:text-muted focus-visible:border-primary"
         />
-        <SubmitButton
-          pendingText="Enviando…"
-          className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
+        <SubmitButton variant="success" pendingText="Enviando…" className="rounded-2xl">
           Enviar
         </SubmitButton>
       </div>
       {state.error && (
-        <p className="mt-2 text-sm text-red-700">{state.error}</p>
+        <p className="mt-2 text-sm text-danger" role="alert">
+          {state.error}
+        </p>
       )}
     </form>
   )
@@ -132,54 +127,45 @@ export function OrderCard({
 }) {
   const paid = order.payment_status === 'paid'
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="rounded-card border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-stone-900">
+          <p className="text-sm font-semibold text-foreground">
             {order.is_custom_order ? 'Encargo especial' : 'Pedido'}
           </p>
-          <p className="text-xs text-stone-600">
-            {order.items_summary || '—'}
-          </p>
+          <p className="text-xs text-muted">{order.items_summary || '—'}</p>
         </div>
-        <p className="text-sm font-semibold text-stone-900">
+        <p className="text-sm font-semibold text-foreground">
           {order.is_custom_order ? '—' : `S/ ${order.total_soles.toFixed(2)}`}
         </p>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700">
-          {order.status}
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-            paid
-              ? 'bg-emerald-100 text-emerald-800'
-              : 'bg-amber-100 text-amber-800'
-          }`}
-        >
+        <Badge tone="neutral">{order.status}</Badge>
+        <Badge tone={paid ? 'success' : 'warning'} dot>
           {paid ? 'Pagado' : 'Pago pendiente'}
-        </span>
+        </Badge>
       </div>
 
       {/* Fecha estimada de entrega */}
       <form action={setDeliveryDate} className="mt-4">
         <input type="hidden" name="orderId" value={order.id} />
         <input type="hidden" name="conversationId" value={conversationId} />
-        <label className="block text-xs font-medium text-stone-700">
+        <label
+          htmlFor={`date-${order.id}`}
+          className="block text-xs font-medium text-foreground"
+        >
           Fecha estimada de entrega
         </label>
         <div className="mt-1 flex items-center gap-2">
-          <input
+          <Input
+            id={`date-${order.id}`}
             type="date"
             name="date"
             defaultValue={order.estimated_delivery_date ?? ''}
-            className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+            className="h-9 w-auto"
           />
-          <SubmitButton
-            pendingText="Guardando…"
-            className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
-          >
+          <SubmitButton variant="outline" size="sm" pendingText="Guardando…">
             Guardar
           </SubmitButton>
         </div>
@@ -187,7 +173,7 @@ export function OrderCard({
 
       {/* Confirmación de pago manual */}
       {paid ? (
-        <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+        <div className="mt-4 rounded-lg bg-success-surface px-3 py-2 text-xs text-success">
           Pago confirmado
           {order.payment_confirmed_at
             ? ` el ${new Date(order.payment_confirmed_at).toLocaleString('es-PE', {
@@ -201,19 +187,20 @@ export function OrderCard({
         <form action={confirmPayment} className="mt-4">
           <input type="hidden" name="orderId" value={order.id} />
           <input type="hidden" name="conversationId" value={conversationId} />
-          <label className="block text-xs font-medium text-stone-700">
+          <label
+            htmlFor={`note-${order.id}`}
+            className="block text-xs font-medium text-foreground"
+          >
             Nota de pago (opcional)
           </label>
-          <input
+          <Input
+            id={`note-${order.id}`}
             type="text"
             name="note"
             placeholder="Ej. Yape de Juan, código 4521, S/ 45.00"
-            className="mt-1 w-full rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+            className="mt-1 h-9"
           />
-          <SubmitButton
-            pendingText="Confirmando…"
-            className="mt-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
+          <SubmitButton variant="success" size="sm" pendingText="Confirmando…" className="mt-2">
             Confirmar pago
           </SubmitButton>
         </form>

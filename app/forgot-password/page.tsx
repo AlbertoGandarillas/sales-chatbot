@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { AuthShell } from '@/components/auth-shell'
+import { Alert, Button, Field, Input } from '@/components/ui'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -30,57 +32,38 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
-        <Link href="/" className="text-lg font-bold tracking-tight text-stone-900">
-          Aynibot
+    <AuthShell
+      title="Recuperar contraseña"
+      subtitle="Te enviaremos un enlace para crear una nueva contraseña."
+      footer={
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Volver a iniciar sesión
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-stone-900">Recuperar contraseña</h1>
-        <p className="mt-1 text-sm text-stone-600">
-          Te enviaremos un enlace para crear una nueva contraseña.
-        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Correo" htmlFor="email">
+          <Input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tucorreo@ejemplo.com"
+            autoComplete="email"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-stone-700">
-              Correo
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tucorreo@ejemplo.com"
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
-            />
-          </div>
+        <Button type="submit" disabled={busy} className="w-full">
+          {busy ? 'Enviando…' : 'Enviar enlace'}
+        </Button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-          >
-            {busy ? 'Enviando…' : 'Enviar enlace'}
-          </button>
-        </form>
-
-        {message && (
-          <p
-            className={`mt-4 text-sm ${
-              message.kind === 'error' ? 'text-red-600' : 'text-green-700'
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
-
-        <p className="mt-6 text-center text-sm text-stone-600">
-          <Link href="/login" className="font-medium text-stone-900 hover:underline">
-            Volver a iniciar sesión
-          </Link>
-        </p>
-      </div>
-    </main>
+      {message && (
+        <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live className="mt-4">
+          {message.text}
+        </Alert>
+      )}
+    </AuthShell>
   )
 }

@@ -10,6 +10,8 @@ import {
   type CatalogState,
   type ResyncState,
 } from './actions'
+import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
+import { cn } from '@/lib/cn'
 
 export interface Product {
   id: string
@@ -34,21 +36,21 @@ function ResyncButton() {
   return (
     <div className="flex flex-col items-end gap-1">
       <form action={formAction}>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 disabled:opacity-50"
-        >
+        <Button type="submit" variant="outline" size="sm" disabled={pending}>
           {pending ? 'Sincronizando…' : 'Resincronizar catálogo'}
-        </button>
+        </Button>
       </form>
       {state.result && (
-        <p className="text-xs text-green-700">
+        <p className="text-xs text-success" role="status" aria-live="polite">
           {state.result.inserted} nuevos · {state.result.updated} actualizados ·{' '}
           {state.result.needsReviewCount} por revisar
         </p>
       )}
-      {state.error && <p className="text-xs text-red-600">{state.error}</p>}
+      {state.error && (
+        <p className="text-xs text-danger" role="alert">
+          {state.error}
+        </p>
+      )}
     </div>
   )
 }
@@ -60,6 +62,9 @@ const BAKERY_CATEGORIES = [
   ['bebidas', 'Bebidas'],
   ['otros', 'Otros'],
 ] as const
+
+const selectClass =
+  'h-10 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm text-foreground transition-colors focus-visible:border-primary'
 
 function formatSoles(n: number) {
   return `S/ ${Number(n).toFixed(2)}`
@@ -84,41 +89,34 @@ function ProductForm({
   return (
     <form
       action={formAction}
-      className="space-y-3 rounded-xl border border-stone-300 bg-stone-50 p-4"
+      className="space-y-3 rounded-card border border-border-strong bg-surface-muted p-4"
     >
       {product && <input type="hidden" name="id" value={product.id} />}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="text-stone-700">Nombre</span>
-          <input
-            name="name"
-            required
-            defaultValue={product?.name ?? ''}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-stone-700">Precio (S/)</span>
-          <input
+        <Field label="Nombre" htmlFor="name">
+          <Input id="name" name="name" required defaultValue={product?.name ?? ''} />
+        </Field>
+        <Field label="Precio (S/)" htmlFor="price_soles">
+          <Input
+            id="price_soles"
             name="price_soles"
             type="number"
             min="0"
             step="0.01"
             defaultValue={product?.price_soles ?? 0}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
           />
-        </label>
+        </Field>
       </div>
 
       {!isRetail && (
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm">
-            <span className="text-stone-700">Categoría</span>
+          <Field label="Categoría" htmlFor="category">
             <select
+              id="category"
               name="category"
               defaultValue={product?.category ?? 'otros'}
-              className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+              className={selectClass}
             >
               {BAKERY_CATEGORIES.map(([v, l]) => (
                 <option key={v} value={v}>
@@ -126,86 +124,106 @@ function ProductForm({
                 </option>
               ))}
             </select>
-          </label>
-          <label className="flex items-center gap-2 pt-6 text-sm">
+          </Field>
+          <label className="flex items-center gap-2 pt-6 text-sm text-foreground">
             <input
               type="checkbox"
               name="is_custom_order"
               defaultChecked={product?.is_custom_order ?? false}
+              className="h-4 w-4 accent-primary"
             />
-            <span className="text-stone-700">Es encargo personalizado (sin precio fijo)</span>
+            Es encargo personalizado (sin precio fijo)
           </label>
         </div>
       )}
 
       {isRetail && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <label className="block text-sm">
-            <span className="text-stone-700">Rango de tallas</span>
-            <input
+          <Field label="Rango de tallas" htmlFor="talla_range">
+            <Input
+              id="talla_range"
               name="talla_range"
               placeholder="Ej: 38 al 43"
               defaultValue={product?.talla_range ?? ''}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
             />
-          </label>
-          <label className="block text-sm">
-            <span className="text-stone-700">Color / material</span>
-            <input
+          </Field>
+          <Field label="Color / material" htmlFor="color_o_material">
+            <Input
+              id="color_o_material"
               name="color_o_material"
               defaultValue={product?.color_o_material ?? ''}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
             />
-          </label>
-          <label className="block text-sm">
-            <span className="text-stone-700">Imagen (URL)</span>
-            <input
+          </Field>
+          <Field label="Imagen (URL)" htmlFor="image_url">
+            <Input
+              id="image_url"
               name="image_url"
               defaultValue={product?.image_url ?? ''}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
             />
-          </label>
+          </Field>
         </div>
       )}
 
-      <label className="block text-sm">
-        <span className="text-stone-700">Descripción</span>
-        <textarea
+      <Field label="Descripción" htmlFor="description">
+        <Textarea
+          id="description"
           name="description"
           rows={2}
           defaultValue={product?.description ?? ''}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
         />
-      </label>
+      </Field>
 
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
           name="available"
           defaultChecked={product?.available ?? true}
+          className="h-4 w-4 accent-primary"
         />
-        <span className="text-stone-700">Disponible</span>
+        Disponible
       </label>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && (
+        <Alert tone="danger" live>
+          {state.error}
+        </Alert>
+      )}
 
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={pending}>
           {pending ? 'Guardando…' : 'Guardar'}
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-700 hover:bg-stone-100"
-        >
+        </Button>
+        <Button type="button" variant="outline" onClick={onDone}>
           Cancelar
-        </button>
+        </Button>
       </div>
     </form>
+  )
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-surface text-muted ring-1 ring-border hover:bg-surface-muted hover:text-foreground'
+      )}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -229,41 +247,28 @@ export function CatalogClient({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-stone-900">Catálogo</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2">
           {shopifyDomain && <ResyncButton />}
-          <button
+          <Button
             type="button"
             onClick={() => {
               setEditingId(null)
               setShowCreate((v) => !v)
             }}
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
           >
             Nuevo producto
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setOnlyReview(false)}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-            !onlyReview ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 ring-1 ring-stone-200'
-          }`}
-        >
+        <FilterChip active={!onlyReview} onClick={() => setOnlyReview(false)}>
           Todos ({products.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setOnlyReview(true)}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-            onlyReview ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 ring-1 ring-stone-200'
-          }`}
-        >
+        </FilterChip>
+        <FilterChip active={onlyReview} onClick={() => setOnlyReview(true)}>
           Por revisar ({reviewCount})
-        </button>
+        </FilterChip>
       </div>
 
       {showCreate && (
@@ -273,7 +278,7 @@ export function CatalogClient({
       )}
 
       {visible.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-stone-300 bg-white p-8 text-center text-stone-600">
+        <p className="rounded-card border border-dashed border-border-strong bg-surface p-8 text-center text-muted">
           No hay productos {onlyReview ? 'por revisar' : 'todavía'}.
         </p>
       ) : (
@@ -289,23 +294,19 @@ export function CatalogClient({
             ) : (
               <article
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4"
               >
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-stone-900">{p.name}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-foreground">{p.name}</p>
                     {p.needs_review && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                      <Badge tone="warning" dot>
                         Por revisar
-                      </span>
+                      </Badge>
                     )}
-                    {!p.available && (
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
-                        No disponible
-                      </span>
-                    )}
+                    {!p.available && <Badge tone="neutral">No disponible</Badge>}
                   </div>
-                  <p className="text-sm text-stone-600">
+                  <p className="text-sm text-muted">
                     {isRetail
                       ? [p.talla_range && `Tallas ${p.talla_range}`, p.color_o_material]
                           .filter(Boolean)
@@ -315,38 +316,37 @@ export function CatalogClient({
                         : p.category}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-stone-900">
+                <div className="flex items-center gap-2">
+                  <span className="mr-1 text-sm font-semibold text-foreground">
                     {p.is_custom_order ? '—' : formatSoles(p.price_soles)}
                   </span>
                   <form action={toggleAvailable}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="next" value={String(!p.available)} />
-                    <button
-                      type="submit"
-                      className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs text-stone-600 hover:bg-stone-100"
-                    >
+                    <Button type="submit" variant="outline" size="sm">
                       {p.available ? 'Ocultar' : 'Mostrar'}
-                    </button>
+                    </Button>
                   </form>
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setShowCreate(false)
                       setEditingId(p.id)
                     }}
-                    className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs text-stone-700 hover:bg-stone-100"
                   >
                     Editar
-                  </button>
+                  </Button>
                   <form action={deleteProduct}>
                     <input type="hidden" name="id" value={p.id} />
-                    <button
+                    <Button
                       type="submit"
-                      className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                      size="sm"
+                      className="border border-danger/30 bg-transparent text-danger hover:bg-danger-surface"
                     >
                       Eliminar
-                    </button>
+                    </Button>
                   </form>
                 </div>
               </article>

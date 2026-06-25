@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { Badge, Card, EmptyState, PageHeader } from '@/components/ui'
 
 function formatSoles(amount: number) {
   return `S/ ${amount.toFixed(2)}`
@@ -19,13 +20,21 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: 'Cancelado',
 }
 
-function Card({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function MetricCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: string
+}) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-stone-600">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-stone-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-stone-600">{hint}</p>}
-    </div>
+    <Card className="p-5">
+      <p className="text-sm text-muted">{label}</p>
+      <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">{value}</p>
+      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+    </Card>
   )
 }
 
@@ -84,12 +93,12 @@ export default async function DashboardResumen() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-stone-900">Resumen</h1>
+      <PageHeader title="Resumen" description="Actividad reciente de tu negocio." />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Card label="Pedidos pendientes" value={String(pendingCount.count ?? 0)} />
-        <Card label="Pedidos del mes" value={String(monthOrdersCount.count ?? 0)} />
-        <Card
+        <MetricCard label="Pedidos pendientes" value={String(pendingCount.count ?? 0)} />
+        <MetricCard label="Pedidos del mes" value={String(monthOrdersCount.count ?? 0)} />
+        <MetricCard
           label="Costo estimado del mes"
           value={`$ ${monthlyCost.toFixed(4)}`}
           hint="OpenAI (se llena con el uso del agente)"
@@ -99,34 +108,34 @@ export default async function DashboardResumen() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Conversaciones recientes */}
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-600">
-            Conversaciones recientes
-          </h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Conversaciones recientes
+            </h2>
+            <Link
+              href="/dashboard/conversaciones"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Ver todas
+            </Link>
+          </div>
           <div className="space-y-2">
             {conversations.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
-                Aún no hay conversaciones.
-              </p>
+              <EmptyState title="Aún no hay conversaciones" description="Cuando un cliente escriba por WhatsApp, aparecerá aquí." />
             ) : (
               conversations.map((c) => (
                 <Link
                   key={c.id}
                   href={`/dashboard/conversaciones/${c.id}`}
-                  className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 hover:bg-stone-50"
+                  className="flex items-center justify-between rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted"
                 >
                   <div>
-                    <p className="font-medium text-stone-900">{c.customer_phone}</p>
-                    <p className="text-xs text-stone-600">{formatDate(c.updated_at)}</p>
+                    <p className="font-medium text-foreground">{c.customer_phone}</p>
+                    <p className="text-xs text-muted">{formatDate(c.updated_at)}</p>
                   </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      c.mode === 'human'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-stone-100 text-stone-700'
-                    }`}
-                  >
+                  <Badge tone={c.mode === 'human' ? 'warning' : 'neutral'} dot>
                     {c.mode === 'human' ? 'Humano' : 'Bot'}
-                  </span>
+                  </Badge>
                 </Link>
               ))
             )}
@@ -135,29 +144,27 @@ export default async function DashboardResumen() {
 
         {/* Pedidos recientes */}
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-600">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
             Pedidos recientes
           </h2>
           <div className="space-y-2">
             {orders.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
-                Aún no hay pedidos.
-              </p>
+              <EmptyState title="Aún no hay pedidos" description="Los pedidos que tome el bot aparecerán aquí." />
             ) : (
               orders.map((o) => {
                 const inner = (
                   <>
                     <div>
-                      <p className="font-medium text-stone-900">
+                      <p className="font-medium text-foreground">
                         {o.is_custom_order ? 'Encargo especial' : 'Pedido'}
                       </p>
-                      <p className="text-xs text-stone-600">{formatDate(o.created_at)}</p>
+                      <p className="text-xs text-muted">{formatDate(o.created_at)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-stone-900">
+                      <p className="text-sm font-semibold text-foreground">
                         {o.is_custom_order ? '—' : formatSoles(Number(o.total_soles))}
                       </p>
-                      <p className="text-xs text-stone-600">
+                      <p className="text-xs text-muted">
                         {STATUS_LABEL[o.status] ?? o.status}
                       </p>
                     </div>
@@ -167,14 +174,14 @@ export default async function DashboardResumen() {
                   <Link
                     key={o.id}
                     href={`/dashboard/conversaciones/${o.conversation_id}`}
-                    className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 hover:bg-stone-50"
+                    className="flex items-center justify-between rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-muted"
                   >
                     {inner}
                   </Link>
                 ) : (
                   <div
                     key={o.id}
-                    className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4"
+                    className="flex items-center justify-between rounded-card border border-border bg-surface p-4"
                   >
                     {inner}
                   </div>
@@ -184,18 +191,6 @@ export default async function DashboardResumen() {
           </div>
         </section>
       </div>
-
-      <p className="mt-8 text-sm text-stone-600">
-        Gestiona tu catálogo en{' '}
-        <Link href="/dashboard/catalogo" className="underline hover:text-stone-600">
-          Catálogo
-        </Link>{' '}
-        o ajusta la info de tu negocio en{' '}
-        <Link href="/dashboard/perfil" className="underline hover:text-stone-600">
-          Perfil
-        </Link>
-        .
-      </p>
     </main>
   )
 }
