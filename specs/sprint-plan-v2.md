@@ -69,8 +69,10 @@ M1 (esquema + alta usuarios/negocios)
 4. Cruje usa bakery sin cambios.
 
 **Criterio de aceptación**:
-- [ ] Cruje: comportamiento idéntico a v1.
-- [ ] Retail: comunica rangos de talla, nunca stock unitario; no tiene `iniciar_encargo_personalizado`.
+- [x] Cruje: comportamiento idéntico a v1 (plantilla `bakery` = texto v1 literal, mismas tools).
+- [x] Retail: comunica rangos de talla, nunca stock unitario; no tiene `iniciar_encargo_personalizado`.
+
+**Estado**: ✅ Completado. `lib/prompts/index.ts`, `lib/tools/index.ts` creados; `lib/agent.ts` refactorizado (typecheck OK).
 
 ---
 
@@ -84,9 +86,12 @@ M1 (esquema + alta usuarios/negocios)
 4. Páginas base de sesión / logout.
 
 **Criterio de aceptación**:
-- [ ] Login con magic link funciona.
-- [ ] RLS: cada dueño ve solo su negocio.
-- [ ] El bot no se ve afectado por RLS.
+- [x] Login con magic link funciona (`/login` → correo → `/auth/callback`).
+- [x] RLS: cada dueño ve solo su negocio (policies por `owner_user_id`).
+- [x] El bot no se ve afectado por RLS (usa service-role, bypassa RLS).
+
+**Estado**: ✅ Completado. `@supabase/ssr` instalado; `lib/supabase/server.ts` + `lib/supabase/client.ts`; `proxy.ts` (sesión + protección `/dashboard`); `/login`, `/auth/callback`, `/auth/signout`; migración `20260624220000_rls_owner_policies.sql` aplicada; dashboard usa cliente autenticado con guard de sesión en `layout.tsx`. Build OK.
+> Nota: `/auth/callback` se adelantó de M5 a M4 porque el login con magic link no es testeable sin él. M5 reutiliza este callback y añade landing/signup/onboarding.
 
 ---
 

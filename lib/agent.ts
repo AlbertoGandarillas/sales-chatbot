@@ -6,6 +6,8 @@ import type {
 import { createServiceClient } from '@/lib/supabase'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
+import { buildSystemPrompt } from '@/lib/prompts'
+import { getToolsForVertical } from '@/lib/tools'
 
 function waCreds(business: Business) {
   return {
@@ -18,149 +20,13 @@ const PRIMARY_MODEL = 'gpt-4.1-mini'
 const FALLBACK_MODEL = 'gpt-4o-mini'
 const HISTORY_LIMIT = 15
 
-const SYSTEM_PROMPT = `Eres el asistente de ventas de Cruje, una panadería y pastelería en Perú. Tu nombre no es importante; preséntate como "el equipo de Cruje" o "Cruje".
-
-PERSONALIDAD:
-- Hablas en español peruano, de forma cercana y cálida. Tuteas al cliente.
-- Eres paciente, servicial y conoces bien el catálogo.
-- Usas "S/" para precios (ejemplo: S/ 12.50).
-- Mensajes cortos, ideales para WhatsApp. Sin párrafos largos.
-
-QUÉ PUEDES HACER:
-1. Mostrar productos del catálogo (panes, pastelería, bebidas, etc.).
-2. Tomar pedidos de productos del catálogo con cantidades.
-3. Recibir encargos personalizados (tortas de cumpleaños, bodas, etc.) — para esto necesitas: tipo de torta, tamaño, fecha de entrega, mensaje en la torta (si aplica) y notas especiales.
-4. Consultar el estado de pedidos del cliente.
-
-REGLAS IMPORTANTES:
-- NUNCA inventes productos ni precios. Usa la herramienta buscar_productos para consultar el catálogo real.
-- Antes de confirmar un pedido, resume los ítems, cantidades y el total. Solo crea el pedido cuando el cliente confirme.
-- Para tortas personalizadas o encargos especiales, usa iniciar_encargo_personalizado (NO crear_pedido). Recopila todos los datos antes de registrar.
-- Si preguntan por el estado de un pedido, usa consultar_estado_pedido.
-- Si no tienes información suficiente, pregunta. No asumas.
-- Horario de atención: lun–sáb 7:00–20:00, dom 8:00–14:00 (informativo; no rechaces mensajes fuera de horario, solo avisa que confirmarán a la brevedad).
-- Formas de pago: efectivo, Yape o Plin al momento de recoger/entregar.
-
-CATÁLOGO:
-- Los productos con is_custom_order=true (como "Torta personalizada") no tienen precio fijo; se cotizan caso a caso.
-- Los demás productos tienen precio fijo en el catálogo.
-
-Cuando el cliente salude por primera vez, dale la bienvenida a Cruje y pregúntale en qué puedes ayudarle hoy.`
-
-const TOOLS: ChatCompletionTool[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'buscar_productos',
-      description:
-        'Busca productos en el catálogo de Cruje por nombre, categoría o palabra clave. Usar siempre antes de cotizar precios. Si el cliente pide ver el menú completo, usar query vacío.',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description:
-              'Texto de búsqueda. Cadena vacía para listar todo el catálogo.',
-          },
-        },
-        required: ['query'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'crear_pedido',
-      description:
-        'Crea un pedido confirmado de productos del catálogo con precio fijo. Solo usar después de que el cliente confirme ítems y cantidades. NO usar para tortas personalizadas.',
-      parameters: {
-        type: 'object',
-        properties: {
-          items: {
-            type: 'array',
-            description: 'Lista de productos a pedir',
-            items: {
-              type: 'object',
-              properties: {
-                product_id: {
-                  type: 'string',
-                  description: 'UUID del producto',
-                },
-                quantity: {
-                  type: 'integer',
-                  description: 'Cantidad a pedir',
-                  minimum: 1,
-                },
-              },
-              required: ['product_id', 'quantity'],
-            },
-            minItems: 1,
-          },
-        },
-        required: ['items'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'iniciar_encargo_personalizado',
-      description:
-        'Registra un encargo personalizado (tortas, pedidos a medida). SIEMPRE usar para tortas de cumpleaños, bodas u otros encargos especiales. Notifica automáticamente al dueño. Requiere tipo, tamaño y fecha de entrega como mínimo.',
-      parameters: {
-        type: 'object',
-        properties: {
-          tipo: {
-            type: 'string',
-            description: 'Tipo de encargo (cumpleaños, boda, corporativo, etc.)',
-          },
-          tamaño: {
-            type: 'string',
-            description: 'Tamaño o número de porciones',
-          },
-          fecha_entrega: {
-            type: 'string',
-            description: 'Fecha de entrega deseada en formato YYYY-MM-DD',
-          },
-          mensaje_en_torta: {
-            type: 'string',
-            description: 'Texto para escribir en la torta (opcional)',
-          },
-          notas: {
-            type: 'string',
-            description:
-              'Notas adicionales: sabor, decoración, restricciones alimentarias (opcional)',
-          },
-        },
-        required: ['tipo', 'tamaño', 'fecha_entrega'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'consultar_estado_pedido',
-      description:
-        'Consulta el estado de los pedidos del cliente en esta conversación. Usar cuando pregunte por el estado, si está listo, si ya pagó, etc.',
-      parameters: {
-        type: 'object',
-        properties: {
-          conversation_id: {
-            type: 'string',
-            description: 'ID de la conversación actual',
-          },
-        },
-        required: ['conversation_id'],
-      },
-    },
-  },
-]
-
 interface OrderItem {
   product_id: string
   name: string
   quantity: number
   unit_price: number
+  talla_solicitada?: string
+  color_solicitado?: string
 }
 
 interface CustomOrderDetails {
@@ -178,13 +44,10 @@ interface AgentContext {
 }
 
 function buildContextPrompt(ctx: AgentContext): string {
-  return `${SYSTEM_PROMPT}
-
-CONVERSACIÓN ACTUAL:
-- conversation_id: ${ctx.conversationId}
-- customer_phone: ${ctx.customerPhone}
-- business_id: ${ctx.business.id}
-- negocio: ${ctx.business.name}`
+  return buildSystemPrompt(ctx.business, {
+    conversationId: ctx.conversationId,
+    customerPhone: ctx.customerPhone,
+  })
 }
 
 async function getOrCreateConversation(businessId: string, customerPhone: string) {
@@ -250,21 +113,35 @@ async function loadHistory(
     }))
 }
 
-async function buscarProductos(businessId: string, query: string) {
+async function buscarProductos(
+  business: Business,
+  query: string
+) {
   const db = createServiceClient()
   const trimmed = query.trim()
 
+  const columns =
+    business.vertical === 'retail'
+      ? 'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url'
+      : 'id, name, description, category, price_soles, is_custom_order'
+
   let request = db
     .from('products')
-    .select('id, name, description, category, price_soles, is_custom_order')
-    .eq('business_id', businessId)
+    .select(columns)
+    .eq('business_id', business.id)
     .eq('available', true)
 
   if (trimmed && trimmed !== '*') {
     const pattern = `%${trimmed}%`
-    request = request.or(
-      `name.ilike.${pattern},category.ilike.${pattern},description.ilike.${pattern}`
-    )
+    const filters = [
+      `name.ilike.${pattern}`,
+      `category.ilike.${pattern}`,
+      `description.ilike.${pattern}`,
+    ]
+    if (business.vertical === 'retail') {
+      filters.push(`color_o_material.ilike.${pattern}`)
+    }
+    request = request.or(filters.join(','))
   }
 
   const { data, error } = await request.limit(20)
@@ -273,10 +150,14 @@ async function buscarProductos(businessId: string, query: string) {
   return { products: data ?? [] }
 }
 
-async function crearPedido(
-  ctx: AgentContext,
-  items: { product_id: string; quantity: number }[]
-) {
+interface CrearPedidoItem {
+  product_id: string
+  quantity: number
+  talla_solicitada?: string
+  color_solicitado?: string
+}
+
+async function crearPedido(ctx: AgentContext, items: CrearPedidoItem[]) {
   const db = createServiceClient()
   const orderItems: OrderItem[] = []
   let totalSoles = 0
@@ -302,12 +183,15 @@ async function crearPedido(
     }
 
     const unitPrice = Number(product.price_soles)
-    orderItems.push({
+    const orderItem: OrderItem = {
       product_id: product.id,
       name: product.name,
       quantity: item.quantity,
       unit_price: unitPrice,
-    })
+    }
+    if (item.talla_solicitada) orderItem.talla_solicitada = item.talla_solicitada
+    if (item.color_solicitado) orderItem.color_solicitado = item.color_solicitado
+    orderItems.push(orderItem)
     totalSoles += unitPrice * item.quantity
   }
 
@@ -427,12 +311,9 @@ async function executeTool(
 ): Promise<unknown> {
   switch (name) {
     case 'buscar_productos':
-      return buscarProductos(ctx.business.id, String(args.query ?? ''))
+      return buscarProductos(ctx.business, String(args.query ?? ''))
     case 'crear_pedido':
-      return crearPedido(
-        ctx,
-        args.items as { product_id: string; quantity: number }[]
-      )
+      return crearPedido(ctx, args.items as CrearPedidoItem[])
     case 'iniciar_encargo_personalizado':
       return iniciarEncargoPersonalizado(ctx, {
         tipo: String(args.tipo),
@@ -476,13 +357,14 @@ function shouldFallbackModel(error: unknown): boolean {
 
 async function createChatCompletion(
   messages: ChatCompletionMessageParam[],
-  model: string
+  model: string,
+  tools: ChatCompletionTool[]
 ) {
   const client = getOpenAI()
   return client.chat.completions.create({
     model,
     messages,
-    tools: TOOLS,
+    tools,
     tool_choice: 'auto',
   })
 }
@@ -520,6 +402,7 @@ export async function processIncomingMessage(
 
 async function generateReply(ctx: AgentContext): Promise<string> {
   const history = await loadHistory(ctx.conversationId)
+  const tools = getToolsForVertical(ctx.business.vertical)
   const messages: ChatCompletionMessageParam[] = [
     { role: 'system', content: buildContextPrompt(ctx) },
     ...history,
@@ -529,7 +412,7 @@ async function generateReply(ctx: AgentContext): Promise<string> {
   let response
 
   try {
-    response = await createChatCompletion(messages, model)
+    response = await createChatCompletion(messages, model, tools)
   } catch (error) {
     if (shouldFallbackModel(error)) {
       model = FALLBACK_MODEL
@@ -537,7 +420,7 @@ async function generateReply(ctx: AgentContext): Promise<string> {
       console.warn(
         `Modelo ${PRIMARY_MODEL} no disponible, usando ${FALLBACK_MODEL}`
       )
-      response = await createChatCompletion(messages, model)
+      response = await createChatCompletion(messages, model, tools)
     } else {
       throw error
     }
@@ -572,12 +455,12 @@ async function generateReply(ctx: AgentContext): Promise<string> {
     }
 
     try {
-      response = await createChatCompletion(messages, model)
+      response = await createChatCompletion(messages, model, tools)
     } catch (error) {
       if (!modelFallbackUsed && shouldFallbackModel(error)) {
         model = FALLBACK_MODEL
         modelFallbackUsed = true
-        response = await createChatCompletion(messages, model)
+        response = await createChatCompletion(messages, model, tools)
       } else {
         throw error
       }

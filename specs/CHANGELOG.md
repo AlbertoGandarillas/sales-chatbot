@@ -4,6 +4,39 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-24 — M4: Supabase Auth (magic link) + RLS por dueño
+
+**Spec** (`auth-dashboard-spec-v2.md`, `sprint-plan-v2.md` M4).
+
+**Implementación real**:
+- `@supabase/ssr` instalado. Clientes nuevos: `lib/supabase/server.ts` (cookies, Server Components/Actions/route handlers) y `lib/supabase/client.ts` (navegador). El `lib/supabase.ts` v1 (anon + service-role) se conserva para el bot/webhook.
+- Sesión/protección vía `proxy.ts` (no `middleware.ts`).
+- Auth: `/login` (`signInWithOtp`), `/auth/callback` (soporta `code` PKCE y `token_hash`), `/auth/signout`.
+- RLS: migración `20260624220000_rls_owner_policies.sql` — quita policies `anon` v1 y crea policies `authenticated` por `owner_user_id` en `businesses/products/conversations/messages/orders` y `SELECT` en `usage_logs`.
+- Dashboard: `app/dashboard/layout.tsx` (guard de sesión + barra con negocio/logout); `app/dashboard/page.tsx` migrado al cliente autenticado del navegador.
+
+**Desvíos respecto al plan**:
+- `middleware.ts` → `proxy.ts`: Next 16 deprecó la convención `middleware`; se usa `proxy` para acatar la deprecación.
+- `/auth/callback` se adelantó de M5 a M4 (necesario para probar el magic link).
+- El bot/webhook siguen con service-role y **no** se ven afectados por RLS.
+
+**Impacto operativo**: el dashboard ya no es accesible sin login; el dashboard anónimo v1 queda obsoleto. Requiere desplegar el código nuevo y configurar las Redirect URLs de Auth.
+
+---
+
+## 2026-06-24 — M3: prompt por plantilla + tools condicionales por vertical
+
+**Spec** (`agent-spec-v2.md`, `sprint-plan-v2.md` M3): el prompt y las tools deben elegirse según `business.vertical`.
+
+**Implementación real**:
+- `lib/prompts/index.ts`: `VERTICAL_TEMPLATES` (`bakery` = texto idéntico al system prompt v1 de Cruje; `retail` = plantilla nueva con reglas de rangos de talla). `buildSystemPrompt(business, ctx)` concatena plantilla + `system_prompt_custom` del dueño + contexto de la conversación.
+- `lib/tools/index.ts`: `getToolsForVertical(vertical)`. `bakery` → `buscar_productos`, `crear_pedido`, `iniciar_encargo_personalizado`, `consultar_estado_pedido`. `retail` → `buscar_productos`, `crear_pedido` (con `talla_solicitada`/`color_solicitado`), `consultar_estado_pedido` (sin encargo personalizado).
+- `lib/agent.ts`: usa `buildSystemPrompt` y `getToolsForVertical`; `buscar_productos` retorna `talla_range`/`color_o_material`/`image_url` en retail; `crear_pedido` guarda talla/color como texto en los ítems.
+
+**Decisión adoptada**: el texto bakery se mantiene literal para no regresionar a Cruje. `escalar_a_humano` se difiere a M9 (operaciones).
+
+---
+
 ## 2026-06-24 — Webhook: `await` en lugar de respuesta inmediata
 
 **Spec original** (`architecture.md`, Fase 3): responder `200 OK` de inmediato y procesar el agente en background.

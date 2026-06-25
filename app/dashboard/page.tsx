@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createBrowserSupabase } from '@/lib/supabase/client'
 
 interface OrderItem {
   product_id: string
@@ -183,6 +183,7 @@ function OrderCard({
 }
 
 export default function DashboardPage() {
+  const supabase = useMemo(() => createBrowserSupabase(), [])
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'regular' | 'custom'>('all')
@@ -202,7 +203,7 @@ export default function DashboardPage() {
 
     setOrders((data as Order[]) ?? [])
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     loadOrders()
@@ -221,7 +222,7 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [loadOrders])
+  }, [loadOrders, supabase])
 
   async function updateOrder(id: string, fields: Partial<Order>) {
     const { error } = await supabase.from('orders').update(fields).eq('id', id)
@@ -244,9 +245,9 @@ export default function DashboardPage() {
   const customCount = orders.filter((o) => o.is_custom_order).length
 
   return (
-    <main className="min-h-screen bg-stone-50">
+    <main className="bg-stone-50">
       <header className="border-b border-stone-200 bg-white px-6 py-5">
-        <h1 className="text-2xl font-bold text-stone-900">Cruje — Pedidos</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Pedidos</h1>
         <p className="mt-1 text-sm text-stone-500">
           Dashboard en tiempo real · {orders.length} pedido
           {orders.length !== 1 ? 's' : ''}
