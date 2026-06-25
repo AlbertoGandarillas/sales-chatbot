@@ -4,6 +4,28 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — Landing v3 (ampliación expositiva, sin cambios de lógica)
+
+**Spec** (`landing-page-v3-spec.md`). Ampliación del landing existente conservando
+hero, CTA final y footer. Contenido 100% verificable contra el inventario real de
+funcionalidades (sin cifras, testimonios ni integraciones inexistentes).
+
+- **Secciones nuevas en `app/page.tsx`**: "Cómo funciona" (4 pasos), "Funcionalidades"
+  (grid de 6 `Card` con badges de categoría), "Casos de uso" enriquecido (Cruje /
+  Betta nombrados como negocios reales, sin cifras), "Para qué negocios es" (con nota
+  honesta de alcance) y "Preguntas frecuentes" (acordeón).
+- **Header**: anclas de navegación (`#como-funciona`, `#funcionalidades`, `#faq`)
+  visibles en `md+`, header sticky con `backdrop-blur`; secciones con `scroll-mt`.
+- **Componente nuevo** `components/ui/accordion.tsx`: `Accordion`/`AccordionItem`
+  nativos (`<details>`/`<summary>`), accesibles por teclado, mismos tokens y radio;
+  exportado en `components/ui/index.ts`.
+- **Decisiones de contenido (checkpoints)**: precios abiertos ("Conversemos y armamos
+  un plan a tu medida", sin tiers); anclas activadas; Cruje y Betta nombrados.
+
+Solo presentación: sin migraciones, rutas, datos ni cambios de comportamiento.
+
+---
+
 ## 2026-06-25 — Rediseño UI/UX (design system, sin cambios de lógica)
 
 **Spec** (`design-system-v2.md`). Mejora visual integral manteniendo intactos
