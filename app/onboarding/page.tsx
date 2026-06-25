@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
     <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-stone-900">Crea tu negocio</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           Un último paso para empezar a usar Aynibot.
         </p>
         <OnboardingForm />

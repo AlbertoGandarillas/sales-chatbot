@@ -37,7 +37,7 @@ export function ChangePasswordForm() {
   return (
     <section className="mt-10 border-t border-stone-200 pt-8">
       <h2 className="text-lg font-semibold text-stone-900">Seguridad</h2>
-      <p className="mt-1 text-sm text-stone-500">Cambia tu contraseña de acceso.</p>
+      <p className="mt-1 text-sm text-stone-600">Cambia tu contraseña de acceso.</p>
 
       <form onSubmit={handleSubmit} className="mt-4 max-w-sm space-y-4">
         <div>

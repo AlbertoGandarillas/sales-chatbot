@@ -31,11 +31,11 @@ export default async function DashboardLayout({
             <span className="text-sm font-semibold text-stone-900">
               {business.name}
             </span>
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">
+            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
               {business.vertical === 'retail' ? 'Retail' : 'Panadería'}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-sm text-stone-500">
+          <div className="flex items-center gap-3 text-sm text-stone-600">
             <span className="hidden sm:inline">{user.email}</span>
             <form action="/auth/signout" method="post">
               <button

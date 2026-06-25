@@ -4,6 +4,32 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — Fix M7 (upsert) + Accesibilidad WCAG 2 AA
+
+**Bug resync catálogo.** Al pulsar "Resincronizar catálogo" fallaba con
+`there is no unique or exclusion constraint matching the ON CONFLICT specification`.
+Causa: el índice `uq_products_business_external` era **parcial**
+(`WHERE external_id IS NOT NULL`) y Postgres no lo acepta como destino de
+`ON CONFLICT (business_id, external_id)` inferido por columnas.
+
+- Migración `20260625120000_products_unique_external_full.sql`: reemplaza el
+  índice por uno **no parcial** sobre `(business_id, external_id)`. Los productos
+  manuales con `external_id NULL` siguen permitidos (los NULL son distintos entre
+  sí en un índice único de Postgres). Aplicada con `supabase db push`.
+
+**Accesibilidad (contraste de texto).** Reportado por test de contraste.
+
+- `text-stone-400` (~2.5:1 sobre blanco, falla) y `text-stone-500` → `text-stone-600`
+  (~7:1, pasa AA/AAA) en todos los componentes: landing, login, signup,
+  forgot/reset password, onboarding, dashboard (resumen, catálogo, perfil, layout).
+- `globals.css`: `::placeholder` con color fijo `#78716c` (≥4.5:1) y se quitó el
+  override `prefers-color-scheme: dark` que ponía texto claro sobre superficies
+  blancas (la app es de tema claro).
+- Colores de estado (`text-red-600` 4.8:1, `text-green-700` 4.9:1,
+  `bg-amber-100/text-amber-800`) ya cumplían AA y se mantienen.
+
+---
+
 ## 2026-06-25 — Auth: login email+password (magic link pasa a opcional)
 
 **Cambio de alcance pedido por el usuario.** El spec v2 definía solo magic link; ahora el método principal es **email + contraseña**, con magic link como alternativa.

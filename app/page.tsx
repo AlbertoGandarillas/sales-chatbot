@@ -97,7 +97,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-stone-200">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-stone-500">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-stone-600">
           © {new Date().getFullYear()} Aynibot — Agente de ventas por WhatsApp.
         </div>
       </footer>

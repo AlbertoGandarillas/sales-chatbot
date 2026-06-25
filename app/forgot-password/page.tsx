@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
           Aynibot
         </Link>
         <h1 className="mt-4 text-2xl font-bold text-stone-900">Recuperar contraseña</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           Te enviaremos un enlace para crear una nueva contraseña.
         </p>
 
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
           </p>
         )}
 
-        <p className="mt-6 text-center text-sm text-stone-500">
+        <p className="mt-6 text-center text-sm text-stone-600">
           <Link href="/login" className="font-medium text-stone-900 hover:underline">
             Volver a iniciar sesión
           </Link>

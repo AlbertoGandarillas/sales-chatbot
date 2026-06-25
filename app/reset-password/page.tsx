@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
     <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
       <div className="w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-stone-900">Nueva contraseña</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           Define tu nueva contraseña para acceder.
         </p>
 

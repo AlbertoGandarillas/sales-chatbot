@@ -62,7 +62,7 @@ function LoginForm() {
           Aynibot
         </Link>
         <h1 className="mt-4 text-2xl font-bold text-stone-900">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           {magic
             ? 'Te enviaremos un enlace mágico a tu correo.'
             : 'Ingresa con tu correo y contraseña.'}
@@ -95,7 +95,7 @@ function LoginForm() {
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-stone-500 hover:text-stone-800"
+                  className="text-xs text-stone-600 hover:text-stone-800"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -126,7 +126,7 @@ function LoginForm() {
             setMagic((v) => !v)
             setMessage(null)
           }}
-          className="mt-4 w-full text-center text-sm text-stone-500 hover:text-stone-800"
+          className="mt-4 w-full text-center text-sm text-stone-600 hover:text-stone-800"
         >
           {magic ? 'Usar contraseña' : 'Entrar con enlace mágico'}
         </button>
@@ -141,7 +141,7 @@ function LoginForm() {
           </p>
         )}
 
-        <p className="mt-6 text-center text-sm text-stone-500">
+        <p className="mt-6 text-center text-sm text-stone-600">
           ¿No tienes cuenta?{' '}
           <Link href="/signup" className="font-medium text-stone-900 hover:underline">
             Crear cuenta

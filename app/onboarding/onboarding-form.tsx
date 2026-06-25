@@ -51,7 +51,7 @@ export function OnboardingForm() {
             htmlFor="shopify_domain"
             className="block text-sm font-medium text-stone-700"
           >
-            Dominio Shopify <span className="text-stone-400">(opcional)</span>
+            Dominio Shopify <span className="text-stone-600">(opcional)</span>
           </label>
           <input
             id="shopify_domain"
@@ -60,7 +60,7 @@ export function OnboardingForm() {
             placeholder="www.tutienda.com"
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
           />
-          <p className="mt-1 text-xs text-stone-400">
+          <p className="mt-1 text-xs text-stone-600">
             Puedes completarlo después en tu perfil.
           </p>
         </div>

@@ -79,7 +79,7 @@ function SignupForm() {
           Aynibot
         </Link>
         <h1 className="mt-4 text-2xl font-bold text-stone-900">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
           {magic
             ? 'Te enviaremos un enlace mágico a tu correo.'
             : 'Regístrate con tu correo y una contraseña.'}
@@ -151,7 +151,7 @@ function SignupForm() {
             setMagic((v) => !v)
             setMessage(null)
           }}
-          className="mt-4 w-full text-center text-sm text-stone-500 hover:text-stone-800"
+          className="mt-4 w-full text-center text-sm text-stone-600 hover:text-stone-800"
         >
           {magic ? 'Usar contraseña' : 'Registrarme con enlace mágico'}
         </button>
@@ -166,7 +166,7 @@ function SignupForm() {
           </p>
         )}
 
-        <p className="mt-6 text-center text-sm text-stone-500">
+        <p className="mt-6 text-center text-sm text-stone-600">
           ¿Ya tienes cuenta?{' '}
           <Link href="/login" className="font-medium text-stone-900 hover:underline">
             Iniciar sesión

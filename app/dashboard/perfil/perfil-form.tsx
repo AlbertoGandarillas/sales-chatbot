@@ -35,7 +35,7 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
         <span className="font-medium text-stone-700">
           Información específica del negocio
         </span>
-        <span className="mt-0.5 block text-xs text-stone-400">
+        <span className="mt-0.5 block text-xs text-stone-600">
           Horario, políticas, tono, datos de entrega/pago. El agente usa esto como
           contexto adicional. Las reglas base del bot no se editan aquí.
         </span>
@@ -50,7 +50,7 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
 
       <label className="block text-sm">
         <span className="font-medium text-stone-700">WhatsApp del dueño</span>
-        <span className="mt-0.5 block text-xs text-stone-400">
+        <span className="mt-0.5 block text-xs text-stone-600">
           Para recibir notificaciones (encargos, escalamientos). Formato internacional, ej. 51999000111.
         </span>
         <input
@@ -63,7 +63,7 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
       {isRetail && (
         <label className="block text-sm">
           <span className="font-medium text-stone-700">Dominio Shopify</span>
-          <span className="mt-0.5 block text-xs text-stone-400">
+          <span className="mt-0.5 block text-xs text-stone-600">
             Para sincronizar el catálogo. Ej: www.tutienda.com
           </span>
           <input
@@ -74,7 +74,7 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
         </label>
       )}
 
-      <div className="rounded-lg bg-stone-50 p-3 text-xs text-stone-500">
+      <div className="rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
         No editable desde aquí: tipo de negocio ({isRetail ? 'retail' : 'panadería'}),
         número de WhatsApp del bot y credenciales técnicas.
       </div>

@@ -22,9 +22,9 @@ const STATUS_LABEL: Record<string, string> = {
 function Card({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-stone-500">{label}</p>
+      <p className="text-sm text-stone-600">{label}</p>
       <p className="mt-1 text-2xl font-bold text-stone-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-stone-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-stone-600">{hint}</p>}
     </div>
   )
 }
@@ -97,12 +97,12 @@ export default async function DashboardResumen() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Conversaciones recientes */}
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-600">
             Conversaciones recientes
           </h2>
           <div className="space-y-2">
             {conversations.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500">
+              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
                 Aún no hay conversaciones.
               </p>
             ) : (
@@ -113,7 +113,7 @@ export default async function DashboardResumen() {
                 >
                   <div>
                     <p className="font-medium text-stone-900">{c.customer_phone}</p>
-                    <p className="text-xs text-stone-400">{formatDate(c.updated_at)}</p>
+                    <p className="text-xs text-stone-600">{formatDate(c.updated_at)}</p>
                   </div>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -132,12 +132,12 @@ export default async function DashboardResumen() {
 
         {/* Pedidos recientes */}
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-600">
             Pedidos recientes
           </h2>
           <div className="space-y-2">
             {orders.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500">
+              <p className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-600">
                 Aún no hay pedidos.
               </p>
             ) : (
@@ -150,13 +150,13 @@ export default async function DashboardResumen() {
                     <p className="font-medium text-stone-900">
                       {o.is_custom_order ? 'Encargo especial' : 'Pedido'}
                     </p>
-                    <p className="text-xs text-stone-400">{formatDate(o.created_at)}</p>
+                    <p className="text-xs text-stone-600">{formatDate(o.created_at)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-stone-900">
                       {o.is_custom_order ? '—' : formatSoles(Number(o.total_soles))}
                     </p>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-stone-600">
                       {STATUS_LABEL[o.status] ?? o.status}
                     </p>
                   </div>
@@ -167,7 +167,7 @@ export default async function DashboardResumen() {
         </section>
       </div>
 
-      <p className="mt-8 text-sm text-stone-400">
+      <p className="mt-8 text-sm text-stone-600">
         Gestiona tu catálogo en{' '}
         <Link href="/dashboard/catalogo" className="underline hover:text-stone-600">
           Catálogo

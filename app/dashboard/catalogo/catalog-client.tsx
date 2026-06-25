@@ -273,7 +273,7 @@ export function CatalogClient({
       )}
 
       {visible.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-stone-300 bg-white p-8 text-center text-stone-500">
+        <p className="rounded-xl border border-dashed border-stone-300 bg-white p-8 text-center text-stone-600">
           No hay productos {onlyReview ? 'por revisar' : 'todavía'}.
         </p>
       ) : (
@@ -300,12 +300,12 @@ export function CatalogClient({
                       </span>
                     )}
                     {!p.available && (
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">
+                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
                         No disponible
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-stone-600">
                     {isRetail
                       ? [p.talla_range && `Tallas ${p.talla_range}`, p.color_o_material]
                           .filter(Boolean)
