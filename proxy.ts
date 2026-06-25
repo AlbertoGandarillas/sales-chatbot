@@ -29,16 +29,16 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
-  // Proteger /dashboard: sin sesión → /login
-  if (!user && path.startsWith('/dashboard')) {
+  // Proteger rutas autenticadas: sin sesión → /signup
+  if (!user && (path.startsWith('/dashboard') || path.startsWith('/onboarding'))) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/signup'
     url.searchParams.set('next', path)
     return NextResponse.redirect(url)
   }
 
-  // Si ya hay sesión y entra a /login, mandarlo al dashboard
-  if (user && path === '/login') {
+  // Si ya hay sesión y entra a /signup o /login, mandarlo al dashboard
+  if (user && (path === '/signup' || path === '/login')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     url.search = ''
@@ -49,5 +49,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/onboarding/:path*', '/signup', '/login'],
 }

@@ -4,6 +4,41 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-24 — M6: Dashboard (resumen + catálogo + perfil) + limpieza
+
+**Spec** (`auth-dashboard-spec-v2.md`).
+
+**Implementación real**:
+- `lib/dashboard.ts` → `getOwnerBusiness()` (lee la fila del dueño vía RLS).
+- `app/dashboard/layout.tsx`: barra con negocio/vertical/logout + nav (Resumen / Catálogo / Perfil).
+- `/dashboard` (resumen, server): tarjetas (pedidos pendientes, pedidos del mes, costo del mes desde `usage_logs`) + conversaciones recientes (con `mode` bot/humano) + pedidos recientes. Todo de solo lectura.
+- `/dashboard/catalogo`: tabla + Server Actions `saveProduct`/`deleteProduct`/`toggleAvailable`. Crear/editar con formulario por vertical (bakery: categoría + encargo; retail: `talla_range`/`color_o_material`/`image_url`). Filtro "Por revisar" (`needs_review`); al guardar se pone `needs_review=false`.
+- `/dashboard/perfil`: Server Action `updateProfile` (edita `name`, `system_prompt_custom`, `owner_whatsapp_number`, y `shopify_domain` solo en retail). No expone reglas base ni credenciales WhatsApp.
+
+**Desvíos respecto al plan**:
+- El `/dashboard` v1 era un panel client realtime con acciones de pago/entrega; se reemplazó por el **resumen** de M6. Las acciones de pago/entrega se reconstruyen en **M9** (operaciones).
+- El botón "Resincronizar catálogo" se muestra solo si hay `shopify_domain` pero queda **deshabilitado** hasta **M7** (cuando exista `ingestShopifyCatalog`).
+- Limpieza solicitada: se eliminaron `app/supabase-demo/`, `lib/db-service.ts` y los SVG por defecto de create-next-app en `public/`. (Tras borrar la demo hubo que limpiar `.next` por tipos generados obsoletos.)
+
+---
+
+## 2026-06-24 — M5: Landing Aynibot + signup + onboarding
+
+**Spec** (`landing-signup-spec-v2.md`).
+
+**Implementación real**:
+- `/` reemplaza la landing default por la de **Aynibot** (hero, casos de uso panadería/retail, CTA → `/signup`). Metadata actualizada en `app/layout.tsx`.
+- `/signup`: formulario de magic link (`signInWithOtp` con `emailRedirectTo=/auth/callback`). Sirve para registro y login.
+- `/onboarding`: guard (autenticado + sin negocio) + `OnboardingForm` (cliente) + Server Action `createBusiness` que genera `slug` (reintento ante colisión `23505`) e inserta con `owner_user_id = auth.uid()`.
+- `proxy.ts`: protege `/dashboard/*` y `/onboarding/*` (sin sesión → `/signup`); authenticated en `/signup`/`/login` → `/dashboard`.
+
+**Desvíos respecto al plan**:
+- El formulario canónico quedó en `/signup`; `/login` (creado en M4) ahora es un **alias que redirige a `/signup`** preservando query.
+- La lógica post-login (onboarding vs dashboard) no se puso en `/auth/callback`; la resuelve el guard de `app/dashboard/layout.tsx` (sin negocio → `/onboarding`). Resultado equivalente con una sola fuente de verdad.
+- WhatsApp **no** se pide en onboarding (es config técnica posterior), según spec.
+
+---
+
 ## 2026-06-24 — M4: Supabase Auth (magic link) + RLS por dueño
 
 **Spec** (`auth-dashboard-spec-v2.md`, `sprint-plan-v2.md` M4).

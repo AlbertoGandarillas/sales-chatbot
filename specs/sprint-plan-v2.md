@@ -106,8 +106,10 @@ M1 (esquema + alta usuarios/negocios)
 5. `middleware.ts` de protección.
 
 **Criterio de aceptación**:
-- [ ] Flujo completo: landing → signup → correo → callback → onboarding/dashboard.
-- [ ] Cruje y Betta entran directo a dashboard (sin onboarding).
+- [x] Flujo completo: landing → signup → correo → callback → onboarding/dashboard.
+- [x] Cruje y Betta entran directo a dashboard (sin onboarding).
+
+**Estado**: ✅ Completado. `/` landing Aynibot; `/signup` (magic link); `/auth/callback` (de M4); `/onboarding` (form + Server Action `createBusiness`); `proxy.ts` protege `/dashboard` y `/onboarding`. `/login` quedó como alias → `/signup`. La redirección onboarding-vs-dashboard la resuelve el guard de `app/dashboard/layout.tsx`. Build OK.
 
 ---
 
@@ -120,9 +122,11 @@ M1 (esquema + alta usuarios/negocios)
 3. `/dashboard/perfil` editar `system_prompt_custom` y campos permitidos.
 
 **Criterio de aceptación**:
-- [ ] CRUD de catálogo funciona por negocio.
-- [ ] Perfil edita prompt custom; no expone reglas base.
-- [ ] Resumen muestra costo del mes.
+- [x] CRUD de catálogo funciona por negocio (crear/editar/eliminar/mostrar-ocultar, filtro "Por revisar").
+- [x] Perfil edita `name`, `system_prompt_custom`, `owner_whatsapp_number` y `shopify_domain` (retail); no expone reglas base ni credenciales.
+- [x] Resumen muestra conversaciones y pedidos recientes, tarjetas (pendientes, del mes) y costo del mes (de `usage_logs`).
+
+**Estado**: ✅ Completado. `lib/dashboard.ts` (`getOwnerBusiness`); `app/dashboard/layout.tsx` con nav (Resumen/Catálogo/Perfil); `/dashboard` resumen (server); `/dashboard/catalogo` (Server Actions CRUD + filtro needs_review + botón resync deshabilitado hasta M7); `/dashboard/perfil` (Server Action). Build + typecheck OK. Botón "Resincronizar" visible solo si hay `shopify_domain` pero queda **deshabilitado** hasta M7.
 
 ---
 
