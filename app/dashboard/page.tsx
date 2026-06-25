@@ -52,7 +52,9 @@ export default async function DashboardResumen() {
       .limit(5),
     supabase
       .from('orders')
-      .select('id, status, total_soles, is_custom_order, payment_status, created_at')
+      .select(
+        'id, status, total_soles, is_custom_order, payment_status, conversation_id, created_at'
+      )
       .eq('business_id', business.id)
       .order('created_at', { ascending: false })
       .limit(5),
@@ -107,9 +109,10 @@ export default async function DashboardResumen() {
               </p>
             ) : (
               conversations.map((c) => (
-                <div
+                <Link
                   key={c.id}
-                  className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4"
+                  href={`/dashboard/conversaciones/${c.id}`}
+                  className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 hover:bg-stone-50"
                 >
                   <div>
                     <p className="font-medium text-stone-900">{c.customer_phone}</p>
@@ -119,12 +122,12 @@ export default async function DashboardResumen() {
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       c.mode === 'human'
                         ? 'bg-amber-100 text-amber-800'
-                        : 'bg-stone-100 text-stone-600'
+                        : 'bg-stone-100 text-stone-700'
                     }`}
                   >
                     {c.mode === 'human' ? 'Humano' : 'Bot'}
                   </span>
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -141,27 +144,42 @@ export default async function DashboardResumen() {
                 Aún no hay pedidos.
               </p>
             ) : (
-              orders.map((o) => (
-                <div
-                  key={o.id}
-                  className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4"
-                >
-                  <div>
-                    <p className="font-medium text-stone-900">
-                      {o.is_custom_order ? 'Encargo especial' : 'Pedido'}
-                    </p>
-                    <p className="text-xs text-stone-600">{formatDate(o.created_at)}</p>
+              orders.map((o) => {
+                const inner = (
+                  <>
+                    <div>
+                      <p className="font-medium text-stone-900">
+                        {o.is_custom_order ? 'Encargo especial' : 'Pedido'}
+                      </p>
+                      <p className="text-xs text-stone-600">{formatDate(o.created_at)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-stone-900">
+                        {o.is_custom_order ? '—' : formatSoles(Number(o.total_soles))}
+                      </p>
+                      <p className="text-xs text-stone-600">
+                        {STATUS_LABEL[o.status] ?? o.status}
+                      </p>
+                    </div>
+                  </>
+                )
+                return o.conversation_id ? (
+                  <Link
+                    key={o.id}
+                    href={`/dashboard/conversaciones/${o.conversation_id}`}
+                    className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 hover:bg-stone-50"
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div
+                    key={o.id}
+                    className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4"
+                  >
+                    {inner}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-stone-900">
-                      {o.is_custom_order ? '—' : formatSoles(Number(o.total_soles))}
-                    </p>
-                    <p className="text-xs text-stone-600">
-                      {STATUS_LABEL[o.status] ?? o.status}
-                    </p>
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </section>

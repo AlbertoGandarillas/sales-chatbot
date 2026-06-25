@@ -50,17 +50,24 @@ function buildContextPrompt(ctx: AgentContext): string {
   })
 }
 
-async function getOrCreateConversation(businessId: string, customerPhone: string) {
+type ConversationMode = 'bot' | 'human'
+
+async function getOrCreateConversation(
+  businessId: string,
+  customerPhone: string
+): Promise<{ id: string; mode: ConversationMode }> {
   const db = createServiceClient()
 
   const { data: existing } = await db
     .from('conversations')
-    .select('id')
+    .select('id, mode')
     .eq('business_id', businessId)
     .eq('customer_phone', customerPhone)
     .maybeSingle()
 
-  if (existing) return existing.id
+  if (existing) {
+    return { id: existing.id, mode: (existing.mode as ConversationMode) ?? 'bot' }
+  }
 
   const { data: created, error } = await db
     .from('conversations')
@@ -69,11 +76,11 @@ async function getOrCreateConversation(businessId: string, customerPhone: string
       customer_phone: customerPhone,
       status: 'active',
     })
-    .select('id')
+    .select('id, mode')
     .single()
 
   if (error) throw error
-  return created.id
+  return { id: created.id, mode: (created.mode as ConversationMode) ?? 'bot' }
 }
 
 async function saveMessage(
@@ -262,13 +269,44 @@ Pedido ID: ${order.id}`
   }
 }
 
+async function escalarAHumano(ctx: AgentContext, motivo: string) {
+  const db = createServiceClient()
+
+  await db
+    .from('conversations')
+    .update({ mode: 'human' })
+    .eq('id', ctx.conversationId)
+
+  const ownerMessage = `🙋 Derivación a humano — ${ctx.business.name}
+
+Motivo: ${motivo}
+Cliente: ${ctx.customerPhone}
+Conversación: ${ctx.conversationId}
+
+Entra al dashboard para tomar el control y responder.`
+
+  try {
+    await notifyOwner(ownerMessage, {
+      ownerNumber: ctx.business.owner_whatsapp_number,
+      ...waCreds(ctx.business),
+    })
+  } catch (err) {
+    console.error('[agent] No se pudo notificar la derivación al dueño:', err)
+  }
+
+  return {
+    escalated: true,
+    message: `Avísale al cliente, con tus palabras, que en un momento lo atiende alguien del equipo de ${ctx.business.name}.`,
+  }
+}
+
 async function consultarEstadoPedido(conversationId: string) {
   const db = createServiceClient()
 
   const { data, error } = await db
     .from('orders')
     .select(
-      'id, status, payment_status, delivery_status, total_soles, is_custom_order, items, custom_order_details, created_at'
+      'id, status, payment_status, delivery_status, total_soles, is_custom_order, items, custom_order_details, estimated_delivery_date, created_at'
     )
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
@@ -294,6 +332,7 @@ async function consultarEstadoPedido(conversationId: string) {
       status: order.status,
       payment_status: order.payment_status,
       delivery_status: order.delivery_status,
+      estimated_delivery_date: order.estimated_delivery_date ?? null,
       total_soles: Number(order.total_soles),
       is_custom_order: order.is_custom_order,
       items_summary: itemsSummary,
@@ -326,6 +365,8 @@ async function executeTool(
       })
     case 'consultar_estado_pedido':
       return consultarEstadoPedido(ctx.conversationId)
+    case 'escalar_a_humano':
+      return escalarAHumano(ctx, String(args.motivo ?? 'Sin motivo'))
     default:
       throw new Error(`Tool desconocida: ${name}`)
   }
@@ -374,7 +415,10 @@ export async function processIncomingMessage(
   customerPhone: string,
   text: string
 ): Promise<void> {
-  const conversationId = await getOrCreateConversation(business.id, customerPhone)
+  const { id: conversationId, mode } = await getOrCreateConversation(
+    business.id,
+    customerPhone
+  )
   const ctx: AgentContext = {
     conversationId,
     customerPhone,
@@ -382,6 +426,15 @@ export async function processIncomingMessage(
   }
 
   await saveMessage(conversationId, 'user', text)
+
+  // Handoff: si un humano tomó la conversación, el bot no responde.
+  // El mensaje queda guardado para que el dueño lo lea en el dashboard.
+  if (mode === 'human') {
+    console.log(
+      `[agent] Conversación ${conversationId} en modo humano; el bot no responde.`
+    )
+    return
+  }
 
   try {
     const reply = await generateReply(ctx)

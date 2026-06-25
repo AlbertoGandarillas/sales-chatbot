@@ -171,9 +171,11 @@ M1 (esquema + alta usuarios/negocios)
 4. Confirmación de pago manual + `payment_note`.
 
 **Criterio de aceptación**:
-- [ ] Handoff funciona end-to-end (escala, notifica, bot calla, dueño responde).
-- [ ] Fecha de entrega editable y comunicada por el agente.
-- [ ] Confirmación de pago manual con nota.
+- [x] Handoff funciona end-to-end (escala, notifica, bot calla, dueño responde).
+- [x] Fecha de entrega editable y comunicada por el agente.
+- [x] Confirmación de pago manual con nota.
+
+**Estado**: ✅ Completado. Tool `escalar_a_humano` (ambos verticales) + handler en `lib/agent.ts` (set `mode='human'`, `notifyOwner`, el bot avisa al cliente). `processIncomingMessage` calla al bot si `mode='human'`. `consultar_estado_pedido` incluye `estimated_delivery_date`; instrucciones de handoff/entrega en `buildSystemPrompt` (sin tocar el `BAKERY_TEMPLATE` literal). Dashboard: `/dashboard/conversaciones` (lista) y `/dashboard/conversaciones/[id]` (chat estilo WhatsApp con toggle bot/humano, respuesta manual vía WhatsApp como `human_agent`, y panel de pedidos con fecha de entrega editable + confirmar pago + `payment_note`). Server Actions RLS-scoped. Sin migración nueva (columnas ya en M1). Build + typecheck OK.
 
 ---
 

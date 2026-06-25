@@ -5,6 +5,7 @@ import { getOwnerBusiness } from '@/lib/dashboard'
 
 const NAV = [
   { href: '/dashboard', label: 'Resumen' },
+  { href: '/dashboard/conversaciones', label: 'Conversaciones' },
   { href: '/dashboard/catalogo', label: 'Catálogo' },
   { href: '/dashboard/perfil', label: 'Perfil' },
 ]

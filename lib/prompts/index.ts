@@ -87,6 +87,14 @@ export function buildSystemPrompt(
     )
   }
 
+  // Reglas operativas comunes a todos los verticales (handoff + fecha de entrega).
+  // Se agregan aquí para no modificar los textos literales de las plantillas.
+  parts.push(
+    `\nOPERACIONES:
+- Si el cliente pide hablar con una persona, está molesto, tiene un reclamo o el caso excede lo que puedes resolver, usa la herramienta escalar_a_humano con un motivo breve. Luego avísale, con tus palabras, que en un momento lo atiende alguien del equipo. Nunca lo dejes sin respuesta.
+- Cuando consultes el estado de un pedido y este tenga estimated_delivery_date, comunica esa fecha tal cual (ej. "tu pedido llegaría el 2 de julio"). Si no hay fecha, no la inventes.`
+  )
+
   parts.push(
     `\nCONVERSACIÓN ACTUAL:
 - conversation_id: ${ctx.conversationId}

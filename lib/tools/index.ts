@@ -126,6 +126,25 @@ const iniciarEncargoPersonalizado: ChatCompletionTool = {
   },
 }
 
+const escalarAHumano: ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'escalar_a_humano',
+    description:
+      'Deriva la conversación a una persona del equipo cuando el cliente lo pide explícitamente, está molesto, o el caso excede lo que puedes resolver (reclamos, casos especiales, negociación). Tras llamarla, avisa al cliente que alguien lo atenderá.',
+    parameters: {
+      type: 'object',
+      properties: {
+        motivo: {
+          type: 'string',
+          description: 'Motivo breve de la derivación (para el dueño)',
+        },
+      },
+      required: ['motivo'],
+    },
+  },
+}
+
 const consultarEstadoPedido: ChatCompletionTool = {
   type: 'function',
   function: {
@@ -144,7 +163,12 @@ const consultarEstadoPedido: ChatCompletionTool = {
 
 export function getToolsForVertical(vertical: Vertical): ChatCompletionTool[] {
   if (vertical === 'retail') {
-    return [buscarProductosRetail, crearPedidoRetail, consultarEstadoPedido]
+    return [
+      buscarProductosRetail,
+      crearPedidoRetail,
+      consultarEstadoPedido,
+      escalarAHumano,
+    ]
   }
   // bakery (default)
   return [
@@ -152,5 +176,6 @@ export function getToolsForVertical(vertical: Vertical): ChatCompletionTool[] {
     crearPedidoBakery,
     iniciarEncargoPersonalizado,
     consultarEstadoPedido,
+    escalarAHumano,
   ]
 }

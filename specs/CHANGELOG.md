@@ -4,6 +4,45 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-25 — M9: Handoff humano + fecha de entrega + pagos + detalle de conversación
+
+**Spec** (`operations-spec-v2.md`). Las columnas (`conversations.mode`,
+`orders.estimated_delivery_date`, `orders.payment_confirmed_at`,
+`orders.payment_note`, rol `human_agent`) ya existían desde la migración M1, así
+que **no hizo falta migración nueva**.
+
+**Handoff a humano**:
+- Tool `escalar_a_humano(motivo)` añadida a ambos verticales (`lib/tools/index.ts`).
+- `lib/agent.ts`: handler `escalarAHumano` → `UPDATE conversations SET mode='human'`,
+  `notifyOwner(motivo, cliente, conversación)` y devuelve al modelo la instrucción
+  de avisar al cliente (el bot nunca queda en silencio en ese turno).
+- `getOrCreateConversation` ahora devuelve `{ id, mode }`. En
+  `processIncomingMessage`, si `mode==='human'` el mensaje del cliente se guarda
+  pero **el bot no responde** (lo atiende el dueño desde el dashboard).
+
+**Fecha de entrega**:
+- `consultar_estado_pedido` incluye `estimated_delivery_date`.
+- Instrucción operativa agregada en `buildSystemPrompt` (común a ambos verticales,
+  **sin tocar el texto literal de `BAKERY_TEMPLATE`** para preservar la regresión de
+  Cruje): comunica la fecha si existe, no inventarla si no.
+
+**Detalle de conversación (estilo WhatsApp)** — pedido del usuario:
+- `/dashboard/conversaciones`: lista de todas las conversaciones del negocio (RLS).
+- `/dashboard/conversaciones/[id]`: vista de chat con burbujas (entrante blanco a la
+  izquierda; bot verde claro y `human_agent` verde a la derecha), encabezado verde,
+  toggle **Pausar bot / Devolver al bot**, caja de respuesta manual (solo en modo
+  humano) que envía por WhatsApp con las credenciales del negocio y guarda el mensaje
+  como `human_agent`, y panel lateral de **pedidos** con fecha de entrega editable y
+  **Confirmar pago** + `payment_note`.
+- Server Actions en `[id]/actions.ts` (`toggleMode`, `sendManualReply`,
+  `setDeliveryDate`, `confirmPayment`), todas RLS-scoped al dueño autenticado.
+- Nav del dashboard con enlace "Conversaciones"; las conversaciones y pedidos
+  recientes del resumen ahora enlazan al detalle.
+
+Build + typecheck OK.
+
+---
+
 ## 2026-06-25 — Fix M7 (upsert) + Accesibilidad WCAG 2 AA
 
 **Bug resync catálogo.** Al pulsar "Resincronizar catálogo" fallaba con
