@@ -75,14 +75,14 @@ const FEATURES: { title: string; body: string; tone: BadgeTone; tag: string }[] 
 
 const USE_CASES: { badge: string; tone: BadgeTone; name: string; kind: string; body: string }[] = [
   {
-    badge: 'Panadería',
+    badge: 'Catálogo propio',
     tone: 'primary',
     name: 'Cruje',
     kind: 'Panadería y pastelería',
-    body: 'Toma pedidos del catálogo y arma encargos de tortas con fecha de entrega, avisando al dueño cuando entra un pedido especial.',
+    body: 'Carga su catálogo a mano, toma pedidos y arma encargos de tortas con fecha de entrega, avisando al dueño cuando entra un pedido especial.',
   },
   {
-    badge: 'Retail Shopify',
+    badge: 'Tienda Shopify',
     tone: 'info',
     name: 'Betta',
     kind: 'Retail de zapatillas en Shopify',
@@ -92,19 +92,23 @@ const USE_CASES: { badge: string; tone: BadgeTone; name: string; kind: string; b
 
 const BUSINESS_TYPES = [
   {
-    title: 'Panaderías y pastelerías',
-    body: 'Catálogo de productos + encargos personalizados con fecha de entrega.',
+    title: 'Negocios con catálogo propio',
+    body: 'Panaderías, bodegas, tiendas y cualquier negocio con inventario sencillo. Cargas tu catálogo a mano y, si quieres, recibes encargos a medida.',
   },
   {
-    title: 'Tiendas Shopify (retail)',
-    body: 'Catálogo de productos con variantes de talla y color, sincronizado desde Shopify.',
+    title: 'Tiendas Shopify',
+    body: 'Catálogo sincronizado automáticamente desde Shopify, con variantes de talla y color.',
   },
 ]
 
 const FAQS = [
   {
     q: '¿Necesito tener mi tienda en Shopify?',
-    a: 'Solo si quieres el catálogo sincronizado de retail. Las panaderías cargan su catálogo a mano y no necesitan Shopify.',
+    a: 'No. Si tienes un inventario sencillo (panadería, bodega, tienda) cargas tu catálogo a mano. Shopify solo se necesita si quieres sincronizar tu catálogo automáticamente.',
+  },
+  {
+    q: '¿Puedo empezar sin Shopify y conectarlo después?',
+    a: 'Sí. Puedes arrancar con tu catálogo propio y, cuando migres a Shopify, conectarlo desde tu perfil y sincronizar. Tus productos cargados a mano se conservan y no se reconfigura tu WhatsApp.',
   },
   {
     q: '¿Qué pasa si un cliente necesita algo muy particular?',
@@ -286,7 +290,7 @@ export default function Home() {
                 Dos negocios reales ya operando con Aynibot
               </h2>
               <p className="mt-3 text-muted">
-                Cada vertical automatiza un flujo distinto de atención y pedidos.
+                Cada uno automatiza un flujo distinto de atención y pedidos.
               </p>
             </div>
             <div className="mt-10 grid gap-6 sm:grid-cols-2">
@@ -331,10 +335,13 @@ export default function Home() {
               ))}
             </div>
             <div className="mt-6 rounded-card border border-border bg-surface-muted p-5 text-sm text-muted">
-              Hoy Aynibot está enfocado en estos dos tipos de negocio. Si el tuyo es
-              distinto,{' '}
+              Puedes empezar con tu catálogo propio y{' '}
+              <span className="font-medium text-foreground">conectar Shopify más
+              adelante</span>{' '}
+              cuando crezcas, sin rehacer tu cuenta ni tu WhatsApp. ¿Tu negocio es
+              distinto?{' '}
               <Link href="/signup" className="font-medium text-primary hover:underline">
-                escríbenos
+                Escríbenos
               </Link>{' '}
               y lo evaluamos.
             </div>

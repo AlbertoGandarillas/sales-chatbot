@@ -1,12 +1,13 @@
 import { createServiceClient } from '@/lib/supabase'
 
-export type Vertical = 'bakery' | 'retail'
+export type CatalogSource = 'manual' | 'shopify'
 
 export interface Business {
   id: string
   name: string
   slug: string
-  vertical: Vertical
+  catalog_source: CatalogSource
+  supports_custom_orders: boolean
   whatsapp_phone_number_id: string | null
   whatsapp_token: string | null
   owner_whatsapp_number: string | null
@@ -16,7 +17,7 @@ export interface Business {
 }
 
 const BUSINESS_COLUMNS =
-  'id, name, slug, vertical, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id'
+  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id'
 
 export async function getBusinessByPhoneNumberId(
   phoneNumberId: string

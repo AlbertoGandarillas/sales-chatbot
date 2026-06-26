@@ -21,14 +21,14 @@ const CRUJE = 'a0000000-0000-4000-8000-000000000001'
 
 const { data: businesses } = await admin
   .from('businesses')
-  .select('id, name, slug, vertical, whatsapp_phone_number_id, shopify_domain, owner_user_id')
+  .select('id, name, slug, catalog_source, whatsapp_phone_number_id, shopify_domain, owner_user_id')
   .order('created_at', { ascending: true })
 
 console.log('businesses:')
 console.table(
   businesses.map((b) => ({
     name: b.name,
-    vertical: b.vertical,
+    catalog_source: b.catalog_source,
     phone_id: b.whatsapp_phone_number_id ?? '—',
     shopify: b.shopify_domain ?? '—',
     owner: b.owner_user_id ? b.owner_user_id.slice(0, 8) : '—',

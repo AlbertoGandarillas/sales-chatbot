@@ -30,7 +30,9 @@ export default async function DashboardLayout({
               {business.name}
             </span>
             <Badge tone="primary">
-              {business.vertical === 'retail' ? 'Retail' : 'Panadería'}
+              {business.catalog_source === 'shopify'
+                ? 'Tienda Shopify'
+                : 'Catálogo propio'}
             </Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted">

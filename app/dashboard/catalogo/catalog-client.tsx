@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
-import type { Vertical } from '@/lib/business-resolver'
+import type { CatalogSource } from '@/lib/business-resolver'
 import {
   saveProduct,
   deleteProduct,
@@ -55,32 +55,30 @@ function ResyncButton() {
   )
 }
 
-const BAKERY_CATEGORIES = [
-  ['panes', 'Panes'],
-  ['pasteleria', 'Pastelería'],
-  ['tortas', 'Tortas'],
-  ['bebidas', 'Bebidas'],
-  ['otros', 'Otros'],
-] as const
-
-const selectClass =
-  'h-10 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm text-foreground transition-colors focus-visible:border-primary'
+const CATEGORY_SUGGESTIONS = [
+  'destacados',
+  'ofertas',
+  'bebidas',
+  'comida',
+  'abarrotes',
+  'ropa',
+  'calzado',
+  'accesorios',
+  'otros',
+]
 
 function formatSoles(n: number) {
   return `S/ ${Number(n).toFixed(2)}`
 }
 
 function ProductForm({
-  vertical,
   product,
   onDone,
 }: {
-  vertical: Vertical
   product?: Product
   onDone: () => void
 }) {
   const [state, formAction, pending] = useActionState(saveProduct, initialState)
-  const isRetail = vertical === 'retail'
 
   useEffect(() => {
     if (state.ok) onDone()
@@ -109,60 +107,60 @@ function ProductForm({
         </Field>
       </div>
 
-      {!isRetail && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Categoría" htmlFor="category">
-            <select
-              id="category"
-              name="category"
-              defaultValue={product?.category ?? 'otros'}
-              className={selectClass}
-            >
-              {BAKERY_CATEGORIES.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <label className="flex items-center gap-2 pt-6 text-sm text-foreground">
-            <input
-              type="checkbox"
-              name="is_custom_order"
-              defaultChecked={product?.is_custom_order ?? false}
-              className="h-4 w-4 accent-primary"
-            />
-            Es encargo personalizado (sin precio fijo)
-          </label>
-        </div>
-      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Categoría" htmlFor="category" hint="Texto libre.">
+          <Input
+            id="category"
+            name="category"
+            list="category-suggestions"
+            placeholder="Ej: bebidas, calzado, otros"
+            defaultValue={product?.category ?? 'otros'}
+          />
+          <datalist id="category-suggestions">
+            {CATEGORY_SUGGESTIONS.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </Field>
+        <label className="flex items-center gap-2 pt-6 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="is_custom_order"
+            defaultChecked={product?.is_custom_order ?? false}
+            className="h-4 w-4 accent-primary"
+          />
+          Es encargo a medida (sin precio fijo)
+        </label>
+      </div>
 
-      {isRetail && (
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Rango de tallas" htmlFor="talla_range">
-            <Input
-              id="talla_range"
-              name="talla_range"
-              placeholder="Ej: 38 al 43"
-              defaultValue={product?.talla_range ?? ''}
-            />
-          </Field>
-          <Field label="Color / material" htmlFor="color_o_material">
-            <Input
-              id="color_o_material"
-              name="color_o_material"
-              defaultValue={product?.color_o_material ?? ''}
-            />
-          </Field>
-          <Field label="Imagen (URL)" htmlFor="image_url">
-            <Input
-              id="image_url"
-              name="image_url"
-              defaultValue={product?.image_url ?? ''}
-            />
-          </Field>
-        </div>
-      )}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field
+          label="Rango de tallas"
+          htmlFor="talla_range"
+          hint="Opcional."
+        >
+          <Input
+            id="talla_range"
+            name="talla_range"
+            placeholder="Ej: 38 al 43"
+            defaultValue={product?.talla_range ?? ''}
+          />
+        </Field>
+        <Field label="Color / material" htmlFor="color_o_material" hint="Opcional.">
+          <Input
+            id="color_o_material"
+            name="color_o_material"
+            defaultValue={product?.color_o_material ?? ''}
+          />
+        </Field>
+        <Field label="Imagen (URL)" htmlFor="image_url" hint="Opcional.">
+          <Input
+            id="image_url"
+            name="image_url"
+            defaultValue={product?.image_url ?? ''}
+          />
+        </Field>
+      </div>
 
       <Field label="Descripción" htmlFor="description">
         <Textarea
@@ -229,11 +227,11 @@ function FilterChip({
 
 export function CatalogClient({
   products,
-  vertical,
+  catalogSource,
   shopifyDomain,
 }: {
   products: Product[]
-  vertical: Vertical
+  catalogSource: CatalogSource
   shopifyDomain: string | null
 }) {
   const [showCreate, setShowCreate] = useState(false)
@@ -242,14 +240,14 @@ export function CatalogClient({
 
   const reviewCount = products.filter((p) => p.needs_review).length
   const visible = onlyReview ? products.filter((p) => p.needs_review) : products
-  const isRetail = vertical === 'retail'
+  const canResync = catalogSource === 'shopify' || Boolean(shopifyDomain)
 
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2">
-          {shopifyDomain && <ResyncButton />}
+          {canResync && <ResyncButton />}
           <Button
             type="button"
             onClick={() => {
@@ -273,7 +271,7 @@ export function CatalogClient({
 
       {showCreate && (
         <div className="mb-5">
-          <ProductForm vertical={vertical} onDone={() => setShowCreate(false)} />
+          <ProductForm onDone={() => setShowCreate(false)} />
         </div>
       )}
 
@@ -287,7 +285,6 @@ export function CatalogClient({
             editingId === p.id ? (
               <ProductForm
                 key={p.id}
-                vertical={vertical}
                 product={p}
                 onDone={() => setEditingId(null)}
               />
@@ -307,13 +304,17 @@ export function CatalogClient({
                     {!p.available && <Badge tone="neutral">No disponible</Badge>}
                   </div>
                   <p className="text-sm text-muted">
-                    {isRetail
-                      ? [p.talla_range && `Tallas ${p.talla_range}`, p.color_o_material]
-                          .filter(Boolean)
-                          .join(' · ') || '—'
-                      : p.is_custom_order
-                        ? 'Encargo personalizado'
-                        : p.category}
+                    {[
+                      p.talla_range && `Tallas ${p.talla_range}`,
+                      p.color_o_material,
+                      !p.talla_range && !p.color_o_material
+                        ? p.is_custom_order
+                          ? 'Encargo a medida'
+                          : p.category
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || '—'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

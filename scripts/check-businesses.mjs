@@ -25,7 +25,7 @@ const admin = createClient(
 
 const { data, error } = await admin
   .from('businesses')
-  .select('name, slug, vertical, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, shopify_domain')
+  .select('name, slug, catalog_source, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, shopify_domain')
   .order('name')
 
 if (error) {
@@ -34,7 +34,7 @@ if (error) {
 }
 
 for (const b of data) {
-  console.log(`\n=== ${b.name} (${b.slug}) — ${b.vertical} ===`)
+  console.log(`\n=== ${b.name} (${b.slug}) — ${b.catalog_source} ===`)
   console.log('  phone_number_id :', b.whatsapp_phone_number_id ?? '(NULL)')
   console.log('  whatsapp_token  :', b.whatsapp_token ? `set (${b.whatsapp_token.length} chars)` : '(NULL)')
   console.log('  owner_whatsapp  :', b.owner_whatsapp_number ?? '(NULL)')

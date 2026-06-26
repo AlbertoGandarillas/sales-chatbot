@@ -4,6 +4,39 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-26 — Catálogo escalable y migrable (catalog_source) — Fase 1
+
+**Spec** (`business-types-unification-spec.md`). Se reemplaza el `vertical` fijo
+(`bakery`/`retail`) por un **origen de catálogo mutable** + capacidad, para que un
+negocio pueda **empezar con catálogo propio y migrar a Shopify** sin rehacer cuenta ni
+WhatsApp. Decisiones aprobadas: 1(a), 2(a), 3(a), 4(a), 5(a).
+
+- **DB** (`20260626120000_catalog_source.sql`, no destructiva): nueva columna
+  `businesses.catalog_source ∈ {manual, shopify}` (default `manual`) + flag
+  `supports_custom_orders`; backfill desde `vertical` (`retail→shopify`); se relaja el
+  `CHECK` de `products.category` (texto libre); se **elimina** la columna `vertical`.
+- **Modelo**: el origen del catálogo es **mutable**; las variantes (talla/color) pasan
+  a ser **atributos de producto** disponibles para todos; catálogo **híbrido** vía
+  `products.source`.
+- **Migración manual→Shopify**: el dueño agrega su dominio en Perfil y al
+  **Resincronizar** el catálogo el negocio pasa a `catalog_source='shopify'`; los
+  productos manuales se conservan.
+- **Agente**: prompt genérico para catálogo propio + prompt Shopify, seleccionados por
+  `catalog_source`; encargos a medida por `supports_custom_orders`; `getToolsFor()`
+  arma las tools por configuración. `buscar_productos` siempre devuelve columnas de
+  variante.
+- **Dashboard**: onboarding ("Catálogo propio" / "Tienda Shopify"), perfil (sección
+  "Origen del catálogo" + conectar Shopify + toggle encargos), catálogo (categoría de
+  texto libre, variantes opcionales para todos, botón resync por origen).
+- **Landing**: copy "Negocios con catálogo propio (panaderías, bodegas, tiendas…)" +
+  "Tiendas Shopify"; mensaje de escalabilidad y FAQ de migración.
+- **Scripts/specs**: `seed/verify/check` y runbook actualizados a `catalog_source`.
+
+Verificado: `tsc` + `next build` verdes; migración aplicada (Cruje=`manual`,
+Betta=`shopify`) sin pérdida de datos. Cruje y Betta operan igual.
+
+---
+
 ## 2026-06-25 — Landing v3 (ampliación expositiva, sin cambios de lógica)
 
 **Spec** (`landing-page-v3-spec.md`). Ampliación del landing existente conservando

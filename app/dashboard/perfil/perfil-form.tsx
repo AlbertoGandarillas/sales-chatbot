@@ -10,7 +10,7 @@ const initialState: ProfileState = { error: null, ok: false }
 export function PerfilForm({ business }: { business: OwnerBusiness }) {
   const [state, formAction, pending] = useActionState(updateProfile, initialState)
   const [saved, setSaved] = useState(false)
-  const isRetail = business.vertical === 'retail'
+  const isShopify = business.catalog_source === 'shopify'
 
   useEffect(() => {
     if (state.ok) {
@@ -52,23 +52,53 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
         />
       </Field>
 
-      {isRetail && (
-        <Field
-          label="Dominio Shopify"
-          htmlFor="shopify_domain"
-          hint="Para sincronizar el catálogo. Ej: www.tutienda.com"
-        >
-          <Input
-            id="shopify_domain"
-            name="shopify_domain"
-            defaultValue={business.shopify_domain ?? ''}
-          />
-        </Field>
-      )}
+      <label className="flex items-start gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          name="supports_custom_orders"
+          defaultChecked={business.supports_custom_orders}
+          className="mt-0.5 h-4 w-4 accent-primary"
+        />
+        <span>
+          Acepto encargos a medida
+          <span className="block text-xs text-muted">
+            El agente podrá tomar pedidos personalizados (tortas, arreglos, pedidos
+            por encargo) y avisarte.
+          </span>
+        </span>
+      </label>
+
+      <div className="rounded-card border border-border bg-surface-muted p-4">
+        <p className="text-sm font-semibold text-foreground">Origen del catálogo</p>
+        <p className="mt-1 text-xs text-muted">
+          Actualmente:{' '}
+          <span className="font-medium text-foreground">
+            {isShopify ? 'Tienda Shopify (sincronizado)' : 'Catálogo propio (manual)'}
+          </span>
+          .
+        </p>
+        <div className="mt-3">
+          <Field
+            label="Dominio Shopify"
+            htmlFor="shopify_domain"
+            hint={
+              isShopify
+                ? 'Catálogo sincronizado. Ej: www.tutienda.com'
+                : 'Conecta Shopify: agrega tu dominio, guarda y luego pulsa “Resincronizar catálogo” en la sección Catálogo. Tus productos manuales se conservan.'
+            }
+          >
+            <Input
+              id="shopify_domain"
+              name="shopify_domain"
+              placeholder="www.tutienda.com"
+              defaultValue={business.shopify_domain ?? ''}
+            />
+          </Field>
+        </div>
+      </div>
 
       <div className="rounded-lg bg-surface-muted p-3 text-xs text-muted">
-        No editable desde aquí: tipo de negocio ({isRetail ? 'retail' : 'panadería'}),
-        número de WhatsApp del bot y credenciales técnicas.
+        No editable desde aquí: número de WhatsApp del bot y credenciales técnicas.
       </div>
 
       {state.error && (

@@ -4,8 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { ingestShopifyCatalog, type IngestResult } from '@/lib/shopify-ingestion'
 
-const BAKERY_CATEGORIES = ['panes', 'pasteleria', 'tortas', 'bebidas', 'otros']
-
 export type CatalogState = { error: string | null; ok: boolean }
 
 function str(formData: FormData, key: string): string {
@@ -19,8 +17,8 @@ function nullable(formData: FormData, key: string): string | null {
 
 async function ownerBusiness() {
   const supabase = await createServerSupabase()
-  const { data } = await supabase.from('businesses').select('id, vertical').maybeSingle()
-  return { supabase, business: data as { id: string; vertical: string } | null }
+  const { data } = await supabase.from('businesses').select('id').maybeSingle()
+  return { supabase, business: data as { id: string } | null }
 }
 
 export async function saveProduct(
@@ -39,11 +37,7 @@ export async function saveProduct(
     return { error: 'Precio inválido.', ok: false }
   }
 
-  const isRetail = business.vertical === 'retail'
-  const category = isRetail ? 'retail' : str(formData, 'category') || 'otros'
-  if (!isRetail && !BAKERY_CATEGORIES.includes(category)) {
-    return { error: 'Categoría inválida.', ok: false }
-  }
+  const category = str(formData, 'category') || 'otros'
 
   const payload = {
     name,
@@ -51,10 +45,10 @@ export async function saveProduct(
     category,
     price_soles: price,
     available: formData.get('available') != null,
-    is_custom_order: !isRetail && formData.get('is_custom_order') != null,
-    talla_range: isRetail ? nullable(formData, 'talla_range') : null,
-    color_o_material: isRetail ? nullable(formData, 'color_o_material') : null,
-    image_url: isRetail ? nullable(formData, 'image_url') : null,
+    is_custom_order: formData.get('is_custom_order') != null,
+    talla_range: nullable(formData, 'talla_range'),
+    color_o_material: nullable(formData, 'color_o_material'),
+    image_url: nullable(formData, 'image_url'),
     needs_review: false,
   }
 
@@ -110,6 +104,17 @@ export async function resyncCatalog(
   }
 
   const result = await ingestShopifyCatalog(business.id, business.shopify_domain)
+
+  // Migración catálogo propio → Shopify: tras una sincronización con productos,
+  // el negocio pasa a tener origen de catálogo 'shopify'.
+  if (result.inserted + result.updated > 0) {
+    await supabase
+      .from('businesses')
+      .update({ catalog_source: 'shopify' })
+      .eq('id', business.id)
+    revalidatePath('/dashboard')
+  }
+
   revalidatePath('/dashboard/catalogo')
   return { error: result.errors[0] ?? null, result }
 }

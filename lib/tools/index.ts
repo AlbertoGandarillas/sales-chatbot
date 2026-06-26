@@ -1,12 +1,12 @@
 import type { ChatCompletionTool } from 'openai/resources/chat/completions'
-import type { Vertical } from '@/lib/business-resolver'
+import type { CatalogSource } from '@/lib/business-resolver'
 
-const buscarProductosBakery: ChatCompletionTool = {
+const buscarProductosStandard: ChatCompletionTool = {
   type: 'function',
   function: {
     name: 'buscar_productos',
     description:
-      'Busca productos en el catálogo por nombre, categoría o palabra clave. Usar siempre antes de cotizar precios. Si el cliente pide ver el menú completo, usar query vacío.',
+      'Busca productos en el catálogo por nombre, categoría o palabra clave. Usar siempre antes de cotizar precios. Si el cliente pide ver el catálogo completo, usar query vacío. Si un producto tiene rango de tallas o color/material, comunícalo tal como aparece.',
     parameters: {
       type: 'object',
       properties: {
@@ -20,7 +20,7 @@ const buscarProductosBakery: ChatCompletionTool = {
   },
 }
 
-const buscarProductosRetail: ChatCompletionTool = {
+const buscarProductosShopify: ChatCompletionTool = {
   type: 'function',
   function: {
     name: 'buscar_productos',
@@ -39,12 +39,12 @@ const buscarProductosRetail: ChatCompletionTool = {
   },
 }
 
-const crearPedidoBakery: ChatCompletionTool = {
+const crearPedidoStandard: ChatCompletionTool = {
   type: 'function',
   function: {
     name: 'crear_pedido',
     description:
-      'Crea un pedido confirmado de productos del catálogo con precio fijo. Solo usar después de que el cliente confirme ítems y cantidades. NO usar para tortas personalizadas.',
+      'Crea un pedido confirmado de productos del catálogo con precio fijo. Solo usar después de que el cliente confirme ítems y cantidades. NO usar para encargos a medida. Si el producto maneja talla o color/material, incluirlos.',
     parameters: {
       type: 'object',
       properties: {
@@ -56,6 +56,14 @@ const crearPedidoBakery: ChatCompletionTool = {
             properties: {
               product_id: { type: 'string', description: 'UUID del producto' },
               quantity: { type: 'integer', description: 'Cantidad a pedir', minimum: 1 },
+              talla_solicitada: {
+                type: 'string',
+                description: 'Talla pedida (texto, opcional, solo si aplica)',
+              },
+              color_solicitado: {
+                type: 'string',
+                description: 'Color o material pedido (texto, opcional)',
+              },
             },
             required: ['product_id', 'quantity'],
           },
@@ -67,7 +75,7 @@ const crearPedidoBakery: ChatCompletionTool = {
   },
 }
 
-const crearPedidoRetail: ChatCompletionTool = {
+const crearPedidoShopify: ChatCompletionTool = {
   type: 'function',
   function: {
     name: 'crear_pedido',
@@ -108,12 +116,12 @@ const iniciarEncargoPersonalizado: ChatCompletionTool = {
   function: {
     name: 'iniciar_encargo_personalizado',
     description:
-      'Registra un encargo personalizado (tortas, pedidos a medida). SIEMPRE usar para tortas de cumpleaños, bodas u otros encargos especiales. Notifica automáticamente al dueño. Requiere tipo, tamaño y fecha de entrega como mínimo.',
+      'Registra un encargo o pedido a medida (productos personalizados, tortas, arreglos especiales, etc.). SIEMPRE usar para pedidos que no tienen precio fijo en el catálogo. Notifica automáticamente al dueño. Requiere tipo, tamaño/cantidad y fecha de entrega como mínimo.',
     parameters: {
       type: 'object',
       properties: {
-        tipo: { type: 'string', description: 'Tipo de encargo (cumpleaños, boda, corporativo, etc.)' },
-        tamaño: { type: 'string', description: 'Tamaño o número de porciones' },
+        tipo: { type: 'string', description: 'Tipo de encargo (cumpleaños, boda, corporativo, a medida, etc.)' },
+        tamaño: { type: 'string', description: 'Tamaño, cantidad o número de porciones' },
         fecha_entrega: { type: 'string', description: 'Fecha de entrega deseada en formato YYYY-MM-DD' },
         mensaje_en_torta: { type: 'string', description: 'Texto para escribir en la torta (opcional)' },
         notas: {
@@ -161,21 +169,21 @@ const consultarEstadoPedido: ChatCompletionTool = {
   },
 }
 
-export function getToolsForVertical(vertical: Vertical): ChatCompletionTool[] {
-  if (vertical === 'retail') {
-    return [
-      buscarProductosRetail,
-      crearPedidoRetail,
-      consultarEstadoPedido,
-      escalarAHumano,
-    ]
+export interface ToolsContext {
+  catalog_source: CatalogSource
+  supports_custom_orders: boolean
+}
+
+export function getToolsFor(business: ToolsContext): ChatCompletionTool[] {
+  const tools: ChatCompletionTool[] =
+    business.catalog_source === 'shopify'
+      ? [buscarProductosShopify, crearPedidoShopify]
+      : [buscarProductosStandard, crearPedidoStandard]
+
+  if (business.supports_custom_orders) {
+    tools.push(iniciarEncargoPersonalizado)
   }
-  // bakery (default)
-  return [
-    buscarProductosBakery,
-    crearPedidoBakery,
-    iniciarEncargoPersonalizado,
-    consultarEstadoPedido,
-    escalarAHumano,
-  ]
+
+  tools.push(consultarEstadoPedido, escalarAHumano)
+  return tools
 }

@@ -8,7 +8,7 @@ const initialState: OnboardingState = { error: null }
 
 export function OnboardingForm() {
   const [state, formAction, pending] = useActionState(createBusiness, initialState)
-  const [vertical, setVertical] = useState('')
+  const [catalogSource, setCatalogSource] = useState('')
 
   return (
     <form action={formAction} className="mt-6 space-y-4">
@@ -22,24 +22,30 @@ export function OnboardingForm() {
         />
       </Field>
 
-      <Field label="Tipo de negocio" htmlFor="vertical">
+      <Field
+        label="¿Cómo gestionarás tu catálogo?"
+        htmlFor="catalog_source"
+        hint="Podrás conectar Shopify más adelante desde tu perfil."
+      >
         <select
-          id="vertical"
-          name="vertical"
+          id="catalog_source"
+          name="catalog_source"
           required
-          value={vertical}
-          onChange={(e) => setVertical(e.target.value)}
+          value={catalogSource}
+          onChange={(e) => setCatalogSource(e.target.value)}
           className="h-10 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm text-foreground transition-colors focus-visible:border-primary"
         >
           <option value="" disabled>
             Selecciona…
           </option>
-          <option value="bakery">Panadería / Pastelería</option>
-          <option value="retail">Retail / Tienda</option>
+          <option value="manual">
+            Catálogo propio (lo cargo a mano)
+          </option>
+          <option value="shopify">Tienda Shopify (lo sincronizo)</option>
         </select>
       </Field>
 
-      {vertical === 'retail' && (
+      {catalogSource === 'shopify' && (
         <Field
           label="Dominio Shopify (opcional)"
           htmlFor="shopify_domain"

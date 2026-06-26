@@ -7,7 +7,7 @@ import { createServiceClient } from '@/lib/supabase'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
-import { getToolsForVertical } from '@/lib/tools'
+import { getToolsFor } from '@/lib/tools'
 
 function waCreds(business: Business) {
   return {
@@ -127,10 +127,10 @@ async function buscarProductos(
   const db = createServiceClient()
   const trimmed = query.trim()
 
+  // Siempre incluimos las columnas de variante: existen para todos los productos
+  // (null cuando no aplica) y permiten que un catálogo propio también use talla/color.
   const columns =
-    business.vertical === 'retail'
-      ? 'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url'
-      : 'id, name, description, category, price_soles, is_custom_order'
+    'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url'
 
   let request = db
     .from('products')
@@ -144,10 +144,8 @@ async function buscarProductos(
       `name.ilike.${pattern}`,
       `category.ilike.${pattern}`,
       `description.ilike.${pattern}`,
+      `color_o_material.ilike.${pattern}`,
     ]
-    if (business.vertical === 'retail') {
-      filters.push(`color_o_material.ilike.${pattern}`)
-    }
     request = request.or(filters.join(','))
   }
 
@@ -455,7 +453,7 @@ export async function processIncomingMessage(
 
 async function generateReply(ctx: AgentContext): Promise<string> {
   const history = await loadHistory(ctx.conversationId)
-  const tools = getToolsForVertical(ctx.business.vertical)
+  const tools = getToolsFor(ctx.business)
   const messages: ChatCompletionMessageParam[] = [
     { role: 'system', content: buildContextPrompt(ctx) },
     ...history,

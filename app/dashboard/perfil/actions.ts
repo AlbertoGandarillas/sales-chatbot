@@ -12,7 +12,7 @@ export async function updateProfile(
   const supabase = await createServerSupabase()
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, vertical')
+    .select('id')
     .maybeSingle()
   if (!business) return { error: 'Sesión sin negocio.', ok: false }
 
@@ -27,10 +27,10 @@ export async function updateProfile(
     name,
     system_prompt_custom: systemPrompt || null,
     owner_whatsapp_number: ownerWhatsapp || null,
-  }
-  // shopify_domain solo aplica a retail
-  if (business.vertical === 'retail') {
-    payload.shopify_domain = shopify || null
+    supports_custom_orders: formData.get('supports_custom_orders') != null,
+    // El dominio Shopify se puede agregar en cualquier momento (catálogo propio →
+    // Shopify). El cambio de catalog_source ocurre al sincronizar el catálogo.
+    shopify_domain: shopify || null,
   }
 
   const { error } = await supabase

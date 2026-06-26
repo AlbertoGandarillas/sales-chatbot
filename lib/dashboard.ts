@@ -1,11 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase/server'
-import type { Vertical } from '@/lib/business-resolver'
+import type { CatalogSource } from '@/lib/business-resolver'
 
 export interface OwnerBusiness {
   id: string
   name: string
   slug: string
-  vertical: Vertical
+  catalog_source: CatalogSource
+  supports_custom_orders: boolean
   description: string | null
   system_prompt_custom: string | null
   owner_whatsapp_number: string | null
@@ -13,7 +14,7 @@ export interface OwnerBusiness {
 }
 
 const OWNER_BUSINESS_COLUMNS =
-  'id, name, slug, vertical, description, system_prompt_custom, owner_whatsapp_number, shopify_domain'
+  'id, name, slug, catalog_source, supports_custom_orders, description, system_prompt_custom, owner_whatsapp_number, shopify_domain'
 
 /**
  * Devuelve el negocio del usuario autenticado (RLS limita a su propia fila).

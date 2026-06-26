@@ -81,7 +81,8 @@ async function main() {
   const { error: crujeErr } = await admin
     .from('businesses')
     .update({
-      vertical: 'bakery',
+      catalog_source: 'manual',
+      supports_custom_orders: true,
       owner_user_id: users.Cruje,
       whatsapp_phone_number_id: process.env.WHATSAPP_PHONE_NUMBER_ID ?? null,
       whatsapp_token: process.env.WHATSAPP_TOKEN ?? null,
@@ -102,7 +103,8 @@ async function main() {
     const { error } = await admin
       .from('businesses')
       .update({
-        vertical: 'retail',
+        catalog_source: 'shopify',
+        supports_custom_orders: false,
         shopify_domain: 'www.betta-footwear.com',
         owner_user_id: users.Betta,
       })
@@ -116,7 +118,8 @@ async function main() {
         name: 'Betta',
         slug: 'betta',
         description: 'Tienda de zapatillas (retail) sobre Shopify',
-        vertical: 'retail',
+        catalog_source: 'shopify',
+        supports_custom_orders: false,
         shopify_domain: 'www.betta-footwear.com',
         owner_user_id: users.Betta,
       })
