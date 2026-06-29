@@ -341,11 +341,7 @@ export function CatalogClient({
                   </Button>
                   <form action={deleteProduct}>
                     <input type="hidden" name="id" value={p.id} />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="border border-danger/30 bg-transparent text-danger hover:bg-danger-surface"
-                    >
+                    <Button type="submit" variant="danger" size="sm">
                       Eliminar
                     </Button>
                   </form>

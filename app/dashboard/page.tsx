@@ -51,7 +51,8 @@ export default async function DashboardResumen() {
     recentOrders,
     pendingCount,
     monthOrdersCount,
-    monthUsage,
+    monthSalesOrders,
+    unpaidPaymentsCount,
   ] = await Promise.all([
     supabase
       .from('conversations')
@@ -78,16 +79,23 @@ export default async function DashboardResumen() {
       .eq('business_id', business.id)
       .gte('created_at', monthStart),
     supabase
-      .from('usage_logs')
-      .select('estimated_cost_usd')
+      .from('orders')
+      .select('total_soles, is_custom_order, status')
       .eq('business_id', business.id)
-      .gte('created_at', monthStart),
+      .gte('created_at', monthStart)
+      .neq('status', 'cancelled'),
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_id', business.id)
+      .eq('payment_status', 'unpaid')
+      .neq('status', 'cancelled'),
   ])
 
   const conversations = recentConversations.data ?? []
   const orders = recentOrders.data ?? []
-  const monthlyCost = (monthUsage.data ?? []).reduce(
-    (sum, row) => sum + Number(row.estimated_cost_usd ?? 0),
+  const monthSalesTotal = (monthSalesOrders.data ?? []).reduce(
+    (sum, row) => sum + (row.is_custom_order ? 0 : Number(row.total_soles ?? 0)),
     0
   )
 
@@ -99,9 +107,13 @@ export default async function DashboardResumen() {
         <MetricCard label="Pedidos pendientes" value={String(pendingCount.count ?? 0)} />
         <MetricCard label="Pedidos del mes" value={String(monthOrdersCount.count ?? 0)} />
         <MetricCard
-          label="Costo estimado del mes"
-          value={`$ ${monthlyCost.toFixed(4)}`}
-          hint="OpenAI (se llena con el uso del agente)"
+          label="Ventas del mes"
+          value={formatSoles(monthSalesTotal)}
+          hint={
+            (unpaidPaymentsCount.count ?? 0) > 0
+              ? `${unpaidPaymentsCount.count} pago(s) por confirmar`
+              : 'Pedidos con precio fijo (sin cancelados)'
+          }
         />
       </section>
 

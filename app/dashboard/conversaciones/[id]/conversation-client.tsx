@@ -43,8 +43,9 @@ export function ModeToggle({
       <input type="hidden" name="nextMode" value={nextMode} />
       <SubmitButton
         size="sm"
+        variant="secondary"
         pendingText="Cambiando…"
-        className="border-0 bg-surface text-foreground hover:bg-surface-muted"
+        className="border border-white/40 bg-white text-emerald-900 shadow-sm hover:bg-emerald-50"
       >
         {mode === 'human' ? 'Devolver al bot' : 'Pausar bot (tomar control)'}
       </SubmitButton>
@@ -170,11 +171,7 @@ function CancelOrderForm({
           {state.error}
         </p>
       )}
-      <SubmitButton
-        size="sm"
-        pendingText="Cancelando…"
-        className="border border-danger/30 bg-transparent text-danger hover:bg-danger-surface"
-      >
+      <SubmitButton variant="danger" size="sm" pendingText="Cancelando…">
         Cancelar pedido
       </SubmitButton>
     </form>

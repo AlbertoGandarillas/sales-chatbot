@@ -71,8 +71,20 @@ export async function saveProduct(
 export async function deleteProduct(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  const supabase = await createServerSupabase()
-  await supabase.from('products').delete().eq('id', id)
+
+  const { supabase, business } = await ownerBusiness()
+  if (!business) return
+
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id)
+    .eq('business_id', business.id)
+
+  if (error) {
+    console.error('[catalog] Error eliminando producto:', error.message)
+  }
+
   revalidatePath('/dashboard/catalogo')
 }
 
