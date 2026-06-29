@@ -393,8 +393,16 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-muted">
-          © {new Date().getFullYear()} Aynibot — Agente de ventas por WhatsApp.
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Aynibot — Agente de ventas por WhatsApp.</p>
+          <div className="flex gap-4">
+            <Link href="/privacidad" className="hover:text-foreground hover:underline">
+              Privacidad
+            </Link>
+            <Link href="/terminos" className="hover:text-foreground hover:underline">
+              Términos
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

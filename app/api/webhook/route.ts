@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { processIncomingMessage } from '@/lib/agent'
 import { resolveBusinessFromWebhook } from '@/lib/business-resolver'
+import { claimWhatsAppMessage } from '@/lib/webhook-dedupe'
+import {
+  isProductionEnv,
+  verifyMetaWebhookSignature,
+} from '@/lib/webhook-signature'
 
 export const maxDuration = 60
 
@@ -27,10 +32,47 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
+  const rawBody = await request.text()
+  const appSecret = process.env.WHATSAPP_APP_SECRET?.trim()
 
-    // Multi-tenant: resolver el negocio por phone_number_id del payload.
+  if (isProductionEnv()) {
+    if (!appSecret) {
+      console.error('[webhook] WHATSAPP_APP_SECRET no configurado en production')
+      return new NextResponse('Server misconfiguration', { status: 500 })
+    }
+    const signature = request.headers.get('x-hub-signature-256')
+    if (!verifyMetaWebhookSignature(rawBody, signature, appSecret)) {
+      console.warn('[webhook] Firma inválida o ausente')
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  } else if (appSecret) {
+    const signature = request.headers.get('x-hub-signature-256')
+    if (signature && !verifyMetaWebhookSignature(rawBody, signature, appSecret)) {
+      console.warn('[webhook] Firma inválida (dev)')
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  } else {
+    console.warn(
+      '[webhook] WHATSAPP_APP_SECRET no definido; verificación de firma omitida (dev)'
+    )
+  }
+
+  try {
+    const body = JSON.parse(rawBody) as {
+      entry?: {
+        changes?: {
+          value?: {
+            messages?: {
+              id?: string
+              type?: string
+              from?: string
+              text?: { body?: string }
+            }[]
+          }
+        }[]
+      }[]
+    }
+
     const business = await resolveBusinessFromWebhook(body)
     if (!business) {
       console.warn('[webhook] phone_number_id sin negocio asociado; se ignora.')
@@ -46,10 +88,18 @@ export async function POST(request: NextRequest) {
           if (message.type === 'text' && message.from && message.text?.body) {
             const from = String(message.from)
             const text = String(message.text.body)
+            const wamid = message.id ? String(message.id) : null
+
+            if (wamid) {
+              const isNew = await claimWhatsAppMessage(business.id, wamid)
+              if (!isNew) {
+                console.log(`[webhook] Duplicado ignorado (${business.name}):`, wamid)
+                continue
+              }
+            }
+
             console.log(`[webhook] Mensaje recibido (${business.name}):`, from, text)
 
-            // Meta tolera hasta ~20s antes de reintentar; await es más fiable
-            // que after() en el plan Hobby de Vercel (límite ~10s).
             try {
               await processIncomingMessage(business, from, text)
               console.log('[webhook] Respuesta enviada a:', from)

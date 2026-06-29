@@ -8,6 +8,7 @@ import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
 import { getToolsFor } from '@/lib/tools'
+import { logUsage } from '@/lib/usage-tracking'
 
 function waCreds(business: Business) {
   return {
@@ -19,6 +20,10 @@ function waCreds(business: Business) {
 const PRIMARY_MODEL = 'gpt-4.1-mini'
 const FALLBACK_MODEL = 'gpt-4o-mini'
 const HISTORY_LIMIT = 15
+const MAX_TOOL_ROUNDS = 8
+
+const MAX_ROUNDS_FALLBACK_REPLY =
+  'Disculpa, necesito un momento más para revisar tu consulta. ¿Puedes repetir lo que necesitas?'
 
 interface OrderItem {
   product_id: string
@@ -83,6 +88,14 @@ async function getOrCreateConversation(
   return { id: created.id, mode: (created.mode as ConversationMode) ?? 'bot' }
 }
 
+async function touchConversation(conversationId: string) {
+  const db = createServiceClient()
+  await db
+    .from('conversations')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', conversationId)
+}
+
 async function saveMessage(
   conversationId: string,
   role: 'user' | 'assistant',
@@ -95,6 +108,7 @@ async function saveMessage(
     content,
   })
   if (error) throw error
+  await touchConversation(conversationId)
 }
 
 async function loadHistory(
@@ -371,7 +385,6 @@ async function executeTool(
 }
 
 let openaiClient: OpenAI | null = null
-let modelFallbackUsed = false
 
 function getOpenAI(): OpenAI {
   if (!openaiClient) {
@@ -408,6 +421,13 @@ async function createChatCompletion(
   })
 }
 
+interface GenerateReplyResult {
+  reply: string
+  model: string
+  inputTokens: number
+  outputTokens: number
+}
+
 export async function processIncomingMessage(
   business: Business,
   customerPhone: string,
@@ -435,9 +455,16 @@ export async function processIncomingMessage(
   }
 
   try {
-    const reply = await generateReply(ctx)
-    await saveMessage(conversationId, 'assistant', reply)
-    await sendWhatsAppMessage(customerPhone, reply, waCreds(business))
+    const result = await generateReply(ctx)
+    await saveMessage(conversationId, 'assistant', result.reply)
+    await sendWhatsAppMessage(customerPhone, result.reply, waCreds(business))
+    await logUsage({
+      businessId: business.id,
+      conversationId,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+    })
   } catch (error) {
     console.error('[agent] Error procesando mensaje:', error)
     const fallback = `¡Hola! Gracias por escribir a ${business.name}. Hubo un problemita técnico, pero ya estamos revisando. ¿Puedes intentar de nuevo en un momento?`
@@ -451,7 +478,7 @@ export async function processIncomingMessage(
   }
 }
 
-async function generateReply(ctx: AgentContext): Promise<string> {
+async function generateReply(ctx: AgentContext): Promise<GenerateReplyResult> {
   const history = await loadHistory(ctx.conversationId)
   const tools = getToolsFor(ctx.business)
   const messages: ChatCompletionMessageParam[] = [
@@ -460,24 +487,52 @@ async function generateReply(ctx: AgentContext): Promise<string> {
   ]
 
   let model = PRIMARY_MODEL
+  let inputTokens = 0
+  let outputTokens = 0
   let response
+
+  function accumulateUsage(usage?: {
+    prompt_tokens?: number
+    completion_tokens?: number
+  }) {
+    if (!usage) return
+    inputTokens += usage.prompt_tokens ?? 0
+    outputTokens += usage.completion_tokens ?? 0
+  }
 
   try {
     response = await createChatCompletion(messages, model, tools)
+    accumulateUsage(response.usage)
   } catch (error) {
     if (shouldFallbackModel(error)) {
       model = FALLBACK_MODEL
-      modelFallbackUsed = true
       console.warn(
         `Modelo ${PRIMARY_MODEL} no disponible, usando ${FALLBACK_MODEL}`
       )
       response = await createChatCompletion(messages, model, tools)
+      accumulateUsage(response.usage)
     } else {
       throw error
     }
   }
 
+  let toolRound = 0
+  let usedFallbackModel = model === FALLBACK_MODEL
+
   while (response.choices[0]?.message?.tool_calls?.length) {
+    if (++toolRound > MAX_TOOL_ROUNDS) {
+      console.warn('[agent] maxToolRounds alcanzado', {
+        conversationId: ctx.conversationId,
+        toolRound,
+      })
+      return {
+        reply: MAX_ROUNDS_FALLBACK_REPLY,
+        model,
+        inputTokens,
+        outputTokens,
+      }
+    }
+
     const assistantMessage = response.choices[0].message
     messages.push(assistantMessage)
 
@@ -507,23 +562,22 @@ async function generateReply(ctx: AgentContext): Promise<string> {
 
     try {
       response = await createChatCompletion(messages, model, tools)
+      accumulateUsage(response.usage)
     } catch (error) {
-      if (!modelFallbackUsed && shouldFallbackModel(error)) {
+      if (!usedFallbackModel && shouldFallbackModel(error)) {
         model = FALLBACK_MODEL
-        modelFallbackUsed = true
+        usedFallbackModel = true
         response = await createChatCompletion(messages, model, tools)
+        accumulateUsage(response.usage)
       } else {
         throw error
       }
     }
   }
 
-  return (
+  const reply =
     response.choices[0]?.message?.content?.trim() ||
     'Disculpa, no pude procesar tu mensaje. ¿Puedes intentar de nuevo?'
-  )
-}
 
-export function wasModelFallbackUsed(): boolean {
-  return modelFallbackUsed
+  return { reply, model, inputTokens, outputTokens }
 }

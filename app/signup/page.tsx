@@ -135,6 +135,18 @@ function SignupForm() {
         <Button type="submit" disabled={busy} className="w-full">
           {busy ? 'Procesando…' : magic ? 'Enviar enlace de acceso' : 'Crear cuenta'}
         </Button>
+
+        <p className="mt-3 text-center text-xs text-muted">
+          Al registrarte aceptas los{' '}
+          <Link href="/terminos" className="text-primary hover:underline">
+            Términos
+          </Link>{' '}
+          y la{' '}
+          <Link href="/privacidad" className="text-primary hover:underline">
+            Política de privacidad
+          </Link>
+          .
+        </p>
       </form>
 
       <Button

@@ -25,9 +25,11 @@ interface OrderRow {
   total_soles: number
   status: string
   payment_status: string
+  delivery_status: string
   estimated_delivery_date: string | null
   payment_confirmed_at: string | null
   payment_note: string | null
+  notes: string | null
 }
 
 function formatTime(iso: string) {
@@ -74,7 +76,7 @@ export default async function ConversationDetail({
     supabase
       .from('orders')
       .select(
-        'id, is_custom_order, items, custom_order_details, total_soles, status, payment_status, estimated_delivery_date, payment_confirmed_at, payment_note'
+        'id, is_custom_order, items, custom_order_details, total_soles, status, payment_status, delivery_status, estimated_delivery_date, payment_confirmed_at, payment_note, notes'
       )
       .eq('conversation_id', id)
       .order('created_at', { ascending: false }),
@@ -91,9 +93,11 @@ export default async function ConversationDetail({
     total_soles: Number(o.total_soles),
     status: o.status,
     payment_status: o.payment_status,
+    delivery_status: o.delivery_status,
     estimated_delivery_date: o.estimated_delivery_date,
     payment_confirmed_at: o.payment_confirmed_at,
     payment_note: o.payment_note,
+    notes: o.notes,
   }))
 
   return (

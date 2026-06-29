@@ -4,12 +4,16 @@ import { useActionState, useEffect, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import {
   confirmPayment,
+  confirmOrder,
+  markOrderDelivered,
   sendManualReply,
   setDeliveryDate,
   toggleMode,
+  updateOrderStatus,
+  type OrderActionState,
   type ReplyState,
 } from './actions'
-import { Badge, Button, Input } from '@/components/ui'
+import { Badge, Button, Input, Textarea } from '@/components/ui'
 import type { ButtonProps } from '@/components/ui'
 
 function SubmitButton({
@@ -113,9 +117,68 @@ export interface OrderView {
   total_soles: number
   status: string
   payment_status: string
+  delivery_status: string
   estimated_delivery_date: string | null
   payment_confirmed_at: string | null
   payment_note: string | null
+  notes: string | null
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Pendiente',
+  confirmed: 'Confirmado',
+  cancelled: 'Cancelado',
+}
+
+const DELIVERY_LABEL: Record<string, string> = {
+  pending: 'Pendiente de entrega',
+  delivered: 'Entregado',
+}
+
+function CancelOrderForm({
+  orderId,
+  conversationId,
+}: {
+  orderId: string
+  conversationId: string
+}) {
+  const [state, formAction] = useActionState<OrderActionState, FormData>(
+    updateOrderStatus,
+    { error: null }
+  )
+
+  return (
+    <form action={formAction} className="mt-3 space-y-2">
+      <input type="hidden" name="orderId" value={orderId} />
+      <input type="hidden" name="conversationId" value={conversationId} />
+      <label
+        htmlFor={`cancel-${orderId}`}
+        className="block text-xs font-medium text-foreground"
+      >
+        Motivo de cancelación <span className="text-danger">*</span>
+      </label>
+      <Textarea
+        id={`cancel-${orderId}`}
+        name="cancelReason"
+        rows={2}
+        required
+        placeholder="Ej. Cliente ya no lo quiere, sin stock…"
+        className="text-sm"
+      />
+      {state.error && (
+        <p className="text-xs text-danger" role="alert">
+          {state.error}
+        </p>
+      )}
+      <SubmitButton
+        size="sm"
+        pendingText="Cancelando…"
+        className="border border-danger/30 bg-transparent text-danger hover:bg-danger-surface"
+      >
+        Cancelar pedido
+      </SubmitButton>
+    </form>
+  )
 }
 
 export function OrderCard({
@@ -126,6 +189,11 @@ export function OrderCard({
   conversationId: string
 }) {
   const paid = order.payment_status === 'paid'
+  const isCancelled = order.status === 'cancelled'
+  const isConfirmed = order.status === 'confirmed'
+  const isPending = order.status === 'pending'
+  const isDelivered = order.delivery_status === 'delivered'
+
   return (
     <div className="rounded-card border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-2">
@@ -141,69 +209,112 @@ export function OrderCard({
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Badge tone="neutral">{order.status}</Badge>
+        <Badge tone={isCancelled ? 'danger' : isConfirmed ? 'success' : 'neutral'}>
+          {STATUS_LABEL[order.status] ?? order.status}
+        </Badge>
         <Badge tone={paid ? 'success' : 'warning'} dot>
           {paid ? 'Pagado' : 'Pago pendiente'}
         </Badge>
+        {!isCancelled && (
+          <Badge tone={isDelivered ? 'success' : 'neutral'}>
+            {DELIVERY_LABEL[order.delivery_status] ?? order.delivery_status}
+          </Badge>
+        )}
       </div>
 
-      {/* Fecha estimada de entrega */}
-      <form action={setDeliveryDate} className="mt-4">
-        <input type="hidden" name="orderId" value={order.id} />
-        <input type="hidden" name="conversationId" value={conversationId} />
-        <label
-          htmlFor={`date-${order.id}`}
-          className="block text-xs font-medium text-foreground"
-        >
-          Fecha estimada de entrega
-        </label>
-        <div className="mt-1 flex items-center gap-2">
-          <Input
-            id={`date-${order.id}`}
-            type="date"
-            name="date"
-            defaultValue={order.estimated_delivery_date ?? ''}
-            className="h-9 w-auto"
-          />
-          <SubmitButton variant="outline" size="sm" pendingText="Guardando…">
-            Guardar
-          </SubmitButton>
-        </div>
-      </form>
+      {order.notes && isCancelled && (
+        <p className="mt-2 text-xs text-muted">{order.notes}</p>
+      )}
 
-      {/* Confirmación de pago manual */}
-      {paid ? (
-        <div className="mt-4 rounded-lg bg-success-surface px-3 py-2 text-xs text-success">
-          Pago confirmado
-          {order.payment_confirmed_at
-            ? ` el ${new Date(order.payment_confirmed_at).toLocaleString('es-PE', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-              })}`
-            : ''}
-          {order.payment_note ? ` · ${order.payment_note}` : ''}
+      {/* Acciones de estado */}
+      {!isCancelled && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {isPending && (
+            <form action={confirmOrder}>
+              <input type="hidden" name="orderId" value={order.id} />
+              <input type="hidden" name="conversationId" value={conversationId} />
+              <SubmitButton variant="success" size="sm" pendingText="Confirmando…">
+                Confirmar pedido
+              </SubmitButton>
+            </form>
+          )}
+          {isConfirmed && !isDelivered && (
+            <form action={markOrderDelivered}>
+              <input type="hidden" name="orderId" value={order.id} />
+              <input type="hidden" name="conversationId" value={conversationId} />
+              <SubmitButton variant="outline" size="sm" pendingText="Guardando…">
+                Marcar entregado
+              </SubmitButton>
+            </form>
+          )}
         </div>
-      ) : (
-        <form action={confirmPayment} className="mt-4">
-          <input type="hidden" name="orderId" value={order.id} />
-          <input type="hidden" name="conversationId" value={conversationId} />
-          <label
-            htmlFor={`note-${order.id}`}
-            className="block text-xs font-medium text-foreground"
-          >
-            Nota de pago (opcional)
-          </label>
-          <Input
-            id={`note-${order.id}`}
-            type="text"
-            name="note"
-            placeholder="Ej. Yape de Juan, código 4521, S/ 45.00"
-            className="mt-1 h-9"
-          />
-          <SubmitButton variant="success" size="sm" pendingText="Confirmando…" className="mt-2">
-            Confirmar pago
-          </SubmitButton>
-        </form>
+      )}
+
+      {!isCancelled && (isPending || isConfirmed) && (
+        <CancelOrderForm orderId={order.id} conversationId={conversationId} />
+      )}
+
+      {/* Fecha estimada de entrega */}
+      {!isCancelled && (
+        <>
+          <form action={setDeliveryDate} className="mt-4">
+            <input type="hidden" name="orderId" value={order.id} />
+            <input type="hidden" name="conversationId" value={conversationId} />
+            <label
+              htmlFor={`date-${order.id}`}
+              className="block text-xs font-medium text-foreground"
+            >
+              Fecha estimada de entrega
+            </label>
+            <div className="mt-1 flex items-center gap-2">
+              <Input
+                id={`date-${order.id}`}
+                type="date"
+                name="date"
+                defaultValue={order.estimated_delivery_date ?? ''}
+                className="h-9 w-auto"
+              />
+              <SubmitButton variant="outline" size="sm" pendingText="Guardando…">
+                Guardar
+              </SubmitButton>
+            </div>
+          </form>
+
+          {/* Confirmación de pago manual */}
+          {paid ? (
+            <div className="mt-4 rounded-lg bg-success-surface px-3 py-2 text-xs text-success">
+              Pago confirmado
+              {order.payment_confirmed_at
+                ? ` el ${new Date(order.payment_confirmed_at).toLocaleString('es-PE', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}`
+                : ''}
+              {order.payment_note ? ` · ${order.payment_note}` : ''}
+            </div>
+          ) : (
+            <form action={confirmPayment} className="mt-4">
+              <input type="hidden" name="orderId" value={order.id} />
+              <input type="hidden" name="conversationId" value={conversationId} />
+              <label
+                htmlFor={`note-${order.id}`}
+                className="block text-xs font-medium text-foreground"
+              >
+                Nota de pago (opcional)
+              </label>
+              <Input
+                id={`note-${order.id}`}
+                type="text"
+                name="note"
+                placeholder="Ej. Yape de Juan, código 4521, S/ 45.00"
+                className="mt-1 h-9"
+              />
+              <SubmitButton variant="success" size="sm" pendingText="Confirmando…" className="mt-2">
+                Confirmar pago
+              </SubmitButton>
+            </form>
+          )}
+        </>
       )}
     </div>
   )

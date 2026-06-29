@@ -4,6 +4,25 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-26 — Production v1 hardening (P0-1, P0-2, P0-6, P0-7, P1-8/9/10/12)
+
+**Spec** (`production-v1-hardening-spec.md`). Camino corto a v1 seguro, medible y
+operable. Checkpoints: placeholders legales, motivo obligatorio al cancelar pedido.
+
+- **P0-1 Firma webhook**: `lib/webhook-signature.ts` + body crudo en POST; obligatorio
+  en production con `WHATSAPP_APP_SECRET`.
+- **P0-2 Dedupe**: tabla `processed_whatsapp_messages` + `lib/webhook-dedupe.ts`.
+- **P0-6 maxToolRounds**: tope 8 en `lib/agent.ts`.
+- **P0-7 Legal**: `/privacidad`, `/terminos`, `lib/legal-config.ts` (placeholders),
+  links en landing y signup.
+- **P1-8 Usage**: `lib/usage-tracking.ts` → `usage_logs` tras cada turno del bot.
+- **P1-9 Pedidos**: confirmar, cancelar (motivo obligatorio), marcar entregado en
+  `OrderCard`.
+- **P1-10 updated_at**: `touchConversation` en `saveMessage`.
+- **P1-12 Fallback bug**: variable local por request; eliminado `wasModelFallbackUsed`.
+
+---
+
 ## 2026-06-26 — Catálogo escalable y migrable (catalog_source) — Fase 1
 
 **Spec** (`business-types-unification-spec.md`). Se reemplaza el `vertical` fijo

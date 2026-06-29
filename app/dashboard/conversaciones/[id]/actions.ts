@@ -114,3 +114,97 @@ export async function confirmPayment(formData: FormData) {
 
   revalidatePath(detailPath(conversationId))
 }
+
+export type OrderActionState = { error: string | null }
+
+async function applyOrderStatus(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  orderId: string,
+  conversationId: string,
+  nextStatus: 'confirmed' | 'cancelled',
+  cancelReason?: string
+): Promise<OrderActionState> {
+  const { data: order } = await supabase
+    .from('orders')
+    .select('id, status')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!order) return { error: 'Pedido no encontrado.' }
+
+  if (order.status === 'cancelled') {
+    return { error: 'Este pedido ya está cancelado.' }
+  }
+  if (nextStatus === 'confirmed' && order.status !== 'pending') {
+    return { error: 'Solo se pueden confirmar pedidos pendientes.' }
+  }
+  if (
+    nextStatus === 'cancelled' &&
+    order.status !== 'pending' &&
+    order.status !== 'confirmed'
+  ) {
+    return { error: 'No se puede cancelar este pedido.' }
+  }
+
+  const payload: Record<string, unknown> = { status: nextStatus }
+  if (nextStatus === 'cancelled') {
+    payload.notes = `Cancelado: ${cancelReason}`
+  }
+
+  const { error } = await supabase.from('orders').update(payload).eq('id', orderId)
+  if (error) return { error: error.message }
+
+  revalidatePath(detailPath(conversationId))
+  return { error: null }
+}
+
+export async function confirmOrder(formData: FormData) {
+  const orderId = String(formData.get('orderId') ?? '')
+  const conversationId = String(formData.get('conversationId') ?? '')
+  if (!orderId || !conversationId) return
+
+  const supabase = await createServerSupabase()
+  await applyOrderStatus(supabase, orderId, conversationId, 'confirmed')
+}
+
+export async function updateOrderStatus(
+  _prev: OrderActionState,
+  formData: FormData
+): Promise<OrderActionState> {
+  const orderId = String(formData.get('orderId') ?? '')
+  const conversationId = String(formData.get('conversationId') ?? '')
+  const cancelReason = String(formData.get('cancelReason') ?? '').trim()
+
+  if (!orderId || !conversationId) {
+    return { error: 'Pedido inválido.' }
+  }
+  if (!cancelReason) {
+    return { error: 'El motivo de cancelación es obligatorio.' }
+  }
+
+  const supabase = await createServerSupabase()
+  return applyOrderStatus(supabase, orderId, conversationId, 'cancelled', cancelReason)
+}
+
+export async function markOrderDelivered(formData: FormData) {
+  const orderId = String(formData.get('orderId') ?? '')
+  const conversationId = String(formData.get('conversationId') ?? '')
+  if (!orderId || !conversationId) return
+
+  const supabase = await createServerSupabase()
+
+  const { data: order } = await supabase
+    .from('orders')
+    .select('status')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!order || order.status !== 'confirmed') return
+
+  await supabase
+    .from('orders')
+    .update({ delivery_status: 'delivered' })
+    .eq('id', orderId)
+
+  revalidatePath(detailPath(conversationId))
+}
