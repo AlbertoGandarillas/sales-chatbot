@@ -6,6 +6,9 @@ import {
   formatSoles,
 } from '@/lib/order-create'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
+import { normalizeWhatsAppPhone } from '@/lib/whatsapp-phone'
+
+export { normalizeWhatsAppPhone, normalizeWhatsAppPhone as normalizeCustomerPhone } from '@/lib/whatsapp-phone'
 
 export type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly'
 export type RecurringStatus = 'active' | 'paused' | 'cancelled'
@@ -50,10 +53,6 @@ export const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
 }
 
 const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-
-export function normalizeCustomerPhone(raw: string): string {
-  return raw.replace(/\D/g, '')
-}
 
 export function todayInLima(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: LIMA_TZ }).format(
@@ -100,7 +99,7 @@ export async function getOrCreateConversationId(
   businessId: string,
   customerPhone: string
 ): Promise<string> {
-  const phone = normalizeCustomerPhone(customerPhone)
+  const phone = normalizeWhatsAppPhone(customerPhone)
   const { data: existing } = await db
     .from('conversations')
     .select('id')
@@ -227,7 +226,7 @@ export async function listRecurringForCustomer(
   businessId: string,
   customerPhone: string
 ) {
-  const phone = normalizeCustomerPhone(customerPhone)
+  const phone = normalizeWhatsAppPhone(customerPhone)
   const { data, error } = await db
     .from('recurring_orders')
     .select('*')
@@ -245,7 +244,7 @@ export async function getActiveReminderRun(
   businessId: string,
   customerPhone: string
 ) {
-  const phone = normalizeCustomerPhone(customerPhone)
+  const phone = normalizeWhatsAppPhone(customerPhone)
   const today = todayInLima()
 
   const { data: recurringRows, error } = await db

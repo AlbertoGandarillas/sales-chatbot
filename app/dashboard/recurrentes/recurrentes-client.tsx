@@ -179,12 +179,16 @@ function RecurringForm({
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Teléfono WhatsApp" htmlFor="customer_phone" hint="Solo números, ej. 51999999999">
+        <Field
+          label="Teléfono WhatsApp"
+          htmlFor="customer_phone"
+          hint="Formato internacional Perú: 51999342668. Si pones 999342668, se agrega el 51 automáticamente."
+        >
           <Input
             id="customer_phone"
             name="customer_phone"
             required
-            placeholder="51999999999"
+            placeholder="51999342668"
             defaultValue={recurring?.customer_phone ?? ''}
           />
         </Field>

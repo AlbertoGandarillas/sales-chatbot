@@ -13,6 +13,7 @@ import {
   type RecurringFrequency,
   type RecurringOrderRow,
 } from '@/lib/recurring-orders'
+import { isValidPeruWhatsAppPhone } from '@/lib/whatsapp-phone'
 
 export type RecurringState = { error: string | null; ok: boolean }
 
@@ -54,6 +55,13 @@ export async function saveRecurringOrder(
   const customerPhone = normalizeCustomerPhone(str(formData, 'customer_phone'))
   if (!customerPhone) {
     return { error: 'Teléfono del cliente es obligatorio.', ok: false }
+  }
+  if (!isValidPeruWhatsAppPhone(customerPhone)) {
+    return {
+      error:
+        'Teléfono inválido. Usa formato Perú: 51999342668 (51 + 9 dígitos del móvil).',
+      ok: false,
+    }
   }
 
   const frequency = parseFrequency(str(formData, 'frequency'))
@@ -212,6 +220,14 @@ export async function sendRecurringReminderNow(
   const row = recurring as RecurringOrderRow
   const db = createServiceClient()
   const scheduledFor = row.next_run_on || todayInLima()
+
+  if (!business.whatsapp_token || !business.whatsapp_phone_number_id) {
+    return {
+      error:
+        'WhatsApp no está configurado para este negocio. Revisa token y phone_number_id en la base de datos o Perfil.',
+      ok: false,
+    }
+  }
 
   try {
     const result = await sendRecurringReminder(
