@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
+  formatFileSizeBytes,
+  PRODUCT_IMAGE_MAX_MB,
   resolveProductImage,
+  validateProductImageFile,
   type ProductImageFields,
 } from '@/lib/product-image'
 import { Button, Field, Input } from '@/components/ui'
@@ -10,10 +13,14 @@ import { ProductThumbnail } from './product-thumbnail'
 
 export function ProductImageField({
   product,
+  onFileError,
 }: {
   product?: ProductImageFields & { id?: string }
+  /** Se invoca con mensaje de error o null si el archivo es válido / no hay archivo. */
+  onFileError?: (message: string | null) => void
 }) {
   const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [selectedFileLabel, setSelectedFileLabel] = useState<string | null>(null)
   const [removeStored, setRemoveStored] = useState(false)
 
   useEffect(() => {
@@ -21,6 +28,10 @@ export function ProductImageField({
       if (filePreview) URL.revokeObjectURL(filePreview)
     }
   }, [filePreview])
+
+  function reportFileError(message: string | null) {
+    onFileError?.(message)
+  }
 
   const stored = product?.image_storage_path && !removeStored
   const resolved = useMemo(
@@ -38,8 +49,22 @@ export function ProductImageField({
     if (filePreview) URL.revokeObjectURL(filePreview)
     if (!file) {
       setFilePreview(null)
+      setSelectedFileLabel(null)
+      reportFileError(null)
       return
     }
+
+    const validationError = validateProductImageFile(file)
+    if (validationError) {
+      e.target.value = ''
+      setFilePreview(null)
+      setSelectedFileLabel(null)
+      reportFileError(validationError)
+      return
+    }
+
+    reportFileError(null)
+    setSelectedFileLabel(`${file.name} (${formatFileSizeBytes(file.size)})`)
     setFilePreview(URL.createObjectURL(file))
     setRemoveStored(false)
   }
@@ -49,7 +74,7 @@ export function ProductImageField({
       <Field
         label="Imagen del producto"
         htmlFor="image_url"
-        hint="Pega una URL o sube un archivo (JPEG, PNG o WebP, máx. 2 MB). Si subes archivo, tiene prioridad."
+        hint={`Pega una URL o sube un archivo (JPEG, PNG o WebP). Tamaño máximo: ${PRODUCT_IMAGE_MAX_MB} MB.`}
       >
         <Input
           id="image_url"
@@ -78,6 +103,14 @@ export function ProductImageField({
             onChange={onFileChange}
             className="max-w-xs text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
           />
+          {selectedFileLabel && (
+            <p className="text-xs text-muted" role="status">
+              Archivo seleccionado: {selectedFileLabel}
+            </p>
+          )}
+          <p className="text-xs text-muted">
+            Archivos mayores a {PRODUCT_IMAGE_MAX_MB} MB no se pueden subir.
+          </p>
         </div>
 
         {previewUrl ? (

@@ -1,5 +1,6 @@
 export const PRODUCT_IMAGE_BUCKET = 'product-images'
 export const PRODUCT_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+export const PRODUCT_IMAGE_MAX_MB = 2
 
 export const PRODUCT_IMAGE_ALLOWED_TYPES = [
   'image/jpeg',
@@ -68,17 +69,25 @@ export function extensionForMime(mime: string): string | null {
   }
 }
 
+/** Tamaño legible, ej. "1.4 MB" o "850 KB". */
+export function formatFileSizeBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
 export function validateProductImageFile(
   file: File,
   maxBytes = PRODUCT_IMAGE_MAX_BYTES
 ): string | null {
-  if (file.size > maxBytes) {
-    return `La imagen supera ${Math.round(maxBytes / (1024 * 1024))} MB.`
-  }
   if (
     !PRODUCT_IMAGE_ALLOWED_TYPES.includes(file.type as ProductImageMime)
   ) {
     return 'Formato no permitido. Usa JPEG, PNG o WebP.'
+  }
+  if (file.size > maxBytes) {
+    return `La imagen pesa ${formatFileSizeBytes(file.size)}; el máximo permitido es ${PRODUCT_IMAGE_MAX_MB} MB. Elige otra imagen o comprímela.`
   }
   return null
 }

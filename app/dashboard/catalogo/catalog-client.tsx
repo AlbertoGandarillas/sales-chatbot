@@ -13,6 +13,7 @@ import {
 import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
 import { ProductImageField } from '@/components/catalog/product-image-field'
 import { ProductThumbnail } from '@/components/catalog/product-thumbnail'
+import { validateProductImageFile } from '@/lib/product-image'
 import { cn } from '@/lib/cn'
 
 export interface Product {
@@ -82,15 +83,35 @@ function ProductForm({
   onDone: () => void
 }) {
   const [state, formAction, pending] = useActionState(saveProduct, initialState)
+  const [imageError, setImageError] = useState<string | null>(null)
 
   useEffect(() => {
     if (state.ok) onDone()
   }, [state.ok, onDone])
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const fileInput = e.currentTarget.elements.namedItem(
+      'image_file'
+    ) as HTMLInputElement | null
+    const file = fileInput?.files?.[0]
+    if (file && file.size > 0) {
+      const validationError = validateProductImageFile(file)
+      if (validationError) {
+        e.preventDefault()
+        setImageError(validationError)
+        return
+      }
+    }
+    setImageError(null)
+  }
+
+  const saveBlocked = pending || Boolean(imageError)
+
   return (
     <form
       action={formAction}
       encType="multipart/form-data"
+      onSubmit={handleSubmit}
       className="space-y-3 rounded-card border border-border-strong bg-surface-muted p-4"
     >
       {product && <input type="hidden" name="id" value={product.id} />}
@@ -159,7 +180,7 @@ function ProductForm({
         </Field>
       </div>
 
-      <ProductImageField product={product} />
+      <ProductImageField product={product} onFileError={setImageError} />
 
       <Field label="Descripción" htmlFor="description">
         <Textarea
@@ -180,14 +201,14 @@ function ProductForm({
         Disponible
       </label>
 
-      {state.error && (
+      {(imageError || state.error) && (
         <Alert tone="danger" live>
-          {state.error}
+          {imageError ?? state.error}
         </Alert>
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={saveBlocked}>
           {pending ? 'Guardando…' : 'Guardar'}
         </Button>
         <Button type="button" variant="outline" onClick={onDone}>
