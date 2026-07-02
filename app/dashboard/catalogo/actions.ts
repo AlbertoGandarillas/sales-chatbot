@@ -8,6 +8,7 @@ import {
 } from '@/lib/supabase/product-image-storage'
 import { ingestShopifyCatalog, type IngestResult } from '@/lib/shopify-ingestion'
 import { getSupabaseProjectUrl } from '@/lib/product-image'
+import { parsePromoFromFormData } from '@/lib/promo-form'
 
 export type CatalogState = { error: string | null; ok: boolean }
 
@@ -102,16 +103,32 @@ export async function saveProduct(
   const urlInput = nullable(formData, 'image_url')
   const file = imageFileFromForm(formData)
 
+  const promoParsed = parsePromoFromFormData(formData, price)
+  if (!promoParsed.ok) {
+    return { error: promoParsed.error, ok: false }
+  }
+
+  const isCustomOrder = formData.get('is_custom_order') != null
+  const promoFields = isCustomOrder
+    ? {
+        promo_price_soles: null,
+        promo_starts_at: null,
+        promo_ends_at: null,
+        promo_label: null,
+      }
+    : promoParsed.data
+
   const payload = {
     name,
     description: nullable(formData, 'description'),
     category,
     price_soles: price,
     available: formData.get('available') != null,
-    is_custom_order: formData.get('is_custom_order') != null,
+    is_custom_order: isCustomOrder,
     talla_range: nullable(formData, 'talla_range'),
     color_o_material: nullable(formData, 'color_o_material'),
     needs_review: false,
+    ...promoFields,
   }
 
   try {

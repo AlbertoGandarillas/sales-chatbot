@@ -5,6 +5,18 @@ import type {
 } from 'openai/resources/chat/completions'
 import { createServiceClient } from '@/lib/supabase'
 import { resolveProductImage } from '@/lib/product-image'
+import { mapProductForSearch } from '@/lib/pricing'
+import { createCatalogOrder, type OrderLineItem } from '@/lib/order-create'
+import {
+  advanceNextRunOn,
+  createOrderFromRecurring,
+  formatRecurringSchedule,
+  getActiveReminderRun,
+  listRecurringForCustomer,
+  skipRecurringRun,
+  summarizeRecurringItems,
+  type RecurringOrderRow,
+} from '@/lib/recurring-orders'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
@@ -26,14 +38,7 @@ const MAX_TOOL_ROUNDS = 8
 const MAX_ROUNDS_FALLBACK_REPLY =
   'Disculpa, necesito un momento más para revisar tu consulta. ¿Puedes repetir lo que necesitas?'
 
-interface OrderItem {
-  product_id: string
-  name: string
-  quantity: number
-  unit_price: number
-  talla_solicitada?: string
-  color_solicitado?: string
-}
+interface OrderItem extends OrderLineItem {}
 
 interface CustomOrderDetails {
   tipo: string
@@ -137,15 +142,15 @@ async function loadHistory(
 
 async function buscarProductos(
   business: Business,
-  query: string
+  query: string,
+  soloOfertas = false
 ) {
   const db = createServiceClient()
   const trimmed = query.trim()
+  const now = new Date()
 
-  // Siempre incluimos las columnas de variante: existen para todos los productos
-  // (null cuando no aplica) y permiten que un catálogo propio también use talla/color.
   const columns =
-    'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url, image_storage_path'
+    'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url, image_storage_path, promo_price_soles, promo_starts_at, promo_ends_at, promo_label'
 
   let request = db
     .from('products')
@@ -160,22 +165,28 @@ async function buscarProductos(
       `category.ilike.${pattern}`,
       `description.ilike.${pattern}`,
       `color_o_material.ilike.${pattern}`,
+      `promo_label.ilike.${pattern}`,
     ]
     request = request.or(filters.join(','))
   }
 
-  const { data, error } = await request.limit(20)
+  const { data, error } = await request.limit(soloOfertas ? 50 : 20)
   if (error) throw error
 
-  const products = (data ?? []).map((row) => {
+  let products = (data ?? []).map((row) => {
+    const mapped = mapProductForSearch(row, now)
     const { url: image_public_url } = resolveProductImage({
       image_url: row.image_url,
       image_storage_path: row.image_storage_path,
     })
-    return { ...row, image_public_url }
+    return { ...mapped, image_public_url }
   })
 
-  return { products }
+  if (soloOfertas) {
+    products = products.filter((p) => p.on_promo)
+  }
+
+  return { products: products.slice(0, 20) }
 }
 
 interface CrearPedidoItem {
@@ -187,62 +198,88 @@ interface CrearPedidoItem {
 
 async function crearPedido(ctx: AgentContext, items: CrearPedidoItem[]) {
   const db = createServiceClient()
-  const orderItems: OrderItem[] = []
-  let totalSoles = 0
-
-  for (const item of items) {
-    const { data: product, error } = await db
-      .from('products')
-      .select('id, name, price_soles, is_custom_order, available')
-      .eq('id', item.product_id)
-      .eq('business_id', ctx.business.id)
-      .single()
-
-    if (error || !product) {
-      throw new Error(`Producto no encontrado: ${item.product_id}`)
-    }
-    if (!product.available) {
-      throw new Error(`Producto no disponible: ${product.name}`)
-    }
-    if (product.is_custom_order) {
-      throw new Error(
-        `${product.name} requiere encargo personalizado, no pedido directo`
-      )
-    }
-
-    const unitPrice = Number(product.price_soles)
-    const orderItem: OrderItem = {
-      product_id: product.id,
-      name: product.name,
-      quantity: item.quantity,
-      unit_price: unitPrice,
-    }
-    if (item.talla_solicitada) orderItem.talla_solicitada = item.talla_solicitada
-    if (item.color_solicitado) orderItem.color_solicitado = item.color_solicitado
-    orderItems.push(orderItem)
-    totalSoles += unitPrice * item.quantity
-  }
-
-  const { data: order, error: orderError } = await db
-    .from('orders')
-    .insert({
-      business_id: ctx.business.id,
-      conversation_id: ctx.conversationId,
-      status: 'pending',
-      items: orderItems,
-      total_soles: totalSoles,
-      is_custom_order: false,
-    })
-    .select('id')
-    .single()
-
-  if (orderError) throw orderError
+  const result = await createCatalogOrder({
+    db,
+    businessId: ctx.business.id,
+    conversationId: ctx.conversationId,
+    items,
+    source: 'chat',
+  })
 
   return {
-    order_id: order.id,
-    total_soles: totalSoles,
-    items: orderItems,
-    status: 'pending',
+    order_id: result.order_id,
+    total_soles: result.total_soles,
+    items: result.items,
+    status: result.status,
+  }
+}
+
+async function consultarPedidoRecurrente(ctx: AgentContext) {
+  const db = createServiceClient()
+  const rows = await listRecurringForCustomer(
+    db,
+    ctx.business.id,
+    ctx.customerPhone
+  )
+
+  if (rows.length === 0) {
+    return { recurrentes: [], message: 'Este cliente no tiene pedidos recurrentes activos.' }
+  }
+
+  return {
+    recurrentes: rows.map((row) => ({
+      id: row.id,
+      status: row.status,
+      frequency: row.frequency,
+      schedule: formatRecurringSchedule(row),
+      next_run_on: row.next_run_on,
+      items_summary: summarizeRecurringItems(row.items),
+      notes: row.notes,
+    })),
+  }
+}
+
+async function confirmarPedidoRecurrente(
+  ctx: AgentContext,
+  confirmado: boolean,
+  notasCliente?: string
+) {
+  const db = createServiceClient()
+  const pending = await getActiveReminderRun(
+    db,
+    ctx.business.id,
+    ctx.customerPhone
+  )
+
+  if (!pending) {
+    throw new Error(
+      'No hay un recordatorio de pedido recurrente pendiente de confirmación para hoy.'
+    )
+  }
+
+  const recurring = pending.recurring as RecurringOrderRow
+
+  if (!confirmado) {
+    const nextRun = advanceNextRunOn(recurring)
+    await skipRecurringRun(db, recurring, pending.run.id)
+    return {
+      confirmado: false,
+      message: 'Pedido de esta semana omitido. Próxima fecha actualizada.',
+      next_run_on: nextRun,
+    }
+  }
+
+  const order = await createOrderFromRecurring(db, ctx.business, recurring, {
+    conversationId: ctx.conversationId,
+    runId: pending.run.id,
+    customerNotes: notasCliente,
+  })
+
+  return {
+    confirmado: true,
+    order_id: order.order_id,
+    total_soles: order.total_soles,
+    message: 'Pedido recurrente confirmado y registrado.',
   }
 }
 
@@ -371,7 +408,11 @@ async function executeTool(
 ): Promise<unknown> {
   switch (name) {
     case 'buscar_productos':
-      return buscarProductos(ctx.business, String(args.query ?? ''))
+      return buscarProductos(
+        ctx.business,
+        String(args.query ?? ''),
+        args.solo_ofertas === true
+      )
     case 'crear_pedido':
       return crearPedido(ctx, args.items as CrearPedidoItem[])
     case 'iniciar_encargo_personalizado':
@@ -388,6 +429,14 @@ async function executeTool(
       return consultarEstadoPedido(ctx.conversationId)
     case 'escalar_a_humano':
       return escalarAHumano(ctx, String(args.motivo ?? 'Sin motivo'))
+    case 'consultar_pedido_recurrente':
+      return consultarPedidoRecurrente(ctx)
+    case 'confirmar_pedido_recurrente':
+      return confirmarPedidoRecurrente(
+        ctx,
+        args.confirmado === true,
+        args.notas_cliente ? String(args.notas_cliente) : undefined
+      )
     default:
       throw new Error(`Tool desconocida: ${name}`)
   }

@@ -4,6 +4,30 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-07-02 — Pedidos recurrentes Tier 1 + 2
+
+**Spec:** `recurring-orders-spec.md`. Migración `20260629120000_recurring_orders.sql`,
+dashboard `/dashboard/recurrentes`, tools bot, cron `/api/cron/recurring-reminders`,
+`vercel.json` cron 12:00 UTC (7:00 Lima). Requiere `CRON_SECRET` en producción.
+
+---
+
+## 2026-07-02 — Promociones Tier 1 (precio promo por producto)
+
+**Spec:** `promotions-offers-spec.md`. Migración `20260628120000_product_promotions.sql`,
+`lib/pricing.ts`, formulario catálogo, bot (`buscar_productos` + `crear_pedido`), tests.
+
+---
+
+## 2026-06-26 — Promociones y pedidos recurrentes (negocios pequeños)
+
+**Índice:** `small-business-commerce-index.md`. Specs hijos:
+`promotions-offers-spec.md` (precio promo + campaña semanal),
+`recurring-orders-spec.md` (plantillas + recordatorio WA sin cobro auto).
+**Sin código aún** — pendiente aprobación checkpoints CP-SBC1–7.
+
+---
+
 ## 2026-06-26 — Catálogo imágenes + mensajes ricos WhatsApp
 
 **Índice:** `catalog-images-whatsapp-index.md`. Upload Supabase, thumbnails dashboard,

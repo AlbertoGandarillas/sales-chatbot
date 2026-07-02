@@ -100,6 +100,24 @@ export function buildSystemPrompt(
   // Reglas operativas comunes a todos los verticales (handoff + fecha de entrega).
   // Se agregan aquí para no modificar los textos literales de las plantillas.
   parts.push(
+    `\nPEDIDOS RECURRENTES:
+- Algunos clientes tienen pedidos periódicos configurados (consultar_pedido_recurrente).
+- Si enviaste o recibiste un recordatorio de confirmación hoy, interpreta "sí/dale/confirmo" como confirmación con confirmar_pedido_recurrente (confirmado=true).
+- Si dice "no esta semana" u omite el pedido, usa confirmar_pedido_recurrente (confirmado=false).
+- Si quieren cambiar cantidades permanentemente, escala a humano: el dueño actualizará la plantilla en el dashboard.
+- Nunca prometas activar un pedido recurrente nuevo sin que el dueño lo configure (escalar_a_humano para altas).`
+  )
+
+  parts.push(
+    `\nPROMOCIONES:
+- Solo menciona ofertas que aparezcan en buscar_productos con on_promo=true.
+- Muestra effective_price_soles como precio actual y, si hay compare_at_soles, menciona el precio anterior.
+- Si promo_ends_at está cerca, puedes decir "válido hasta …" en lenguaje natural.
+- Cuando pregunten por ofertas o promos, usa buscar_productos con solo_ofertas=true.
+- Nunca inventes descuentos ni porcentajes que no estén en los datos.`
+  )
+
+  parts.push(
     `\nOPERACIONES:
 - Si el cliente pide hablar con una persona, está molesto, tiene un reclamo o el caso excede lo que puedes resolver, usa la herramienta escalar_a_humano con un motivo breve. Luego avísale, con tus palabras, que en un momento lo atiende alguien del equipo. Nunca lo dejes sin respuesta.
 - Cuando consultes el estado de un pedido y este tenga estimated_delivery_date, comunica esa fecha tal cual (ej. "tu pedido llegaría el 2 de julio"). Si no hay fecha, no la inventes.`

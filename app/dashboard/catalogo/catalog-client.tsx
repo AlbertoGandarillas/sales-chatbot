@@ -14,6 +14,11 @@ import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
 import { ProductImageField } from '@/components/catalog/product-image-field'
 import { ProductThumbnail } from '@/components/catalog/product-thumbnail'
 import { validateProductImageFile } from '@/lib/product-image'
+import { effectivePrice } from '@/lib/pricing'
+import {
+  PROMO_LABEL_MAX_LENGTH,
+  timestamptzToDatetimeLocal,
+} from '@/lib/promo-form'
 import { cn } from '@/lib/cn'
 
 export interface Product {
@@ -30,6 +35,10 @@ export interface Product {
   image_url: string | null
   image_storage_path: string | null
   source: string
+  promo_price_soles: number | null
+  promo_starts_at: string | null
+  promo_ends_at: string | null
+  promo_label: string | null
 }
 
 const initialState: CatalogState = { error: null, ok: false }
@@ -73,6 +82,100 @@ const CATEGORY_SUGGESTIONS = [
 
 function formatSoles(n: number) {
   return `S/ ${Number(n).toFixed(2)}`
+}
+
+function ProductPriceDisplay({ product }: { product: Product }) {
+  if (product.is_custom_order) {
+    return <span className="mr-1 text-sm font-semibold text-foreground">—</span>
+  }
+
+  const pricing = effectivePrice(product)
+
+  if (pricing.onPromo) {
+    return (
+      <span className="mr-1 flex flex-col items-end text-sm font-semibold text-foreground sm:flex-row sm:items-center sm:gap-1.5">
+        <span className="text-xs font-normal text-muted line-through">
+          {formatSoles(pricing.compareAt!)}
+        </span>
+        <span className="text-success">{formatSoles(pricing.price)}</span>
+      </span>
+    )
+  }
+
+  return (
+    <span className="mr-1 text-sm font-semibold text-foreground">
+      {formatSoles(product.price_soles)}
+    </span>
+  )
+}
+
+function ProductPromoFields({ product }: { product?: Product }) {
+  const hasPromo = product?.promo_price_soles != null
+
+  return (
+    <details className="rounded-lg border border-border bg-surface p-3">
+      <summary className="cursor-pointer text-sm font-medium text-foreground">
+        Promoción (opcional)
+      </summary>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <Field
+          label="Precio promocional (S/)"
+          htmlFor="promo_price_soles"
+          hint="Debe ser menor que el precio normal."
+        >
+          <Input
+            id="promo_price_soles"
+            name="promo_price_soles"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Ej: 2.00"
+            defaultValue={product?.promo_price_soles ?? ''}
+          />
+        </Field>
+        <Field
+          label="Etiqueta"
+          htmlFor="promo_label"
+          hint={`Opcional, máx. ${PROMO_LABEL_MAX_LENGTH} caracteres.`}
+        >
+          <Input
+            id="promo_label"
+            name="promo_label"
+            maxLength={PROMO_LABEL_MAX_LENGTH}
+            placeholder="Oferta del día"
+            defaultValue={product?.promo_label ?? ''}
+          />
+        </Field>
+        <Field label="Válida desde" htmlFor="promo_starts_at" hint="Opcional. Hora Lima.">
+          <Input
+            id="promo_starts_at"
+            name="promo_starts_at"
+            type="datetime-local"
+            defaultValue={timestamptzToDatetimeLocal(product?.promo_starts_at ?? null)}
+          />
+        </Field>
+        <Field label="Válida hasta" htmlFor="promo_ends_at" hint="Opcional. Hora Lima.">
+          <Input
+            id="promo_ends_at"
+            name="promo_ends_at"
+            type="datetime-local"
+            defaultValue={timestamptzToDatetimeLocal(product?.promo_ends_at ?? null)}
+          />
+        </Field>
+      </div>
+      {hasPromo && (
+        <label className="mt-3 flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="remove_promo"
+            value="true"
+            className="h-4 w-4 accent-primary"
+          />
+          Quitar promoción al guardar
+        </label>
+      )}
+    </details>
+  )
 }
 
 function ProductForm({
@@ -181,6 +284,10 @@ function ProductForm({
       </div>
 
       <ProductImageField product={product} onFileError={setImageError} />
+
+      {!product?.is_custom_order && (
+        <ProductPromoFields product={product} />
+      )}
 
       <Field label="Descripción" htmlFor="description">
         <Textarea
@@ -301,8 +408,9 @@ export function CatalogClient({
         </p>
       ) : (
         <div className="space-y-2">
-          {visible.map((p) =>
-            editingId === p.id ? (
+          {visible.map((p) => {
+            const pricing = effectivePrice(p)
+            return editingId === p.id ? (
               <ProductForm
                 key={p.id}
                 product={p}
@@ -324,6 +432,11 @@ export function CatalogClient({
                       </Badge>
                     )}
                     {!p.available && <Badge tone="neutral">No disponible</Badge>}
+                    {pricing.onPromo && (
+                      <Badge tone="success" dot>
+                        En oferta
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted">
                     {[
@@ -341,9 +454,7 @@ export function CatalogClient({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="mr-1 text-sm font-semibold text-foreground">
-                    {p.is_custom_order ? '—' : formatSoles(p.price_soles)}
-                  </span>
+                  <ProductPriceDisplay product={p} />
                   <form action={toggleAvailable}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="next" value={String(!p.available)} />
@@ -371,7 +482,7 @@ export function CatalogClient({
                 </div>
               </article>
             )
-          )}
+          })}
         </div>
       )}
     </div>

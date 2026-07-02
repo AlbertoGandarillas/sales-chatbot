@@ -12,7 +12,7 @@ export default async function CatalogoPage() {
   const { data } = await supabase
     .from('products')
     .select(
-      'id, name, description, category, price_soles, is_custom_order, available, needs_review, talla_range, color_o_material, image_url, image_storage_path, source'
+      'id, name, description, category, price_soles, is_custom_order, available, needs_review, talla_range, color_o_material, image_url, image_storage_path, source, promo_price_soles, promo_starts_at, promo_ends_at, promo_label'
     )
     .eq('business_id', business.id)
     .order('needs_review', { ascending: false })

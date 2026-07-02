@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { summarizeRecurringItems } from '@/lib/recurring-orders'
 import {
   ModeToggle,
   OrderCard,
   ReplyBox,
   type OrderView,
 } from './conversation-client'
+import { Badge } from '@/components/ui'
 
 export const maxDuration = 30
 
@@ -67,7 +69,8 @@ export default async function ConversationDetail({
 
   if (!conversation) notFound()
 
-  const [{ data: messageData }, { data: orderData }] = await Promise.all([
+  const [{ data: messageData }, { data: orderData }, { data: recurringData }] =
+    await Promise.all([
     supabase
       .from('messages')
       .select('id, role, content, created_at')
@@ -80,10 +83,16 @@ export default async function ConversationDetail({
       )
       .eq('conversation_id', id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('recurring_orders')
+      .select('id, status, frequency, next_run_on, items')
+      .eq('customer_phone', conversation.customer_phone)
+      .in('status', ['active', 'paused']),
   ])
 
   const messages = (messageData ?? []) as MessageRow[]
   const orders = (orderData ?? []) as OrderRow[]
+  const recurringActive = (recurringData ?? []).filter((r) => r.status === 'active')
   const mode = (conversation.mode as 'bot' | 'human') ?? 'bot'
 
   const orderViews: OrderView[] = orders.map((o) => ({
@@ -124,6 +133,19 @@ export default async function ConversationDetail({
               <p className="text-xs text-emerald-50">
                 {mode === 'human' ? 'Atención humana' : 'Atendido por el bot'}
               </p>
+              {recurringActive.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {recurringActive.map((r) => (
+                    <Link key={r.id} href="/dashboard/recurrentes">
+                      <Badge tone="success" className="text-[10px]">
+                        Recurrente · {summarizeRecurringItems(
+                          (r.items ?? []) as { quantity: number; name: string }[]
+                        )}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <ModeToggle conversationId={id} mode={mode} />

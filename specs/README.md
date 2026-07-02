@@ -14,6 +14,9 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `catalog-images-whatsapp-index.md` | Índice: imágenes catálogo + mensajes ricos WA |
 | `catalog-images-storage-spec.md` | Upload Supabase, URL, thumbnails, precedencia |
 | `whatsapp-rich-messages-spec.md` | product_list, ORDER confirmación (Cruje) |
+| `small-business-commerce-index.md` | Índice: promociones + pedidos recurrentes (PYME) |
+| `promotions-offers-spec.md` | Precio promo, oferta del día/semana, bot + dashboard |
+| `recurring-orders-spec.md` | Plantillas recurrentes, recordatorios WhatsApp |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

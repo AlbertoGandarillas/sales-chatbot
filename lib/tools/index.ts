@@ -6,13 +6,18 @@ const buscarProductosStandard: ChatCompletionTool = {
   function: {
     name: 'buscar_productos',
     description:
-      'Busca productos en el catálogo por nombre, categoría o palabra clave. Usar siempre antes de cotizar precios. Si el cliente pide ver el catálogo completo, usar query vacío. Si un producto tiene rango de tallas o color/material, comunícalo tal como aparece.',
+      'Busca productos en el catálogo por nombre, categoría o palabra clave. Usar siempre antes de cotizar precios. Devuelve effective_price_soles y on_promo cuando hay promoción vigente. Si el cliente pide ver el catálogo completo, usar query vacío. Si pregunta por ofertas, usar solo_ofertas=true.',
     parameters: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
           description: 'Texto de búsqueda. Cadena vacía para listar todo el catálogo.',
+        },
+        solo_ofertas: {
+          type: 'boolean',
+          description:
+            'Si true, solo productos con promoción vigente (on_promo). Usar cuando pregunten por ofertas o promos.',
         },
       },
       required: ['query'],
@@ -32,6 +37,11 @@ const buscarProductosShopify: ChatCompletionTool = {
         query: {
           type: 'string',
           description: 'Texto de búsqueda (modelo, talla, color). Vacío para todo el catálogo.',
+        },
+        solo_ofertas: {
+          type: 'boolean',
+          description:
+            'Si true, solo productos con promoción vigente (on_promo). Usar cuando pregunten por ofertas o promos.',
         },
       },
       required: ['query'],
@@ -169,6 +179,39 @@ const consultarEstadoPedido: ChatCompletionTool = {
   },
 }
 
+const consultarPedidoRecurrente: ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'consultar_pedido_recurrente',
+    description:
+      'Consulta si este cliente tiene pedidos recurrentes (plantilla semanal, quincenal o mensual). Usar cuando pregunte por su pedido fijo, lo de siempre, o cuándo es su próximo pedido.',
+    parameters: { type: 'object', properties: {} },
+  },
+}
+
+const confirmarPedidoRecurrente: ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'confirmar_pedido_recurrente',
+    description:
+      'Confirma u omite el pedido recurrente del día tras un recordatorio enviado al cliente. Usar cuando responda sí/dale/confirmo o no esta semana.',
+    parameters: {
+      type: 'object',
+      properties: {
+        confirmado: {
+          type: 'boolean',
+          description: 'true si confirma el pedido; false si lo omite esta semana',
+        },
+        notas_cliente: {
+          type: 'string',
+          description: 'Notas opcionales del cliente para este pedido',
+        },
+      },
+      required: ['confirmado'],
+    },
+  },
+}
+
 export interface ToolsContext {
   catalog_source: CatalogSource
   supports_custom_orders: boolean
@@ -184,6 +227,6 @@ export function getToolsFor(business: ToolsContext): ChatCompletionTool[] {
     tools.push(iniciarEncargoPersonalizado)
   }
 
-  tools.push(consultarEstadoPedido, escalarAHumano)
+  tools.push(consultarEstadoPedido, escalarAHumano, consultarPedidoRecurrente, confirmarPedidoRecurrente)
   return tools
 }
