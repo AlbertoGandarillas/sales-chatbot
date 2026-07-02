@@ -11,6 +11,9 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `agent-spec.md` | System prompt, tools, ciclo multi-turno |
 | `sprint-plan.md` | Fases de implementación y criterios de aceptación |
 | `production-checklist.md` | Pasos para salir del MVP a producción |
+| `catalog-images-whatsapp-index.md` | Índice: imágenes catálogo + mensajes ricos WA |
+| `catalog-images-storage-spec.md` | Upload Supabase, URL, thumbnails, precedencia |
+| `whatsapp-rich-messages-spec.md` | product_list, ORDER confirmación (Cruje) |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

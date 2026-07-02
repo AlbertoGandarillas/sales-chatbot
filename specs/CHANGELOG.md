@@ -4,6 +4,13 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-06-26 — Catálogo imágenes + mensajes ricos WhatsApp
+
+**Índice:** `catalog-images-whatsapp-index.md`. Upload Supabase, thumbnails dashboard,
+mensajes nativos WA (product_list + ORDER). **Sin código aún.**
+
+---
+
 ## 2026-06-26 — Production v1 hardening (P0-1, P0-2, P0-6, P0-7, P1-8/9/10/12)
 
 **Spec** (`production-v1-hardening-spec.md`). Camino corto a v1 seguro, medible y

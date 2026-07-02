@@ -11,6 +11,8 @@ import {
   type ResyncState,
 } from './actions'
 import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
+import { ProductImageField } from '@/components/catalog/product-image-field'
+import { ProductThumbnail } from '@/components/catalog/product-thumbnail'
 import { cn } from '@/lib/cn'
 
 export interface Product {
@@ -25,6 +27,7 @@ export interface Product {
   talla_range: string | null
   color_o_material: string | null
   image_url: string | null
+  image_storage_path: string | null
   source: string
 }
 
@@ -87,6 +90,7 @@ function ProductForm({
   return (
     <form
       action={formAction}
+      encType="multipart/form-data"
       className="space-y-3 rounded-card border border-border-strong bg-surface-muted p-4"
     >
       {product && <input type="hidden" name="id" value={product.id} />}
@@ -153,14 +157,9 @@ function ProductForm({
             defaultValue={product?.color_o_material ?? ''}
           />
         </Field>
-        <Field label="Imagen (URL)" htmlFor="image_url" hint="Opcional.">
-          <Input
-            id="image_url"
-            name="image_url"
-            defaultValue={product?.image_url ?? ''}
-          />
-        </Field>
       </div>
+
+      <ProductImageField product={product} />
 
       <Field label="Descripción" htmlFor="description">
         <Textarea
@@ -293,7 +292,9 @@ export function CatalogClient({
                 key={p.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4"
               >
-                <div className="min-w-0">
+                <div className="flex min-w-0 items-start gap-3">
+                  <ProductThumbnail product={p} size={48} />
+                  <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium text-foreground">{p.name}</p>
                     {p.needs_review && (
@@ -316,6 +317,7 @@ export function CatalogClient({
                       .filter(Boolean)
                       .join(' · ') || '—'}
                   </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="mr-1 text-sm font-semibold text-foreground">

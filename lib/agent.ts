@@ -4,6 +4,7 @@ import type {
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
 import { createServiceClient } from '@/lib/supabase'
+import { resolveProductImage } from '@/lib/product-image'
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
@@ -144,7 +145,7 @@ async function buscarProductos(
   // Siempre incluimos las columnas de variante: existen para todos los productos
   // (null cuando no aplica) y permiten que un catálogo propio también use talla/color.
   const columns =
-    'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url'
+    'id, name, description, category, price_soles, is_custom_order, talla_range, color_o_material, image_url, image_storage_path'
 
   let request = db
     .from('products')
@@ -166,7 +167,15 @@ async function buscarProductos(
   const { data, error } = await request.limit(20)
   if (error) throw error
 
-  return { products: data ?? [] }
+  const products = (data ?? []).map((row) => {
+    const { url: image_public_url } = resolveProductImage({
+      image_url: row.image_url,
+      image_storage_path: row.image_storage_path,
+    })
+    return { ...row, image_public_url }
+  })
+
+  return { products }
 }
 
 interface CrearPedidoItem {
