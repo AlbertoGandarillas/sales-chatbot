@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { resolveTenantPostLoginPath } from '@/lib/tenant-routing'
 
 /**
  * Callback del magic link. Soporta dos formatos de Supabase:
@@ -20,12 +21,14 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const destination = await resolveTenantPostLoginPath(supabase, next)
+      return NextResponse.redirect(`${origin}${destination}`)
     }
   } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const destination = await resolveTenantPostLoginPath(supabase, next)
+      return NextResponse.redirect(`${origin}${destination}`)
     }
   }
 

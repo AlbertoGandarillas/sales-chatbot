@@ -6,6 +6,7 @@ import { useActionState, useEffect, useState } from 'react'
 import type { AdminBusinessRow } from '@/lib/admin-data'
 import { maskSecret } from '@/lib/mask-secret'
 import {
+  assignBusinessOwner,
   updateBusinessGeneral,
   updateBusinessWhatsApp,
   type AdminBusinessState,
@@ -188,9 +189,66 @@ function WhatsAppForm({ business }: { business: AdminBusinessRow }) {
   )
 }
 
+function OwnerForm({ business }: { business: AdminBusinessRow }) {
+  const [state, formAction, pending] = useActionState(assignBusinessOwner, initialState)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (state.ok) {
+      setSaved(true)
+      const t = setTimeout(() => setSaved(false), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [state.ok])
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <input type="hidden" name="id" value={business.id} />
+      <p className="text-sm text-muted">
+        Vincula la cuenta Supabase Auth del dueño para que pueda entrar al dashboard.
+        {business.owner_user_id ? (
+          <>
+            {' '}
+            Dueño actual:{' '}
+            <span className="font-mono text-xs text-foreground">
+              {business.owner_user_id}
+            </span>
+          </>
+        ) : (
+          <> Este negocio aún no tiene dueño vinculado.</>
+        )}
+      </p>
+      <Field label="Correo del dueño" htmlFor="owner_email">
+        <Input
+          id="owner_email"
+          name="owner_email"
+          type="email"
+          required
+          placeholder="dueño@ejemplo.com"
+        />
+      </Field>
+      {state.error && (
+        <Alert tone="danger" live>
+          {state.error}
+        </Alert>
+      )}
+      {saved && (
+        <Alert tone="success" live>
+          Dueño vinculado. El cliente puede iniciar sesión de nuevo.
+        </Alert>
+      )}
+      <Button type="submit" disabled={pending}>
+        {pending ? 'Vinculando…' : 'Vincular dueño'}
+      </Button>
+    </form>
+  )
+}
+
 export function BusinessEditClient({ business }: { business: AdminBusinessRow }) {
   const searchParams = useSearchParams()
-  const tab = searchParams.get('tab') === 'whatsapp' ? 'whatsapp' : 'general'
+  const tabParam = searchParams.get('tab')
+  const tab =
+    tabParam === 'whatsapp' ? 'whatsapp' : tabParam === 'owner' ? 'owner' : 'general'
   const base = `/admin/negocios/${business.id}`
 
   return (
@@ -202,10 +260,15 @@ export function BusinessEditClient({ business }: { business: AdminBusinessRow })
         <TabLink href={`${base}?tab=whatsapp`} active={tab === 'whatsapp'}>
           WhatsApp
         </TabLink>
+        <TabLink href={`${base}?tab=owner`} active={tab === 'owner'}>
+          Dueño
+        </TabLink>
       </div>
       <div className="mt-6 max-w-xl">
         {tab === 'whatsapp' ? (
           <WhatsAppForm business={business} />
+        ) : tab === 'owner' ? (
+          <OwnerForm business={business} />
         ) : (
           <GeneralForm business={business} />
         )}

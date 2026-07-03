@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requirePlatformAdminWithClient } from '@/lib/admin-auth'
 import { logAdminAction } from '@/lib/admin-audit'
+import { createServiceClient } from '@/lib/supabase'
 
 export type AdminBusinessState = { error: string | null; ok: boolean }
 
@@ -79,6 +80,81 @@ export async function updateBusinessWhatsApp(
   await logAdminAction(session.userId, 'business.update_whatsapp', 'business', id, {
     whatsapp_phone_number_id: phoneNumberId,
     token_updated: Boolean(token),
+  })
+
+  revalidatePath('/admin/negocios')
+  revalidatePath(`/admin/negocios/${id}`)
+  return { ...initial, ok: true }
+}
+
+async function findAuthUserIdByEmail(email: string): Promise<string | null> {
+  const db = createServiceClient()
+  let page = 1
+  const perPage = 200
+
+  while (page <= 10) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage })
+    if (error || !data?.users?.length) return null
+
+    const match = data.users.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    )
+    if (match?.id) return match.id
+
+    if (data.users.length < perPage) break
+    page++
+  }
+
+  return null
+}
+
+export async function assignBusinessOwner(
+  _prev: AdminBusinessState,
+  formData: FormData
+): Promise<AdminBusinessState> {
+  const { supabase, session } = await requirePlatformAdminWithClient()
+  const id = String(formData.get('id') ?? '')
+  const ownerEmail = String(formData.get('owner_email') ?? '').trim()
+
+  if (!id) return { error: 'ID inválido.', ok: false }
+  if (!ownerEmail) return { error: 'El correo del dueño es obligatorio.', ok: false }
+
+  const ownerUserId = await findAuthUserIdByEmail(ownerEmail)
+  if (!ownerUserId) {
+    return {
+      error: 'No hay usuario registrado con ese correo. Debe crear cuenta en /signup primero.',
+      ok: false,
+    }
+  }
+
+  const db = createServiceClient()
+  const { data: existingOwnerBusiness } = await db
+    .from('businesses')
+    .select('id, name')
+    .eq('owner_user_id', ownerUserId)
+    .neq('id', id)
+    .maybeSingle()
+
+  if (existingOwnerBusiness) {
+    return {
+      error: `Ese usuario ya es dueño de "${existingOwnerBusiness.name}".`,
+      ok: false,
+    }
+  }
+
+  const { error } = await supabase
+    .from('businesses')
+    .update({
+      owner_user_id: ownerUserId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message, ok: false }
+
+  await logAdminAction(session.userId, 'business.assign_owner', 'business', id, {
+    owner_email: ownerEmail,
+    owner_user_id: ownerUserId,
   })
 
   revalidatePath('/admin/negocios')

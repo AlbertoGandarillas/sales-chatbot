@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { resolveTenantPostLoginPath } from '@/lib/tenant-routing'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -50,13 +51,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Si ya hay sesión y entra a /login o /signup, mandarlo al dashboard.
-  // (/reset-password se permite aunque haya sesión: es para cambiar la clave.)
+  // Sesión activa en /login o /signup → dashboard u onboarding según negocio vinculado.
   if (user && (path === '/signup' || path === '/login')) {
+    const destination = await resolveTenantPostLoginPath(supabase)
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = destination
     url.search = ''
     return NextResponse.redirect(url)
+  }
+
+  // Dueño con negocio no debe ver onboarding.
+  if (user && path.startsWith('/onboarding')) {
+    const destination = await resolveTenantPostLoginPath(supabase, '/onboarding')
+    if (destination !== '/onboarding') {
+      const url = request.nextUrl.clone()
+      url.pathname = destination
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
   }
 
   return response

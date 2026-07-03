@@ -28,8 +28,12 @@ export default async function AdminNegociosPage() {
                       : ' · sin WhatsApp'}
                   </p>
                 </div>
-                <Badge tone={b.whatsapp_token ? 'primary' : 'warning'}>
-                  {b.whatsapp_token ? 'WA conectado' : 'WA pendiente'}
+                <Badge tone={b.owner_user_id ? (b.whatsapp_token ? 'primary' : 'warning') : 'danger'}>
+                  {!b.owner_user_id
+                    ? 'Sin dueño'
+                    : b.whatsapp_token
+                      ? 'WA conectado'
+                      : 'WA pendiente'}
                 </Badge>
               </Card>
             </Link>

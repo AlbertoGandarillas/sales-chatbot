@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { resolveTenantPostLoginPath } from '@/lib/tenant-routing'
 import { AuthShell } from '@/components/auth-shell'
 import { Alert, Button, Field, Input } from '@/components/ui'
 
@@ -30,12 +31,14 @@ function LoginForm() {
       email: email.trim(),
       password,
     })
-    setBusy(false)
     if (error) {
+      setBusy(false)
       setMessage({ kind: 'error', text: 'Correo o contraseña incorrectos.' })
       return
     }
-    router.push(next)
+    const destination = await resolveTenantPostLoginPath(supabase, next)
+    setBusy(false)
+    router.push(destination)
     router.refresh()
   }
 
