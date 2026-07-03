@@ -30,7 +30,7 @@ function LogoContent({
         alt=""
         width={icon}
         height={icon}
-        className="shrink-0 rounded-lg"
+        className="shrink-0"
         priority
       />
       {variant === 'full' && (
