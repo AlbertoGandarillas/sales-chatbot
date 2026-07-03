@@ -17,6 +17,8 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `small-business-commerce-index.md` | Índice: promociones + pedidos recurrentes (PYME) |
 | `promotions-offers-spec.md` | Precio promo, oferta del día/semana, bot + dashboard |
 | `recurring-orders-spec.md` | Plantillas recurrentes, recordatorios WhatsApp |
+| `rebranding-uru-spec.md` | Rebranding Aynibot → Uru (marca + identidad visual) |
+| `design-system-v3-uru.md` | Tokens esmeralda, gradientes, Nunito, chat WA |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

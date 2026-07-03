@@ -1,35 +1,54 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────
-   Aynibot — Design tokens (light). Cálido, claro y confiable.
+   Uru — Design tokens (light). Esmeralda, claro y confiable.
    Los componentes consumen estos tokens vía utilidades semánticas
-   (bg-surface, text-muted, border-border, bg-primary, etc.) en lugar
-   de hardcodear colores. Listos para añadir un tema oscuro luego.
+   (bg-surface, text-muted, border-border, bg-primary, etc.).
    ─────────────────────────────────────────────────────────────── */
 :root {
-  --background: #faf8f5;
+  --background: #f0fbf6;
   --surface: #ffffff;
-  --surface-muted: #f4f1ec;
-  --foreground: #1c1917;
-  --muted-foreground: #57534e;
+  --surface-muted: #e4f7ee;
+  --foreground: #15211c;
+  --muted-foreground: #3d5349;
 
-  --border: #e7e2da;
-  --border-strong: #b9b2a7;
+  --border: #c5e8d8;
+  --border-strong: #7bc4a8;
 
-  --primary: #9a3412;
+  --primary: #00b37e;
   --primary-foreground: #ffffff;
-  --primary-hover: #7c2d12;
+  --primary-hover: #009a6c;
 
-  --ring: #c2410c;
+  --secondary: #1e90d6;
+  --secondary-foreground: #ffffff;
 
-  --success: #15803d;
-  --success-surface: #ecfdf3;
+  --accent: #ffc633;
+  --accent-foreground: #15211c;
+
+  --ring: #00b37e;
+
+  --success: #00b37e;
+  --success-surface: #e4f7ee;
   --warning: #b45309;
-  --warning-surface: #fef6e7;
-  --danger: #b91c1c;
-  --danger-surface: #fef2f2;
-  --info: #1d4ed8;
-  --info-surface: #eff4ff;
+  --warning-surface: #fff8e6;
+  --danger: #c62828;
+  --danger-surface: #ffebee;
+  --info: #1e90d6;
+  --info-surface: #e8f4fd;
+
+  /* Chat estilo WhatsApp — alineado a paleta Uru */
+  --wa-header: #00b37e;
+  --wa-header-subtle: #e4f7ee;
+  --wa-chat-bg: #f0fbf6;
+  --wa-bubble-in: #ffffff;
+  --wa-bubble-out-bot: #e4f7ee;
+  --wa-bubble-out-human: #c5e8d8;
+  --wa-bubble-label: #009a6c;
+
+  /* Gradientes de marca */
+  --gradient-citric: linear-gradient(135deg, #00b37e 0%, #1e90d6 55%, #ffc633 100%);
+  --gradient-fresh: linear-gradient(135deg, #00b37e 0%, #1e90d6 60%, #e4f7ee 100%);
+  --gradient-sale: linear-gradient(135deg, #00b37e 0%, #ffc633 100%);
 
   --radius: 0.75rem;
 }
@@ -48,6 +67,12 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
 
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
   --color-ring: var(--ring);
 
   --color-success: var(--success);
@@ -59,16 +84,41 @@
   --color-info: var(--info);
   --color-info-surface: var(--info-surface);
 
+  --color-wa-header: var(--wa-header);
+  --color-wa-header-subtle: var(--wa-header-subtle);
+  --color-wa-chat-bg: var(--wa-chat-bg);
+  --color-wa-bubble-in: var(--wa-bubble-in);
+  --color-wa-bubble-out-bot: var(--wa-bubble-out-bot);
+  --color-wa-bubble-out-human: var(--wa-bubble-out-human);
+  --color-wa-bubble-label: var(--wa-bubble-label);
+
   --radius-card: var(--radius);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-brand: var(--font-nunito);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.font-brand {
+  font-family: var(--font-brand), var(--font-sans), sans-serif;
+}
+
+.bg-gradient-citric {
+  background: var(--gradient-citric);
+}
+
+.bg-gradient-fresh {
+  background: var(--gradient-fresh);
+}
+
+.bg-gradient-sale {
+  background: var(--gradient-sale);
 }
 
 /* Contraste de placeholders ≥ 4.5:1 sobre superficies claras (WCAG 1.4.3) */

@@ -1,6 +1,6 @@
-# Arquitectura v2 — Plataforma multi-tenant (Aynibot)
+# Arquitectura v2 — Plataforma multi-tenant (Uru)
 
-> Extiende `architecture.md` (v1, Cruje). **No reemplaza** el v1; documenta los cambios para soportar múltiples negocios bajo el mismo código. "Aynibot" es el nombre comercial de la plataforma (temporal), usado solo en la landing/UI; el repo y las variables internas no se renombran.
+> Extiende `architecture.md` (v1, Cruje). **No reemplaza** el v1; documenta los cambios para soportar múltiples negocios bajo el mismo código. "Uru" es el nombre comercial de la plataforma (temporal), usado solo en la landing/UI; el repo y las variables internas no se renombran.
 
 ## Cambio central
 

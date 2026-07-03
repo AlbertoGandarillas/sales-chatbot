@@ -45,7 +45,7 @@ export function ModeToggle({
         size="sm"
         variant="secondary"
         pendingText="Cambiando…"
-        className="border border-white/40 bg-white text-emerald-900 shadow-sm hover:bg-emerald-50"
+        className="border border-white/40 bg-white text-foreground shadow-sm hover:bg-surface-muted"
       >
         {mode === 'human' ? 'Devolver al bot' : 'Pausar bot (tomar control)'}
       </SubmitButton>

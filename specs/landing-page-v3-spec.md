@@ -9,9 +9,9 @@
 
 ## 1. Objetivo
 
-Elevar el landing de Aynibot con la **claridad expositiva** de un producto maduro
+Elevar el landing de Uru con la **claridad expositiva** de un producto maduro
 (estructura inspirada en yavendio.com/pe: cómo funciona → funcionalidades → para
-quién → FAQ), pero con **contenido 100% verídico** de lo que Aynibot hace hoy.
+quién → FAQ), pero con **contenido 100% verídico** de lo que Uru hace hoy.
 
 ### Reglas de contenido (no negociables)
 - ❌ Sin cifras de impacto inventadas (marcas, facturación, % de conversión).
@@ -26,7 +26,7 @@ quién → FAQ), pero con **contenido 100% verídico** de lo que Aynibot hace ho
 ## 2. Estado actual (lo que NO se elimina)
 
 `app/page.tsx` hoy tiene, en este orden:
-1. **Header** (marca "A" + Aynibot, botones Iniciar sesión / Crear cuenta gratis).
+1. **Header** (marca "A" + Uru, botones Iniciar sesión / Crear cuenta gratis).
 2. **Hero** (badge "Hecho para negocios en Perú", H1, subtítulo, 2 CTAs).
 3. **Casos de uso** (2 `<article>`: panaderías / retail Shopify) sobre `bg-surface-muted`.
 4. **CTA final** (H2 + botón "Crear cuenta gratis").
@@ -133,7 +133,7 @@ ocultan (los botones quedan). Cada sección nueva lleva su `id` para el scroll.
       entrega, avisando al dueño cuando entra un pedido especial."
     - **Betta**: "Sincroniza el catálogo desde Shopify y atiende consultas de modelo,
       talla y color, armando el pedido para que el equipo confirme disponibilidad."
-  - Frase de encuadre honesta: "Dos negocios reales ya operando con Aynibot."
+  - Frase de encuadre honesta: "Dos negocios reales ya operando con Uru."
     (Sin números.)
 
 ### 4.4 "Para qué negocios es" (`id="para-quien"`)
@@ -143,7 +143,7 @@ ocultan (los botones quedan). Cada sección nueva lleva su `id` para el scroll.
   - Tarjeta 1: "Panaderías y pastelerías — catálogo + encargos personalizados."
   - Tarjeta 2: "Tiendas Shopify (retail) — catálogo de productos con variantes de
     talla y color."
-  - **Nota**: "Hoy Aynibot está enfocado en estos dos tipos de negocio. Si el tuyo
+  - **Nota**: "Hoy Uru está enfocado en estos dos tipos de negocio. Si el tuyo
     es distinto, escríbenos y lo evaluamos." (Evita el "para cualquier negocio".)
 
 ### 4.5 "Preguntas frecuentes" (`id="faq"`)

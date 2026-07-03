@@ -24,7 +24,7 @@ export default async function OnboardingPage() {
           Crea tu negocio
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Un último paso para empezar a usar Aynibot.
+          Un último paso para empezar a usar Uru.
         </p>
         <OnboardingForm />
       </div>

@@ -1,15 +1,14 @@
 import Link from 'next/link'
 import { LEGAL } from '@/lib/legal-config'
 import { PageHeader } from '@/components/ui'
+import { UruLogo } from '@/components/brand/uru-logo'
 
 export default function TerminosPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <Link href="/" className="font-bold tracking-tight text-foreground">
-            Aynibot
-          </Link>
+          <UruLogo size="sm" />
           <Link href="/login" className="text-sm text-primary hover:underline">
             Iniciar sesión
           </Link>
@@ -24,14 +23,14 @@ export default function TerminosPage() {
 
         <div className="prose prose-stone mt-8 max-w-none space-y-6 text-muted">
           <p>
-            Al usar Aynibot ({LEGAL.companyName}), aceptas estos términos. Si no estás de
+            Al usar Uru ({LEGAL.companyName}), aceptas estos términos. Si no estás de
             acuerdo, no uses el servicio.
           </p>
 
           <section>
             <h2 className="text-lg font-semibold text-foreground">El servicio</h2>
             <p>
-              Aynibot ofrece un agente de ventas por WhatsApp y un panel para que comercios
+              Uru ofrece un agente de ventas por WhatsApp y un panel para que comercios
               gestionen catálogo, conversaciones y pedidos. <strong>No somos procesador de
               pagos</strong>: los cobros entre comercio y cliente final (Yape, depósito, etc.)
               son responsabilidad del comercio.
@@ -71,7 +70,7 @@ export default function TerminosPage() {
             <p>
               En la medida permitida por la ley, {LEGAL.companyName} no será responsable por
               daños indirectos, lucro cesante o pérdidas derivadas del uso del servicio. La
-              responsabilidad total se limita al monto pagado por el comercio a Aynibot en
+              responsabilidad total se limita al monto pagado por el comercio a Uru en
               los últimos doce meses, cuando aplique.
             </p>
           </section>

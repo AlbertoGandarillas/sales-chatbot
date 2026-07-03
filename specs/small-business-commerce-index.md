@@ -31,7 +31,7 @@ Estos specs **complementan** (no reemplazan):
 
 ### Promociones
 
-| E-commerce tradicional | Aynibot (propuesta simple) |
+| E-commerce tradicional | Uru (propuesta simple) |
 |---|---|
 | Motor de reglas (%, fijo, BOGO, mínimo de compra) | **Precio promocional** opcional por producto + fechas |
 | Colecciones dinámicas "Sale" | Categoría **`ofertas`** (ya existe en UI) + badge "En oferta" |
@@ -41,7 +41,7 @@ Estos specs **complementan** (no reemplazan):
 
 ### Pedidos recurrentes
 
-| E-commerce / SaaS suscripción | Aynibot (propuesta simple) |
+| E-commerce / SaaS suscripción | Uru (propuesta simple) |
 |---|---|
 | Cobro automático tarjeta / wallet | **Confirmación por WhatsApp** cada ciclo (Yape manual) |
 | Frecuencia + SKU + dirección guardados | Plantilla `recurring_orders`: ítems, frecuencia, próxima fecha |
@@ -95,7 +95,7 @@ Promociones y recurrentes **pueden implementarse en paralelo** tras P1, porque n
 | CP-SBC3 | ¿Varias campañas activas a la vez? | **Sí**, pero **una sola "destacada"** para el saludo del bot |
 | CP-SBC4 | ¿Recurrentes crean pedido automático sin confirmar? | **No** — siempre confirmación del cliente (WhatsApp) |
 | CP-SBC5 | ¿Quién dispara el recordatorio recurrente? | **Cron diario** (Vercel Cron / Supabase pg_cron) a hora configurable por negocio |
-| CP-SBC6 | ¿Aplica a catálogo Shopify? | **Sí** — promo es capa Aynibot sobre producto local; no sobrescribe precio Shopify en origen |
+| CP-SBC6 | ¿Aplica a catálogo Shopify? | **Sí** — promo es capa Uru sobre producto local; no sobrescribe precio Shopify en origen |
 | CP-SBC7 | ¿Mostrar ofertas con product_list WA? | **Después** de `whatsapp-rich-messages-spec.md` Tier 1 |
 
 ---

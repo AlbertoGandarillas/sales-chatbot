@@ -6,7 +6,7 @@
 >
 > **Metodología spec-driven.** Se aprueba ANTES de tocar código.
 >
-> **Premisa nueva (de la conversación):** Aynibot es para **negocios que venden**.
+> **Premisa nueva (de la conversación):** Uru es para **negocios que venden**.
 > El tipo de negocio **no es una identidad fija**: un negocio puede **empezar con un
 > catálogo propio** (inventario sencillo, sin e-commerce) y **más adelante migrar a
 > Shopify** sin rehacer su cuenta, su WhatsApp ni sus conversaciones. El diseño debe

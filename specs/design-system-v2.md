@@ -1,5 +1,7 @@
 # Design System v2 — Aynibot
 
+> **Superseded by** `design-system-v3-uru.md` (2026-07-02). Conservado como referencia histórica.
+
 > Rediseño UI/UX integral sin cambiar lógica de negocio. Stack real: Next.js 16 +
 > React 19 + **Tailwind CSS v4** (config CSS-first vía `@theme`), fuentes Geist.
 > **No usa shadcn/ui**; se creó una capa de primitivos propia y ligera en

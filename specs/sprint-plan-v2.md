@@ -99,7 +99,7 @@ M1 (esquema + alta usuarios/negocios)
 
 **Specs**: `landing-signup-spec-v2.md`
 
-1. `/` landing Aynibot.
+1. `/` landing Uru.
 2. `/signup` (signInWithOtp).
 3. `/auth/callback` (exchange + redirección por negocio).
 4. `/onboarding` (crear negocio).
@@ -109,7 +109,7 @@ M1 (esquema + alta usuarios/negocios)
 - [x] Flujo completo: landing → signup → correo → callback → onboarding/dashboard.
 - [x] Cruje y Betta entran directo a dashboard (sin onboarding).
 
-**Estado**: ✅ Completado. `/` landing Aynibot; `/signup` (magic link); `/auth/callback` (de M4); `/onboarding` (form + Server Action `createBusiness`); `proxy.ts` protege `/dashboard` y `/onboarding`. `/login` quedó como alias → `/signup`. La redirección onboarding-vs-dashboard la resuelve el guard de `app/dashboard/layout.tsx`. Build OK.
+**Estado**: ✅ Completado. `/` landing Uru; `/signup` (magic link); `/auth/callback` (de M4); `/onboarding` (form + Server Action `createBusiness`); `proxy.ts` protege `/dashboard` y `/onboarding`. `/login` quedó como alias → `/signup`. La redirección onboarding-vs-dashboard la resuelve el guard de `app/dashboard/layout.tsx`. Build OK.
 
 ---
 

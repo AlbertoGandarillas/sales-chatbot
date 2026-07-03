@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +12,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "600", "800", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Aynibot — Agente de ventas por WhatsApp",
+  title: "Uru — Vende sin parar",
   description:
     "Agente de ventas por WhatsApp para negocios en Perú. Atiende, cotiza y toma pedidos 24/7.",
+  openGraph: {
+    title: "Uru — Vende sin parar",
+    description:
+      "Agente de ventas por WhatsApp para negocios en Perú. Atiende, cotiza y toma pedidos 24/7.",
+    siteName: "Uru",
+    type: "website",
+    locale: "es_PE",
+  },
+  icons: {
+    icon: "/brand/uru-isotipo.svg",
+    apple: "/brand/uru-isotipo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

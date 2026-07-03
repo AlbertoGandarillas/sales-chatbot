@@ -252,7 +252,7 @@ Configurable: `businesses.system_prompt_custom` puede desactivar saludos promoci
 ## 7. Productos Shopify (`catalog_source = shopify`)
 
 - El precio base sigue viniendo del sync Shopify (`price_soles`).
-- **Promo Aynibot** es una capa local: el dueño puede poner `promo_price_soles` en productos `source='shopify'` desde el dashboard (override temporal).
+- **Promo Uru** es una capa local: el dueño puede poner `promo_price_soles` en productos `source='shopify'` desde el dashboard (override temporal).
 - Resync Shopify **no borra** columnas promo si el producto ya existía (upsert preserva promo local — documentar en `catalog-ingestion-spec-v2.md`).
 
 ---

@@ -8,6 +8,8 @@ import {
   AccordionItem,
 } from '@/components/ui'
 import type { BadgeTone } from '@/components/ui'
+import { UruLogo } from '@/components/brand/uru-logo'
+import { cn } from '@/lib/cn'
 
 const NAV_LINKS = [
   { href: '#como-funciona', label: 'Cómo funciona' },
@@ -133,12 +135,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <span className="flex items-center gap-2 text-xl font-bold tracking-tight">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm text-primary-foreground">
-              A
-            </span>
-            Aynibot
-          </span>
+          <UruLogo size="md" />
           <nav className="flex items-center gap-1 text-sm sm:gap-2">
             <div className="mr-2 hidden items-center gap-1 md:flex">
               {NAV_LINKS.map((l) => (
@@ -169,35 +166,44 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden bg-gradient-citric">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-primary/10 blur-3xl"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]"
           />
-          <div className="mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24">
+          <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Hecho para negocios en Perú
               </span>
-              <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              <p className="font-brand mt-6 text-lg font-semibold tracking-wide text-white/90">
+                Vende sin parar
+              </p>
+              <h1 className="font-brand mt-3 text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
                 Tu agente de ventas por WhatsApp, atendiendo 24/7
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-muted">
-                Aynibot responde a tus clientes, cotiza productos y toma pedidos
-                automáticamente desde WhatsApp. Tú te enfocas en tu negocio; el bot
-                se encarga de la conversación.
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/90">
+                Uru responde a tus clientes, cotiza productos y toma pedidos
+                automáticamente desde WhatsApp. Tú te enfocas en tu negocio; nosotros
+                nos encargamos de la conversación.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className={buttonVariants({ variant: 'primary', size: 'lg' })}
+                  className={cn(
+                    buttonVariants({ variant: 'primary', size: 'lg' }),
+                    'border-0 bg-white text-foreground shadow-md hover:bg-white/90'
+                  )}
                 >
-                  Empezar con Aynibot
+                  Empezar con Uru
                 </Link>
                 <Link
                   href="#como-funciona"
-                  className={buttonVariants({ variant: 'outline', size: 'lg' })}
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'lg' }),
+                    'border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white'
+                  )}
                 >
                   Ver cómo funciona
                 </Link>
@@ -216,7 +222,7 @@ export default function Home() {
               <Badge tone="primary" dot>
                 Cómo funciona
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
                 De WhatsApp a pedidos, en cuatro pasos
               </h2>
               <p className="mt-3 text-muted">
@@ -251,8 +257,8 @@ export default function Home() {
               <Badge tone="primary" dot>
                 Funcionalidades
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight">
-                Lo que Aynibot hace hoy
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+                Lo que Uru hace hoy
               </h2>
               <p className="mt-3 text-muted">
                 Funciones reales, ya operando. Nada de promesas que todavía no
@@ -286,8 +292,8 @@ export default function Home() {
               <Badge tone="primary" dot>
                 Casos de uso
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight">
-                Dos negocios reales ya operando con Aynibot
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+                Dos negocios reales ya operando con Uru
               </h2>
               <p className="mt-3 text-muted">
                 Cada uno automatiza un flujo distinto de atención y pedidos.
@@ -320,7 +326,7 @@ export default function Home() {
               <Badge tone="primary" dot>
                 Para qué negocios es
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
                 Pensado para dos tipos de negocio
               </h2>
             </div>
@@ -358,7 +364,7 @@ export default function Home() {
               <Badge tone="primary" dot>
                 Preguntas frecuentes
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
                 Lo que probablemente te estás preguntando
               </h2>
             </div>
@@ -373,28 +379,33 @@ export default function Home() {
         </section>
 
         {/* CTA final */}
-        <section className="mx-auto max-w-6xl px-6 py-20 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Listo para automatizar tu WhatsApp
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted">
-            Empieza con tu catálogo y tu número de WhatsApp; nosotros te acompañamos
-            en la conexión y la puesta en marcha.
-          </p>
-          <div className="mt-8">
-            <Link
-              href="/signup"
-              className={buttonVariants({ variant: 'primary', size: 'lg' })}
-            >
-              Crear cuenta gratis
-            </Link>
+        <section className="bg-gradient-sale">
+          <div className="mx-auto max-w-6xl px-6 py-20 text-center">
+            <h2 className="font-brand text-3xl font-extrabold tracking-tight text-white">
+              Listo para automatizar tu WhatsApp
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-white/90">
+              Empieza con tu catálogo y tu número de WhatsApp; nosotros te acompañamos
+              en la conexión y la puesta en marcha.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/signup"
+                className={cn(
+                  buttonVariants({ variant: 'primary', size: 'lg' }),
+                  'border-0 bg-white text-foreground shadow-md hover:bg-white/90'
+                )}
+              >
+                Crear cuenta gratis
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Aynibot — Agente de ventas por WhatsApp.</p>
+          <p>© {new Date().getFullYear()} Uru — Vende sin parar.</p>
           <div className="flex gap-4">
             <Link href="/privacidad" className="hover:text-foreground hover:underline">
               Privacidad

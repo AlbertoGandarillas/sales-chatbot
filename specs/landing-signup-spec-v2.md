@@ -1,28 +1,28 @@
 # Landing + Signup + Onboarding v2
 
-> Spec nuevo. Marca de cara al usuario: **"Aynibot"** (temporal, puede cambiar). Solo se usa en la landing/UI y metadata; no se renombra el repo ni el código.
+> Spec nuevo. Marca de cara al usuario: **"Uru"** (temporal, puede cambiar). Solo se usa en la landing/UI y metadata; no se renombra el repo ni el código.
 
 ## Páginas
 
 | Ruta | Acceso | Propósito |
 |---|---|---|
-| `/` | Pública | Landing de Aynibot |
+| `/` | Pública | Landing de Uru |
 | `/signup` | Pública | Registro/login con magic link (misma operación) |
 | `/auth/callback` | Pública | Completa la sesión tras el magic link |
 | `/onboarding` | Autenticado sin negocio | Crear el primer negocio del usuario |
 
-> La landing v1 actual en `/` (Next.js default / demo) se reemplaza por la landing de Aynibot. El dashboard se mueve a `/dashboard` (ya estaba ahí).
+> La landing v1 actual en `/` (Next.js default / demo) se reemplaza por la landing de Uru. El dashboard se mueve a `/dashboard` (ya estaba ahí).
 
 ## `/` — Landing pública
 
 - **Sin login.** Server component estático.
-- Metadata: `title = "Aynibot — Agente de ventas por WhatsApp"`, description acorde.
+- Metadata: `title = "Uru — Agente de ventas por WhatsApp"`, description acorde.
 - Contenido:
-  - Título **Aynibot** + propuesta de valor: "Agente de ventas por WhatsApp para negocios en Perú. Atiende, cotiza y toma pedidos 24/7."
+  - Título **Uru** + propuesta de valor: "Agente de ventas por WhatsApp para negocios en Perú. Atiende, cotiza y toma pedidos 24/7."
   - 1–2 casos de uso como ejemplos genéricos:
     - *Panaderías* (inspirado en Cruje, sin datos sensibles): "toma pedidos y encargos de tortas".
     - *Retail / tiendas Shopify* (inspirado en Betta): "responde por catálogo, tallas y modelos".
-  - CTA principal: **"Crear cuenta gratis"** / **"Empezar con Aynibot"** → `/signup`.
+  - CTA principal: **"Crear cuenta gratis"** / **"Empezar con Uru"** → `/signup`.
   - Diseño moderno con Tailwind (hero, secciones, footer). Mobile-first.
 - No expone datos reales de Cruje ni Betta (ni números, ni catálogos privados).
 
@@ -72,7 +72,7 @@ sesión establecida con auth.uid()
 
 ## Criterios de aceptación
 
-- [ ] `/` muestra la landing de Aynibot sin requerir login.
+- [ ] `/` muestra la landing de Uru sin requerir login.
 - [ ] `/signup` envía magic link; el correo llega.
 - [ ] `/auth/callback` establece sesión y redirige según tenga o no negocio.
 - [ ] `/onboarding` crea negocio con `owner_user_id = auth.uid()` y vertical elegido.

@@ -1,15 +1,14 @@
 import Link from 'next/link'
 import { LEGAL } from '@/lib/legal-config'
 import { PageHeader } from '@/components/ui'
+import { UruLogo } from '@/components/brand/uru-logo'
 
 export default function PrivacidadPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <Link href="/" className="font-bold tracking-tight text-foreground">
-            Aynibot
-          </Link>
+          <UruLogo size="sm" />
           <Link href="/login" className="text-sm text-primary hover:underline">
             Iniciar sesión
           </Link>
@@ -24,7 +23,7 @@ export default function PrivacidadPage() {
 
         <div className="prose prose-stone mt-8 max-w-none space-y-6 text-muted">
           <p>
-            {LEGAL.companyName} (&quot;Aynibot&quot;) opera una plataforma de agente de
+            {LEGAL.companyName} opera una plataforma de agente de
             ventas por WhatsApp y panel de control para comercios en Perú. Esta política
             describe cómo tratamos los datos personales en el marco de ese servicio.
           </p>
@@ -44,7 +43,7 @@ export default function PrivacidadPage() {
             <h2 className="text-lg font-semibold text-foreground">Datos que recogemos</h2>
             <ul className="list-disc space-y-1 pl-5">
               <li>
-                Del comercio (cliente de Aynibot): correo, datos del negocio, catálogo,
+                Del comercio (cliente de Uru): correo, datos del negocio, catálogo,
                 configuración del agente, credenciales técnicas de WhatsApp almacenadas de
                 forma segura.
               </li>

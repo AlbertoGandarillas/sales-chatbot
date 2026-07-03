@@ -189,7 +189,7 @@ Tras el break, si no hay `content` final, devolver mensaje fijo al cliente:
 ### Problema
 Operar en Perú con datos de clientes (teléfonos, mensajes, pedidos) requiere aviso
 legal mínimo (Ley N.° 29733 — protección de datos personales) y condiciones de uso
-del servicio Aynibot.
+del servicio Uru.
 
 ### Solución
 Dos páginas estáticas públicas, en español, enlazadas desde la app.
@@ -238,7 +238,7 @@ Dos páginas estáticas públicas, en español, enlazadas desde la app.
 
 ### CHECKPOINT 1 — Datos legales
 Antes de publicar copy final, confirmar:
-- Nombre / razón social del responsable (ej. "Aynibot" o persona jurídica).
+- Nombre / razón social del responsable (ej. "Uru" o persona jurídica).
 - Email de contacto legal (ej. `legal@...` o el tuyo).
 - ¿Incluir RUC o domicilio fiscal en el texto?
 

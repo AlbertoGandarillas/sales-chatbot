@@ -114,7 +114,7 @@ export default async function ConversationDetail({
       {/* Columna del chat */}
       <section className="flex h-[75vh] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-sm">
         {/* Encabezado tipo WhatsApp */}
-        <header className="flex items-center justify-between gap-3 border-b border-stone-200 bg-emerald-700 px-4 py-3 text-white">
+        <header className="flex items-center justify-between gap-3 border-b border-border bg-wa-header px-4 py-3 text-primary-foreground">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/conversaciones"
@@ -130,7 +130,7 @@ export default async function ConversationDetail({
               <p className="text-sm font-semibold leading-tight">
                 {conversation.customer_phone}
               </p>
-              <p className="text-xs text-emerald-50">
+              <p className="text-xs text-primary-foreground/80">
                 {mode === 'human' ? 'Atención humana' : 'Atendido por el bot'}
               </p>
               {recurringActive.length > 0 && (
@@ -152,7 +152,7 @@ export default async function ConversationDetail({
         </header>
 
         {/* Mensajes */}
-        <div className="flex-1 space-y-2 overflow-y-auto bg-[#efeae2] px-4 py-4">
+        <div className="flex-1 space-y-2 overflow-y-auto bg-wa-chat-bg px-4 py-4">
           {messages.length === 0 ? (
             <p className="mt-10 text-center text-sm text-muted">
               Sin mensajes todavía.
@@ -169,19 +169,19 @@ export default async function ConversationDetail({
                   <div
                     className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
                       incoming
-                        ? 'rounded-tl-sm bg-white text-stone-900'
+                        ? 'rounded-tl-sm bg-wa-bubble-in text-foreground'
                         : isHuman
-                          ? 'rounded-tr-sm bg-emerald-200 text-stone-900'
-                          : 'rounded-tr-sm bg-[#d9fdd3] text-stone-900'
+                          ? 'rounded-tr-sm bg-wa-bubble-out-human text-foreground'
+                          : 'rounded-tr-sm bg-wa-bubble-out-bot text-foreground'
                     }`}
                   >
                     {!incoming && (
-                      <p className="mb-0.5 text-[11px] font-semibold text-emerald-800">
+                      <p className="mb-0.5 text-[11px] font-semibold text-wa-bubble-label">
                         {isHuman ? 'Equipo' : 'Bot'}
                       </p>
                     )}
                     <p className="whitespace-pre-wrap wrap-break-word">{m.content}</p>
-                    <p className="mt-1 text-right text-[10px] text-stone-600">
+                    <p className="mt-1 text-right text-[10px] text-muted">
                       {formatTime(m.created_at)}
                     </p>
                   </div>

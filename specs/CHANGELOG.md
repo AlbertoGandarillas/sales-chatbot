@@ -4,7 +4,18 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
-## 2026-07-02 — Pedidos recurrentes Tier 1 + 2
+## 2026-07-02 — Rebranding Aynibot → Uru
+
+**Spec:** `rebranding-uru-spec.md`, `design-system-v3-uru.md`.
+
+- Marca **Uru** (wordmark `uru`, tagline "Vende sin parar").
+- Tokens esmeralda/azul/amarillo en `app/globals.css`; gradientes cítrico/fresco/venta.
+- Nunito en landing/marca; Geist intacto en dashboard.
+- Componente `components/brand/uru-logo.tsx` + `public/brand/uru-isotipo.svg` (brandbook v3).
+- Chat conversación: tokens `--wa-*` alineados a paleta Uru.
+- Legal: `companyName: 'Uru'`.
+
+---
 
 **Spec:** `recurring-orders-spec.md`. Migración `20260629120000_recurring_orders.sql`,
 dashboard `/dashboard/recurrentes`, tools bot, cron `/api/cron/recurring-reminders`,

@@ -99,7 +99,7 @@ export async function upsertProductToMetaCatalog(
 
 Mapeo:
 
-| Campo Aynibot | Campo Meta |
+| Campo Uru | Campo Meta |
 |---|---|
 | `products.id` o `external_id` | `retailer_id` (SKU string, max 100 chars) |
 | `name` | name |
@@ -429,7 +429,7 @@ sequenceDiagram
 - Carrito nativo WA → webhook order inbound
 - Pagos in-app WhatsApp / Yape deep link nativo
 - Multi-product message **templates** (marketing)
-- Sincronización bidireccional precio Meta → Aynibot
+- Sincronización bidireccional precio Meta → Uru
 
 ---
 
