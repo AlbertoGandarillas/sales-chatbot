@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { processIncomingMessage } from '@/lib/agent'
+import { handleNonTextInbound, processIncomingMessage } from '@/lib/agent'
 import { resolveBusinessFromWebhook } from '@/lib/business-resolver'
+import { captureError } from '@/lib/observability'
 import { claimWhatsAppMessage } from '@/lib/webhook-dedupe'
 import {
   isProductionEnv,
@@ -8,6 +9,23 @@ import {
 } from '@/lib/webhook-signature'
 
 export const maxDuration = 60
+
+type WebhookMessage = {
+  id?: string
+  type?: string
+  from?: string
+  text?: { body?: string }
+}
+
+type WebhookBody = {
+  entry?: {
+    changes?: {
+      value?: {
+        messages?: WebhookMessage[]
+      }
+    }[]
+  }[]
+}
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('hub.mode')
@@ -29,6 +47,40 @@ export async function GET(request: NextRequest) {
   }
 
   return new NextResponse('Forbidden', { status: 403 })
+}
+
+async function handleWebhookMessage(
+  business: NonNullable<Awaited<ReturnType<typeof resolveBusinessFromWebhook>>>,
+  message: WebhookMessage
+) {
+  if (!message.from) return
+
+  const from = String(message.from)
+  const wamid = message.id ? String(message.id) : null
+  const type = message.type ?? 'unknown'
+
+  if (wamid) {
+    const isNew = await claimWhatsAppMessage(business.id, wamid)
+    if (!isNew) {
+      console.log(`[webhook] Duplicado ignorado (${business.name}):`, wamid)
+      return
+    }
+  }
+
+  if (type === 'text' && message.text?.body) {
+    const text = String(message.text.body)
+    console.log(`[webhook] Mensaje recibido (${business.name}):`, from, text)
+    await processIncomingMessage(business, from, text)
+    console.log('[webhook] Respuesta enviada a:', from)
+    return
+  }
+
+  console.log(
+    `[webhook] Mensaje no-texto (${business.name}):`,
+    from,
+    type
+  )
+  await handleNonTextInbound(business, from, type)
 }
 
 export async function POST(request: NextRequest) {
@@ -58,20 +110,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = JSON.parse(rawBody) as {
-      entry?: {
-        changes?: {
-          value?: {
-            messages?: {
-              id?: string
-              type?: string
-              from?: string
-              text?: { body?: string }
-            }[]
-          }
-        }[]
-      }[]
-    }
+    const body = JSON.parse(rawBody) as WebhookBody
 
     const business = await resolveBusinessFromWebhook(body)
     if (!business) {
@@ -79,38 +118,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'ok' })
     }
 
-    const entries = body.entry ?? []
-    for (const entry of entries) {
-      const changes = entry.changes ?? []
-      for (const change of changes) {
-        const messages = change.value?.messages ?? []
-        for (const message of messages) {
-          if (message.type === 'text' && message.from && message.text?.body) {
-            const from = String(message.from)
-            const text = String(message.text.body)
-            const wamid = message.id ? String(message.id) : null
-
-            if (wamid) {
-              const isNew = await claimWhatsAppMessage(business.id, wamid)
-              if (!isNew) {
-                console.log(`[webhook] Duplicado ignorado (${business.name}):`, wamid)
-                continue
-              }
-            }
-
-            console.log(`[webhook] Mensaje recibido (${business.name}):`, from, text)
-
-            try {
-              await processIncomingMessage(business, from, text)
-              console.log('[webhook] Respuesta enviada a:', from)
-            } catch (err) {
-              console.error('[webhook] Error del agente:', err)
-            }
+    for (const entry of body.entry ?? []) {
+      for (const change of entry.changes ?? []) {
+        for (const message of change.value?.messages ?? []) {
+          try {
+            await handleWebhookMessage(business, message)
+          } catch (err) {
+            captureError(err, {
+              businessId: business.id,
+              messageType: message.type,
+              from: message.from,
+            })
+            console.error('[webhook] Error del agente:', err)
           }
         }
       }
     }
   } catch (error) {
+    captureError(error, { scope: 'webhook-parse' })
     console.error('[webhook] Error parseando payload:', error)
   }
 

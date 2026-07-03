@@ -1,6 +1,8 @@
 const GRAPH_API_VERSION = 'v21.0'
 
 import { normalizeWhatsAppPhone } from '@/lib/whatsapp-phone'
+import { isConversationSessionOpen } from '@/lib/whatsapp-session'
+import { WHATSAPP_SESSION_CLOSED_MESSAGE } from '@/lib/whatsapp-session-window'
 
 export interface WhatsAppCredentials {
   token?: string | null
@@ -17,6 +19,21 @@ export class WhatsAppApiError extends Error {
     this.status = status
     this.code = code
   }
+}
+
+/** Fuera de la ventana de 24 h de mensajería libre (Meta error 131047). */
+export class WhatsAppSessionClosedError extends WhatsAppApiError {
+  constructor(message: string = WHATSAPP_SESSION_CLOSED_MESSAGE) {
+    super(message, 400, 131047)
+    this.name = 'WhatsAppSessionClosedError'
+  }
+}
+
+export function isWhatsAppSessionClosedError(error: unknown): boolean {
+  return (
+    error instanceof WhatsAppSessionClosedError ||
+    (error instanceof WhatsAppApiError && error.code === 131047)
+  )
 }
 
 function parseWhatsAppError(status: number, errorBody: string): WhatsAppApiError {
@@ -49,6 +66,13 @@ function parseWhatsAppError(status: number, errorBody: string): WhatsAppApiError
           'El número no tiene WhatsApp o el formato es incorrecto. Usa 51 + 9 dígitos (ej. 51999342668).',
         status,
         code
+      )
+    }
+
+    if (code === 131047) {
+      return new WhatsAppSessionClosedError(
+        details ??
+          'Pasaron más de 24 horas desde el último mensaje del cliente. WhatsApp requiere una plantilla aprobada para reabrir la conversación.'
       )
     }
 
@@ -112,6 +136,20 @@ export async function sendWhatsAppMessage(
     )
     throw parseWhatsAppError(response.status, errorBody)
   }
+}
+
+/** Envía texto solo si la conversación está dentro de la ventana de 24 h del cliente. */
+export async function sendWhatsAppSessionMessage(
+  conversationId: string,
+  to: string,
+  text: string,
+  creds: WhatsAppCredentials = {}
+): Promise<void> {
+  const open = await isConversationSessionOpen(conversationId)
+  if (!open) {
+    throw new WhatsAppSessionClosedError()
+  }
+  await sendWhatsAppMessage(to, text, creds)
 }
 
 export async function notifyOwner(

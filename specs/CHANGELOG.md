@@ -4,7 +4,36 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
-## 2026-07-02 — Rebranding Aynibot → Uru
+## 2026-07-03 — Observabilidad custom + consola admin (R0–R2)
+
+- Eliminado `@sentry/nextjs`; errores en tabla `error_logs` vía `lib/observability.ts`.
+- Migración `20260703120000_platform_admin_observability.sql` (`error_logs`, `platform_admins`, `admin_audit_logs`, RLS admin).
+- Panel `/admin`: login, overview, errores, negocios (general + WhatsApp).
+- Bootstrap admin: `supabase/bootstrap-platform-admin.sql`.
+
+---
+
+## 2026-07-03 — Specs pendientes: observabilidad custom + consola admin
+
+**Specs nuevos (PENDIENTE APROBACIÓN):**
+
+- `observability-custom-spec.md` — reemplazar Sentry por tabla `error_logs` en Supabase.
+- `admin-console-spec.md` — panel `/admin` con login propio, gestión negocios (WA creds), errores, usage, soporte.
+- `admin-console-index.md` — índice.
+
+**Decisión propuesta:** eliminar `@sentry/nextjs` en fase R0; UI admin en fases R1–R5.
+
+---
+
+## 2026-07-03 — Hardening P1/P0 parcial (rate limit, no-texto, 24h, Sentry, landing)
+
+- **P1-5** `lib/rate-limit.ts`: límite inbound/min y respuestas bot/hora (env opcional).
+- **P1-2** Webhook + `handleNonTextInbound`: respuesta cortés; placeholder en chat.
+- **P0-3** `lib/whatsapp-session*.ts`: ventana 24h; bloqueo proactivo en reply manual y recordatorios recurrentes (`skipped`); error Meta 131047.
+- **P1-4** Sentry opcional vía `SENTRY_DSN` + `instrumentation.ts`.
+- **P1-1** Landing: copy dashboard sin “costo IA” (`usage_logs` intacto).
+
+---
 
 **Spec:** `rebranding-uru-spec.md`, `design-system-v3-uru.md`.
 

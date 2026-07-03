@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { sendWhatsAppMessage } from '@/lib/whatsapp'
+import { sendWhatsAppSessionMessage, isWhatsAppSessionClosedError } from '@/lib/whatsapp'
 
 function detailPath(conversationId: string) {
   return `/dashboard/conversaciones/${conversationId}`
@@ -54,11 +54,14 @@ export async function sendManualReply(
     .maybeSingle()
 
   try {
-    await sendWhatsAppMessage(convo.customer_phone, text, {
+    await sendWhatsAppSessionMessage(conversationId, convo.customer_phone, text, {
       token: biz?.whatsapp_token,
       phoneNumberId: biz?.whatsapp_phone_number_id,
     })
   } catch (err) {
+    if (isWhatsAppSessionClosedError(err)) {
+      return { error: err instanceof Error ? err.message : 'Ventana de 24 h cerrada.' }
+    }
     return {
       error:
         'No se pudo enviar por WhatsApp: ' +

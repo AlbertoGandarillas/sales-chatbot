@@ -5,7 +5,12 @@ import {
   formatOrderItemsSummary,
   formatSoles,
 } from '@/lib/order-create'
-import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
+import { notifyOwner, sendWhatsAppMessage, isWhatsAppSessionClosedError } from '@/lib/whatsapp'
+import {
+  findConversationId,
+  isConversationSessionOpen,
+} from '@/lib/whatsapp-session'
+import { captureMessage } from '@/lib/observability'
 import { normalizeWhatsAppPhone } from '@/lib/whatsapp-phone'
 
 export { normalizeWhatsAppPhone, normalizeWhatsAppPhone as normalizeCustomerPhone } from '@/lib/whatsapp-phone'
@@ -311,11 +316,42 @@ export async function sendRecurringReminder(
     return { run_id: runId ?? '', sent: false }
   }
 
+  const conversationId = await findConversationId(
+    business.id,
+    recurring.customer_phone
+  )
+  const sessionOpen =
+    conversationId != null && (await isConversationSessionOpen(conversationId))
+
+  if (!sessionOpen) {
+    captureMessage('Recordatorio recurrente omitido: ventana 24h cerrada', 'warning', {
+      businessId: business.id,
+      customerPhone: recurring.customer_phone,
+      recurringOrderId: recurring.id,
+    })
+    await db
+      .from('recurring_order_runs')
+      .update({ status: 'skipped' })
+      .eq('id', runId)
+    return { run_id: runId, sent: false }
+  }
+
   const message = buildReminderMessage(recurring)
-  await sendWhatsAppMessage(recurring.customer_phone, message, {
-    token: business.whatsapp_token,
-    phoneNumberId: business.whatsapp_phone_number_id,
-  })
+  try {
+    await sendWhatsAppMessage(recurring.customer_phone, message, {
+      token: business.whatsapp_token,
+      phoneNumberId: business.whatsapp_phone_number_id,
+    })
+  } catch (err) {
+    if (isWhatsAppSessionClosedError(err)) {
+      await db
+        .from('recurring_order_runs')
+        .update({ status: 'skipped' })
+        .eq('id', runId)
+      return { run_id: runId, sent: false }
+    }
+    throw err
+  }
 
   const now = new Date().toISOString()
   await db

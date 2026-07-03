@@ -59,7 +59,7 @@ const FEATURES: { title: string; body: string; tone: BadgeTone; tag: string }[] 
     tag: 'Operación',
     tone: 'info',
     title: 'Dashboard de operación',
-    body: 'Resumen de pedidos y costo de IA del mes, conversaciones en vivo estilo chat, catálogo y perfil del negocio.',
+    body: 'Resumen de pedidos y ventas del mes, conversaciones en vivo estilo chat, catálogo y perfil del negocio.',
   },
   {
     tag: 'Catálogo',

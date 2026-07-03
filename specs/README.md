@@ -19,6 +19,9 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `recurring-orders-spec.md` | Plantillas recurrentes, recordatorios WhatsApp |
 | `rebranding-uru-spec.md` | Rebranding Aynibot → Uru (marca + identidad visual) |
 | `design-system-v3-uru.md` | Tokens esmeralda, gradientes, Nunito, chat WA |
+| `observability-custom-spec.md` | Error logs Supabase (reemplazo Sentry) |
+| `admin-console-index.md` | Índice consola admin plataforma |
+| `admin-console-spec.md` | Panel `/admin`: auth, negocios, errores, ops |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

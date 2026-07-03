@@ -29,7 +29,15 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
-  // Proteger rutas autenticadas: sin sesión → /login
+  // Admin: sin sesión → /admin/login (excepto la propia página de login)
+  if (path.startsWith('/admin') && path !== '/admin/login' && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin/login'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  // Proteger rutas autenticadas tenant: sin sesión → /login
   const isProtected =
     path.startsWith('/dashboard') ||
     path.startsWith('/onboarding') ||
@@ -61,5 +69,6 @@ export const config = {
     '/reset-password',
     '/signup',
     '/login',
+    '/admin/:path*',
   ],
 }

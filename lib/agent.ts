@@ -22,6 +22,17 @@ import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
 import { getToolsFor } from '@/lib/tools'
 import { logUsage } from '@/lib/usage-tracking'
+import {
+  checkAgentRateLimit,
+  checkInboundRateLimit,
+  RATE_LIMIT_AGENT_MESSAGE,
+  RATE_LIMIT_INBOUND_MESSAGE,
+} from '@/lib/rate-limit'
+import {
+  inboundMediaPlaceholder,
+  NON_TEXT_REPLY,
+} from '@/lib/inbound-media'
+import { captureError } from '@/lib/observability'
 
 function waCreds(business: Business) {
   return {
@@ -486,6 +497,33 @@ interface GenerateReplyResult {
   outputTokens: number
 }
 
+export async function handleNonTextInbound(
+  business: Business,
+  customerPhone: string,
+  mediaType: string
+): Promise<void> {
+  const { id: conversationId, mode } = await getOrCreateConversation(
+    business.id,
+    customerPhone
+  )
+
+  await saveMessage(
+    conversationId,
+    'user',
+    inboundMediaPlaceholder(mediaType)
+  )
+
+  if (mode === 'human') return
+
+  const inboundLimit = await checkInboundRateLimit(business.id, customerPhone)
+  const reply = inboundLimit.allowed
+    ? NON_TEXT_REPLY
+    : RATE_LIMIT_INBOUND_MESSAGE
+
+  await saveMessage(conversationId, 'assistant', reply)
+  await sendWhatsAppMessage(customerPhone, reply, waCreds(business))
+}
+
 export async function processIncomingMessage(
   business: Business,
   customerPhone: string,
@@ -495,21 +533,42 @@ export async function processIncomingMessage(
     business.id,
     customerPhone
   )
-  const ctx: AgentContext = {
-    conversationId,
-    customerPhone,
-    business,
-  }
 
   await saveMessage(conversationId, 'user', text)
 
-  // Handoff: si un humano tomó la conversación, el bot no responde.
-  // El mensaje queda guardado para que el dueño lo lea en el dashboard.
   if (mode === 'human') {
     console.log(
       `[agent] Conversación ${conversationId} en modo humano; el bot no responde.`
     )
     return
+  }
+
+  const inboundLimit = await checkInboundRateLimit(business.id, customerPhone)
+  if (!inboundLimit.allowed) {
+    await saveMessage(conversationId, 'assistant', RATE_LIMIT_INBOUND_MESSAGE)
+    await sendWhatsAppMessage(
+      customerPhone,
+      RATE_LIMIT_INBOUND_MESSAGE,
+      waCreds(business)
+    )
+    return
+  }
+
+  const agentLimit = await checkAgentRateLimit(conversationId)
+  if (!agentLimit.allowed) {
+    await saveMessage(conversationId, 'assistant', RATE_LIMIT_AGENT_MESSAGE)
+    await sendWhatsAppMessage(
+      customerPhone,
+      RATE_LIMIT_AGENT_MESSAGE,
+      waCreds(business)
+    )
+    return
+  }
+
+  const ctx: AgentContext = {
+    conversationId,
+    customerPhone,
+    business,
   }
 
   try {
@@ -524,6 +583,11 @@ export async function processIncomingMessage(
       outputTokens: result.outputTokens,
     })
   } catch (error) {
+    captureError(error, {
+      conversationId,
+      businessId: business.id,
+      customerPhone,
+    })
     console.error('[agent] Error procesando mensaje:', error)
     const fallback = `¡Hola! Gracias por escribir a ${business.name}. Hubo un problemita técnico, pero ya estamos revisando. ¿Puedes intentar de nuevo en un momento?`
     try {
