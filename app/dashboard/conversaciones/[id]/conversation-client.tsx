@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import {
   confirmPayment,
@@ -26,6 +26,82 @@ function SubmitButton({
     <Button type="submit" disabled={pending} {...props}>
       {pending ? pendingText ?? 'Procesando…' : children}
     </Button>
+  )
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant' | 'human_agent' | 'tool'
+  content: string
+  created_at: string
+}
+
+function formatMessageTime(iso: string) {
+  return new Date(iso).toLocaleString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/** Lista de mensajes con scroll anclado al final (estilo WhatsApp). */
+export function ConversationMessages({ messages }: { messages: ChatMessage[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight
+    }
+    scrollToBottom()
+    // Por si el layout aún no midió todo el contenido
+    requestAnimationFrame(scrollToBottom)
+  }, [messages])
+
+  return (
+    <div
+      ref={scrollRef}
+      className="flex-1 space-y-2 overflow-y-auto bg-wa-chat-bg px-4 py-4"
+    >
+      {messages.length === 0 ? (
+        <p className="mt-10 text-center text-sm text-muted">
+          Sin mensajes todavía.
+        </p>
+      ) : (
+        messages.map((m) => {
+          const incoming = m.role === 'user'
+          const isHuman = m.role === 'human_agent'
+          return (
+            <div
+              key={m.id}
+              className={`flex ${incoming ? 'justify-start' : 'justify-end'}`}
+            >
+              <div
+                className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                  incoming
+                    ? 'rounded-tl-sm bg-wa-bubble-in text-foreground'
+                    : isHuman
+                      ? 'rounded-tr-sm bg-wa-bubble-out-human text-foreground'
+                      : 'rounded-tr-sm bg-wa-bubble-out-bot text-foreground'
+                }`}
+              >
+                {!incoming && (
+                  <p className="mb-0.5 text-[11px] font-semibold text-wa-bubble-label">
+                    {isHuman ? 'Equipo' : 'Bot'}
+                  </p>
+                )}
+                <p className="whitespace-pre-wrap wrap-break-word">{m.content}</p>
+                <p className="mt-1 text-right text-[10px] text-muted">
+                  {formatMessageTime(m.created_at)}
+                </p>
+              </div>
+            </div>
+          )
+        })
+      )}
+    </div>
   )
 }
 
