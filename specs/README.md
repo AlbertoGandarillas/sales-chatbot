@@ -22,6 +22,7 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `observability-custom-spec.md` | Error logs Supabase (reemplazo Sentry) |
 | `admin-console-index.md` | Índice consola admin plataforma |
 | `admin-console-spec.md` | Panel `/admin`: auth, negocios, errores, ops |
+| `redesign-premium-uru-spec.md` | Rediseño visual premium landing + dashboard (PENDIENTE) |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

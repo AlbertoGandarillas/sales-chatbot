@@ -15,7 +15,11 @@ const TONES: Record<AlertTone, { wrap: string; icon: string; label: string }> = 
     icon: '!',
     label: 'Atención',
   },
-  danger: { wrap: 'bg-danger-surface text-danger', icon: '✕', label: 'Error' },
+  danger: {
+    wrap: 'border border-danger-border bg-danger-surface text-danger-foreground',
+    icon: '✕',
+    label: 'Error',
+  },
 }
 
 export interface AlertProps extends HTMLAttributes<HTMLDivElement> {

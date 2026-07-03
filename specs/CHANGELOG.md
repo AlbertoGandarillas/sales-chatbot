@@ -4,6 +4,17 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-07-03 — Rediseño visual premium Uru (paleta azul/teal/rosa)
+
+- Tokens v4 en `app/globals.css` (reemplazo total esmeralda).
+- Modo claro + oscuro (`data-theme`, `ThemeToggle`, persistencia localStorage).
+- Landing premium: header glass flotante, hero gradiente + glows, `.premium-card`, CTAs cápsula.
+- Dashboard app-like: isotipo Uru, nav limpio, métricas simples, Geist intacto.
+- Logo SVG recoloreado; botón destructivo rosa (CP-D1).
+- Spec: `redesign-premium-uru-spec.md`.
+
+---
+
 ## 2026-07-03 — Observabilidad custom + consola admin (R0–R2)
 
 - Eliminado `@sentry/nextjs`; errores en tabla `error_logs` vía `lib/observability.ts`.

@@ -1,56 +1,115 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────
-   Uru — Design tokens (light). Esmeralda, claro y confiable.
-   Los componentes consumen estos tokens vía utilidades semánticas
-   (bg-surface, text-muted, border-border, bg-primary, etc.).
+   Uru Premium — Design tokens v4 (azul / teal / rosa / crema)
    ─────────────────────────────────────────────────────────────── */
-:root {
-  --background: #f0fbf6;
+:root,
+[data-theme="light"] {
+  --brand-blue: #0078c8;
+  --brand-teal: #00b496;
+  --brand-rose: #f0b4aa;
+  --brand-yellow: #ebe182;
+  --brand-cream: #f0e6dc;
+
+  --background: #f0e6dc;
   --surface: #ffffff;
-  --surface-muted: #e4f7ee;
-  --foreground: #15211c;
-  --muted-foreground: #3d5349;
+  --surface-muted: #faf6f2;
+  --surface-elevated: rgba(255, 255, 255, 0.72);
+  --foreground: #1a1a1e;
+  --muted-foreground: #5c5c66;
 
-  --border: #c5e8d8;
-  --border-strong: #7bc4a8;
+  --border: #e8ddd4;
+  --border-strong: #c9bdb3;
 
-  --primary: #00b37e;
+  --primary: var(--brand-blue);
   --primary-foreground: #ffffff;
-  --primary-hover: #009a6c;
+  --primary-hover: #0066aa;
 
-  --secondary: #1e90d6;
+  --secondary: var(--brand-teal);
   --secondary-foreground: #ffffff;
 
-  --accent: #ffc633;
-  --accent-foreground: #15211c;
+  --accent: var(--brand-yellow);
+  --accent-foreground: #1a1a1e;
+  --accent-rose: var(--brand-rose);
 
-  --ring: #00b37e;
+  --ring: var(--brand-blue);
 
-  --success: #00b37e;
-  --success-surface: #e4f7ee;
-  --warning: #b45309;
-  --warning-surface: #fff8e6;
-  --danger: #c62828;
-  --danger-surface: #ffebee;
-  --info: #1e90d6;
-  --info-surface: #e8f4fd;
+  --success: var(--brand-teal);
+  --success-surface: #e6f7f4;
+  --warning: #9a6700;
+  --warning-surface: #faf6e8;
+  --danger: #8b4a42;
+  --danger-surface: rgba(240, 180, 170, 0.35);
+  --danger-border: var(--brand-rose);
+  --danger-foreground: #1a1a1e;
+  --info: var(--brand-blue);
+  --info-surface: #e6f2fa;
 
-  /* Chat estilo WhatsApp — alineado a paleta Uru */
-  --wa-header: #00b37e;
-  --wa-header-subtle: #e4f7ee;
-  --wa-chat-bg: #f0fbf6;
+  --wa-header: var(--brand-blue);
+  --wa-header-subtle: #e6f2fa;
+  --wa-chat-bg: #faf6f2;
   --wa-bubble-in: #ffffff;
-  --wa-bubble-out-bot: #e4f7ee;
-  --wa-bubble-out-human: #c5e8d8;
-  --wa-bubble-label: #009a6c;
+  --wa-bubble-out-bot: #e6f7f4;
+  --wa-bubble-out-human: #e6f2fa;
+  --wa-bubble-label: var(--brand-teal);
 
-  /* Gradientes de marca */
-  --gradient-citric: linear-gradient(135deg, #00b37e 0%, #1e90d6 55%, #ffc633 100%);
-  --gradient-fresh: linear-gradient(135deg, #00b37e 0%, #1e90d6 60%, #e4f7ee 100%);
-  --gradient-sale: linear-gradient(135deg, #00b37e 0%, #ffc633 100%);
+  --gradient-1: linear-gradient(135deg, #f0b4aa 0%, #00b496 50%, #0078c8 100%);
+  --gradient-2: linear-gradient(135deg, #0078c8 0%, #00b496 55%, #ebe182 100%);
+  --gradient-3: linear-gradient(135deg, #0078c8 0%, #f0e6dc 50%, #00b496 100%);
 
-  --radius: 0.75rem;
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+[data-theme="dark"] {
+  --background: #282828;
+  --surface: #323235;
+  --surface-muted: #202022;
+  --surface-elevated: rgba(50, 50, 53, 0.85);
+  --foreground: #f0e6dc;
+  --muted-foreground: #b8b0a8;
+
+  --border: #3b3b40;
+  --border-strong: #4a4a52;
+
+  --primary: #0078c8;
+  --primary-foreground: #ffffff;
+  --primary-hover: #1a8fd4;
+
+  --secondary: #00b496;
+  --secondary-foreground: #ffffff;
+
+  --accent: #ebe182;
+  --accent-foreground: #1a1a1e;
+  --accent-rose: #f0b4aa;
+
+  --ring: #00b496;
+
+  --success: #00b496;
+  --success-surface: #1a3330;
+  --warning: #ebe182;
+  --warning-surface: #3d3820;
+  --danger: #f0b4aa;
+  --danger-surface: rgba(240, 180, 170, 0.12);
+  --danger-border: #f0b4aa;
+  --danger-foreground: #f0e6dc;
+  --info: #0078c8;
+  --info-surface: #1a3348;
+
+  --wa-header: #0078c8;
+  --wa-header-subtle: #323235;
+  --wa-chat-bg: #282828;
+  --wa-bubble-in: #323235;
+  --wa-bubble-out-bot: #1e3d38;
+  --wa-bubble-out-human: #1a3348;
+  --wa-bubble-label: #00b496;
+
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(40, 40, 40, 0.75);
 }
 
 @theme inline {
@@ -72,6 +131,7 @@
 
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-rose: var(--accent-rose);
 
   --color-ring: var(--ring);
 
@@ -81,6 +141,8 @@
   --color-warning-surface: var(--warning-surface);
   --color-danger: var(--danger);
   --color-danger-surface: var(--danger-surface);
+  --color-danger-border: var(--danger-border);
+  --color-danger-foreground: var(--danger-foreground);
   --color-info: var(--info);
   --color-info-surface: var(--info-surface);
 
@@ -92,7 +154,7 @@
   --color-wa-bubble-out-human: var(--wa-bubble-out-human);
   --color-wa-bubble-label: var(--wa-bubble-label);
 
-  --radius-card: var(--radius);
+  --radius-card: var(--radius-lg);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -109,32 +171,68 @@ body {
   font-family: var(--font-brand), var(--font-sans), sans-serif;
 }
 
-.bg-gradient-citric {
-  background: var(--gradient-citric);
+/* Gradientes de marca */
+.bg-gradient-1 { background: var(--gradient-1); }
+.bg-gradient-2 { background: var(--gradient-2); }
+.bg-gradient-3 { background: var(--gradient-3); }
+
+/* Aliases legacy → nuevos (eliminar en limpieza futura) */
+.bg-gradient-citric { background: var(--gradient-2); }
+.bg-gradient-fresh { background: var(--gradient-3); }
+.bg-gradient-sale { background: var(--gradient-1); }
+
+/* Premium utilities (landing) */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
 }
 
-.bg-gradient-fresh {
-  background: var(--gradient-fresh);
+.glow-blue {
+  background: radial-gradient(circle, rgba(0, 120, 200, 0.35) 0%, transparent 70%);
+}
+.glow-teal {
+  background: radial-gradient(circle, rgba(0, 180, 150, 0.3) 0%, transparent 70%);
+}
+.glow-rose {
+  background: radial-gradient(circle, rgba(240, 180, 170, 0.4) 0%, transparent 70%);
 }
 
-.bg-gradient-sale {
-  background: var(--gradient-sale);
+.premium-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-/* Contraste de placeholders ≥ 4.5:1 sobre superficies claras (WCAG 1.4.3) */
+@media (prefers-reduced-motion: no-preference) {
+  .premium-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 40px rgba(0, 120, 200, 0.08),
+      0 0 0 1px rgba(0, 180, 150, 0.15);
+  }
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
 ::placeholder {
   color: var(--muted-foreground);
   opacity: 1;
 }
 
-/* Foco visible consistente para teclado (WCAG 2.4.7 / 2.4.11) */
 :where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
   border-radius: 5px;
 }
 
-/* Respetar preferencia de movimiento reducido (WCAG 2.3.3) */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

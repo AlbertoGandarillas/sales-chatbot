@@ -13,15 +13,18 @@ export type ButtonVariant =
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50'
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-primary-foreground hover:bg-primary-hover active:translate-y-px',
-  secondary: 'bg-surface-muted text-foreground hover:bg-border active:translate-y-px',
+  primary:
+    'bg-primary text-primary-foreground hover:bg-primary-hover active:translate-y-px shadow-sm',
+  secondary:
+    'bg-secondary text-secondary-foreground hover:brightness-110 active:translate-y-px',
   outline:
     'border border-border-strong bg-surface text-foreground hover:bg-surface-muted active:translate-y-px',
   ghost: 'text-foreground hover:bg-surface-muted active:translate-y-px',
-  danger: 'bg-danger text-white hover:brightness-110 active:translate-y-px',
+  danger:
+    'border border-danger-border bg-danger-surface text-danger-foreground hover:bg-accent-rose/40 active:translate-y-px',
   success: 'bg-success text-white hover:brightness-110 active:translate-y-px',
   link: 'text-primary underline-offset-4 hover:underline',
 }

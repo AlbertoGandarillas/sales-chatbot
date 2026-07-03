@@ -20,7 +20,7 @@ function isActive(pathname: string, href: string) {
 export function DashboardNav() {
   const pathname = usePathname()
   return (
-    <nav className="flex gap-1 overflow-x-auto px-4">
+    <nav className="flex gap-0.5 overflow-x-auto border-t border-border/60 px-3 sm:px-4">
       {NAV.map((item) => {
         const active = isActive(pathname, item.href)
         return (
@@ -29,10 +29,10 @@ export function DashboardNav() {
             href={item.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+              'whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
               active
                 ? 'border-primary text-primary'
-                : 'border-transparent text-muted hover:border-border-strong hover:text-foreground'
+                : 'border-transparent text-muted hover:text-foreground'
             )}
           >
             {item.label}

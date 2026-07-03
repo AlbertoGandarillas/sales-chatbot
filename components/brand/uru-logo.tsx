@@ -11,7 +11,8 @@ type UruLogoProps = {
   variant?: 'full' | 'isotipo'
   size?: keyof typeof SIZES
   className?: string
-  href?: string
+  /** Ruta del enlace. `false` = sin enlace (p. ej. dashboard). Default `/`. */
+  href?: string | false
 }
 
 function LogoContent({
@@ -48,9 +49,9 @@ export function UruLogo({
 }: UruLogoProps) {
   const content = <LogoContent variant={variant} size={size} className={className} />
 
-  if (href) {
+  if (href !== false) {
     return (
-      <Link href={href} className="text-foreground hover:opacity-90">
+      <Link href={href ?? '/'} className="text-foreground hover:opacity-90">
         {content}
       </Link>
     )

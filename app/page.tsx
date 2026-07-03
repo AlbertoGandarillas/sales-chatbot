@@ -9,6 +9,7 @@ import {
 } from '@/components/ui'
 import type { BadgeTone } from '@/components/ui'
 import { UruLogo } from '@/components/brand/uru-logo'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { cn } from '@/lib/cn'
 
 const NAV_LINKS = [
@@ -133,30 +134,35 @@ const FAQS = [
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      {/* Header flotante glass */}
+      <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
+        <div className="glass-panel mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2.5 sm:px-6">
           <UruLogo size="md" />
           <nav className="flex items-center gap-1 text-sm sm:gap-2">
-            <div className="mr-2 hidden items-center gap-1 md:flex">
+            <div className="mr-1 hidden items-center gap-0.5 md:flex">
               {NAV_LINKS.map((l) => (
                 <a
                   key={l.href}
                   href={l.href}
-                  className="rounded-lg px-3 py-2 text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
+                  className="pill px-3 py-2 text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
                 >
                   {l.label}
                 </a>
               ))}
             </div>
+            <ThemeToggle />
             <Link
               href="/login"
-              className={buttonVariants({ variant: 'outline' })}
+              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden sm:inline-flex')}
             >
               Iniciar sesión
             </Link>
             <Link
               href="/signup"
-              className={buttonVariants({ variant: 'primary' })}
+              className={cn(
+                buttonVariants({ variant: 'primary', size: 'sm' }),
+                'pill shadow-md'
+              )}
             >
               Crear cuenta gratis
             </Link>
@@ -164,36 +170,44 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-citric">
+      <main className="flex-1 pt-20">
+        {/* Hero premium */}
+        <section className="relative overflow-hidden bg-gradient-2">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]"
+            className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full glow-rose opacity-60 blur-3xl"
           />
-          <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-16 bottom-0 h-96 w-96 rounded-full glow-blue opacity-50 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full glow-teal opacity-40 blur-3xl"
+          />
+          <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+              <span className="pill inline-flex items-center gap-2 border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
+                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent shadow-sm" />
                 Hecho para negocios en Perú
               </span>
-              <p className="font-brand mt-6 text-lg font-semibold tracking-wide text-white/90">
+              <p className="font-brand mt-8 text-xl font-bold tracking-wide text-white/95 sm:text-2xl">
                 Vende sin parar
               </p>
-              <h1 className="font-brand mt-3 text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
+              <h1 className="font-brand mt-4 text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-6xl">
                 Tu agente de ventas por WhatsApp, atendiendo 24/7
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/90">
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-white/90 sm:text-xl">
                 Uru responde a tus clientes, cotiza productos y toma pedidos
-                automáticamente desde WhatsApp. Tú te enfocas en tu negocio; nosotros
-                nos encargamos de la conversación.
+                automáticamente. Tú te enfocas en tu negocio; nosotros nos
+                encargamos de la conversación.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href="/signup"
                   className={cn(
                     buttonVariants({ variant: 'primary', size: 'lg' }),
-                    'border-0 bg-white text-foreground shadow-md hover:bg-white/90'
+                    'pill border-0 bg-white px-8 text-foreground shadow-lg hover:bg-white/95 hover:shadow-xl'
                   )}
                 >
                   Empezar con Uru
@@ -202,7 +216,7 @@ export default function Home() {
                   href="#como-funciona"
                   className={cn(
                     buttonVariants({ variant: 'outline', size: 'lg' }),
-                    'border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white'
+                    'pill border-white/40 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white'
                   )}
                 >
                   Ver cómo funciona
@@ -215,34 +229,31 @@ export default function Home() {
         {/* Cómo funciona */}
         <section
           id="como-funciona"
-          className="scroll-mt-20 border-t border-border bg-surface-muted"
+          className="scroll-mt-28 border-t border-border/60 bg-surface-muted/80"
         >
-          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
             <div className="max-w-2xl">
               <Badge tone="primary" dot>
                 Cómo funciona
               </Badge>
-              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 De WhatsApp a pedidos, en cuatro pasos
               </h2>
-              <p className="mt-3 text-muted">
+              <p className="mt-3 text-lg text-muted">
                 Sin instalar nada raro: tu número oficial, tu catálogo y un agente
                 que atiende mientras tú supervisas.
               </p>
             </div>
-            <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <ol className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="rounded-card border border-border bg-surface p-6 shadow-sm"
-                >
+                <li key={step.title} className="premium-card p-7">
                   <span
                     aria-hidden="true"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-2 text-sm font-bold text-white shadow-sm"
                   >
                     {i + 1}
                   </span>
-                  <h3 className="mt-4 text-base font-semibold">{step.title}</h3>
+                  <h3 className="font-brand mt-5 text-lg font-bold">{step.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted">{step.body}</p>
                 </li>
               ))}
@@ -251,32 +262,26 @@ export default function Home() {
         </section>
 
         {/* Funcionalidades */}
-        <section id="funcionalidades" className="scroll-mt-20">
-          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <section id="funcionalidades" className="scroll-mt-28">
+          <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
             <div className="max-w-2xl">
               <Badge tone="primary" dot>
                 Funcionalidades
               </Badge>
-              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Lo que Uru hace hoy
               </h2>
-              <p className="mt-3 text-muted">
-                Funciones reales, ya operando. Nada de promesas que todavía no
-                existen.
+              <p className="mt-3 text-lg text-muted">
+                Funciones reales, ya operando. Nada de promesas que todavía no existen.
               </p>
             </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((f) => (
-                <Card
-                  key={f.title}
-                  className="transition-shadow hover:shadow-md"
-                >
-                  <CardContent>
-                    <Badge tone={f.tone}>{f.tag}</Badge>
-                    <h3 className="mt-3 text-base font-semibold">{f.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted">{f.body}</p>
-                  </CardContent>
-                </Card>
+                <div key={f.title} className="premium-card p-6">
+                  <Badge tone={f.tone}>{f.tag}</Badge>
+                  <h3 className="font-brand mt-4 text-lg font-bold">{f.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{f.body}</p>
+                </div>
               ))}
             </div>
           </div>
@@ -285,34 +290,33 @@ export default function Home() {
         {/* Casos de uso */}
         <section
           id="casos"
-          className="scroll-mt-20 border-t border-border bg-surface-muted"
+          className="scroll-mt-28 border-t border-border/60 bg-surface-muted/80"
         >
-          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
             <div className="max-w-2xl">
               <Badge tone="primary" dot>
                 Casos de uso
               </Badge>
-              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Dos negocios reales ya operando con Uru
               </h2>
-              <p className="mt-3 text-muted">
+              <p className="mt-3 text-lg text-muted">
                 Cada uno automatiza un flujo distinto de atención y pedidos.
               </p>
             </div>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+            <div className="mt-12 grid gap-8 sm:grid-cols-2">
               {USE_CASES.map((u) => (
-                <article
-                  key={u.name}
-                  className="rounded-card border border-border bg-surface p-7 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-lg font-semibold">{u.name}</h3>
+                <article key={u.name} className="premium-card p-8">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-brand text-2xl font-bold">{u.name}</h3>
+                      <p className="mt-1 text-sm font-medium text-muted">{u.kind}</p>
+                    </div>
                     <Badge tone={u.tone} dot>
                       {u.badge}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-sm font-medium text-muted">{u.kind}</p>
-                  <p className="mt-3 text-muted">{u.body}</p>
+                  <p className="mt-4 leading-7 text-muted">{u.body}</p>
                 </article>
               ))}
             </div>
@@ -320,33 +324,34 @@ export default function Home() {
         </section>
 
         {/* Para qué negocios es */}
-        <section id="para-quien" className="scroll-mt-20">
-          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <section id="para-quien" className="scroll-mt-28">
+          <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
             <div className="max-w-2xl">
               <Badge tone="primary" dot>
                 Para qué negocios es
               </Badge>
-              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Pensado para dos tipos de negocio
               </h2>
             </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2">
+            <div className="mt-12 grid gap-6 sm:grid-cols-2">
               {BUSINESS_TYPES.map((b) => (
-                <Card key={b.title}>
-                  <CardContent>
-                    <h3 className="text-base font-semibold">{b.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted">{b.body}</p>
+                <Card key={b.title} className="premium-card border-0 shadow-none">
+                  <CardContent className="p-7">
+                    <h3 className="font-brand text-lg font-bold">{b.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted">{b.body}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            <div className="mt-6 rounded-card border border-border bg-surface-muted p-5 text-sm text-muted">
+            <div className="premium-card mt-8 p-6 text-sm text-muted">
               Puedes empezar con tu catálogo propio y{' '}
-              <span className="font-medium text-foreground">conectar Shopify más
-              adelante</span>{' '}
+              <span className="font-medium text-foreground">
+                conectar Shopify más adelante
+              </span>{' '}
               cuando crezcas, sin rehacer tu cuenta ni tu WhatsApp. ¿Tu negocio es
               distinto?{' '}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
                 Escríbenos
               </Link>{' '}
               y lo evaluamos.
@@ -354,21 +359,21 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Preguntas frecuentes */}
+        {/* FAQ */}
         <section
           id="faq"
-          className="scroll-mt-20 border-t border-border bg-surface-muted"
+          className="scroll-mt-28 border-t border-border/60 bg-surface-muted/80"
         >
-          <div className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-3xl px-6 py-20 sm:py-24">
             <div className="text-center">
               <Badge tone="primary" dot>
                 Preguntas frecuentes
               </Badge>
-              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight">
+              <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
                 Lo que probablemente te estás preguntando
               </h2>
             </div>
-            <Accordion className="mt-10">
+            <Accordion className="premium-card mt-12 overflow-hidden p-2">
               {FAQS.map((f) => (
                 <AccordionItem key={f.q} question={f.q}>
                   {f.a}
@@ -379,21 +384,25 @@ export default function Home() {
         </section>
 
         {/* CTA final */}
-        <section className="bg-gradient-sale">
-          <div className="mx-auto max-w-6xl px-6 py-20 text-center">
-            <h2 className="font-brand text-3xl font-extrabold tracking-tight text-white">
+        <section className="relative overflow-hidden bg-gradient-1">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.12),transparent_55%)]"
+          />
+          <div className="relative mx-auto max-w-6xl px-6 py-24 text-center">
+            <h2 className="font-brand text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Listo para automatizar tu WhatsApp
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/90">
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/90">
               Empieza con tu catálogo y tu número de WhatsApp; nosotros te acompañamos
               en la conexión y la puesta en marcha.
             </p>
-            <div className="mt-8">
+            <div className="mt-10">
               <Link
                 href="/signup"
                 className={cn(
                   buttonVariants({ variant: 'primary', size: 'lg' }),
-                  'border-0 bg-white text-foreground shadow-md hover:bg-white/90'
+                  'pill border-0 bg-white px-10 text-foreground shadow-lg hover:bg-white/95'
                 )}
               >
                 Crear cuenta gratis
@@ -403,10 +412,13 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Uru — Vende sin parar.</p>
-          <div className="flex gap-4">
+      <footer className="border-t border-border bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <UruLogo variant="isotipo" size="sm" href={false} />
+            <p>© {new Date().getFullYear()} Uru — Vende sin parar.</p>
+          </div>
+          <div className="flex gap-6">
             <Link href="/privacidad" className="hover:text-foreground hover:underline">
               Privacidad
             </Link>
