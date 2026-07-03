@@ -83,7 +83,7 @@ export function ConversationMessages({ messages }: { messages: ChatMessage[] }) 
                   incoming
                     ? 'rounded-tl-sm bg-wa-bubble-in text-foreground'
                     : isHuman
-                      ? 'rounded-tr-sm bg-wa-bubble-out-human text-foreground'
+                      ? 'wa-bubble-human rounded-tr-sm bg-wa-bubble-out-human text-foreground'
                       : 'rounded-tr-sm bg-wa-bubble-out-bot text-foreground'
                 }`}
               >
@@ -119,9 +119,9 @@ export function ModeToggle({
       <input type="hidden" name="nextMode" value={nextMode} />
       <SubmitButton
         size="sm"
-        variant="secondary"
+        variant="outline"
         pendingText="Cambiando…"
-        className="border border-white/40 bg-white text-foreground shadow-sm hover:bg-surface-muted"
+        className="btn-wa-header-action shadow-sm hover:bg-[var(--btn-wa-header-bg)]"
       >
         {mode === 'human' ? 'Devolver al bot' : 'Pausar bot (tomar control)'}
       </SubmitButton>
@@ -355,7 +355,7 @@ export function OrderCard({
 
           {/* Confirmación de pago manual */}
           {paid ? (
-            <div className="mt-4 rounded-lg bg-success-surface px-3 py-2 text-xs text-success">
+            <div className="mt-4 rounded-lg bg-success-surface px-3 py-2 text-xs text-[var(--badge-success-fg)]">
               Pago confirmado
               {order.payment_confirmed_at
                 ? ` el ${new Date(order.payment_confirmed_at).toLocaleString('es-PE', {

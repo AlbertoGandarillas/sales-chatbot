@@ -206,8 +206,8 @@ export default function Home() {
                 <Link
                   href="/signup"
                   className={cn(
-                    buttonVariants({ variant: 'primary', size: 'lg' }),
-                    'pill border-0 bg-white px-8 text-foreground shadow-lg hover:bg-white/95 hover:shadow-xl'
+                    buttonVariants({ variant: 'ghost', size: 'lg' }),
+                    'btn-on-gradient pill px-8 shadow-lg hover:shadow-xl'
                   )}
                 >
                   Empezar con Uru
@@ -401,8 +401,8 @@ export default function Home() {
               <Link
                 href="/signup"
                 className={cn(
-                  buttonVariants({ variant: 'primary', size: 'lg' }),
-                  'pill border-0 bg-white px-10 text-foreground shadow-lg hover:bg-white/95'
+                  buttonVariants({ variant: 'ghost', size: 'lg' }),
+                  'btn-on-gradient pill px-10 shadow-lg'
                 )}
               >
                 Crear cuenta gratis

@@ -4,6 +4,25 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-07-03 — Dashboard dark mode fixes
+
+- Tokens dark: `--primary` / `--info` / `--wa-header` teal (`#00B496` / `#008f77`); sin azul sólido.
+- Badges semánticos `--badge-*` (light mantiene valores previos vía `:root`).
+- `ModeToggle`: `.btn-wa-header-action` (crema sobre header teal).
+- Burbujas: bot `#2d524c`, humano `#3d3538` + borde rosa; `--wa-bubble-label` `#8aebd4`.
+- Destructivos CP-DEST A: rosa borde/texto más visible en dark.
+- Spec: `dashboard-darkmode-fixes-spec.md`.
+
+---
+
+## 2026-07-03 — Landing fixes (logo, CTAs, header glass)
+
+- LF-1: SVG isotipo — U blanca, destello rosa `#F0B4AA`, sin azul.
+- LF-2: `.btn-on-gradient` para CTAs sobre gradiente (texto carbón legible).
+- LF-3: Header glass 92% opaco + sombra (claro y oscuro).
+
+---
+
 ## 2026-07-03 — Rediseño visual premium Uru (paleta azul/teal/rosa)
 
 - Tokens v4 en `app/globals.css` (reemplazo total esmeralda).

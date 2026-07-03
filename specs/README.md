@@ -23,6 +23,8 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `admin-console-index.md` | Índice consola admin plataforma |
 | `admin-console-spec.md` | Panel `/admin`: auth, negocios, errores, ops |
 | `redesign-premium-uru-spec.md` | Rediseño visual premium landing + dashboard (PENDIENTE) |
+| `landing-fixes-spec.md` | 3 fixes landing: logo, CTAs, header glass |
+| `dashboard-darkmode-fixes-spec.md` | Modo oscuro dashboard: auditoría + fixes (IMPLEMENTADO) |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados

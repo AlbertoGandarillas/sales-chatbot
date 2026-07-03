@@ -10,12 +10,30 @@ export type BadgeTone =
   | 'info'
 
 const TONES: Record<BadgeTone, { wrap: string; dot: string }> = {
-  neutral: { wrap: 'bg-surface-muted text-foreground', dot: 'bg-muted' },
-  primary: { wrap: 'bg-primary/10 text-primary', dot: 'bg-primary' },
-  success: { wrap: 'bg-success-surface text-success', dot: 'bg-success' },
-  warning: { wrap: 'bg-warning-surface text-warning', dot: 'bg-warning' },
-  danger: { wrap: 'bg-danger-surface text-danger', dot: 'bg-danger' },
-  info: { wrap: 'bg-info-surface text-info', dot: 'bg-info' },
+  neutral: {
+    wrap: 'bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-fg)]',
+    dot: 'bg-[var(--badge-neutral-dot)]',
+  },
+  primary: {
+    wrap: 'bg-[var(--badge-primary-bg)] text-[var(--badge-primary-fg)]',
+    dot: 'bg-[var(--badge-primary-dot)]',
+  },
+  success: {
+    wrap: 'bg-[var(--badge-success-bg)] text-[var(--badge-success-fg)]',
+    dot: 'bg-[var(--badge-success-dot)]',
+  },
+  warning: {
+    wrap: 'bg-[var(--badge-warning-bg)] text-[var(--badge-warning-fg)]',
+    dot: 'bg-[var(--badge-warning-dot)]',
+  },
+  danger: {
+    wrap: 'bg-[var(--badge-danger-bg)] text-[var(--badge-danger-fg)]',
+    dot: 'bg-[var(--badge-danger-dot)]',
+  },
+  info: {
+    wrap: 'bg-[var(--badge-info-bg)] text-[var(--badge-info-fg)]',
+    dot: 'bg-[var(--badge-info-dot)]',
+  },
 }
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

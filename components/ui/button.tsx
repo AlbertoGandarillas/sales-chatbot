@@ -24,8 +24,9 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'border border-border-strong bg-surface text-foreground hover:bg-surface-muted active:translate-y-px',
   ghost: 'text-foreground hover:bg-surface-muted active:translate-y-px',
   danger:
-    'border border-danger-border bg-danger-surface text-danger-foreground hover:bg-accent-rose/40 active:translate-y-px',
-  success: 'bg-success text-white hover:brightness-110 active:translate-y-px',
+    'border border-danger-border bg-danger-surface text-danger-foreground hover:bg-accent-rose/20 active:translate-y-px',
+  success:
+    'bg-[var(--btn-success-bg)] text-[var(--btn-success-fg)] hover:brightness-110 active:translate-y-px',
   link: 'text-primary underline-offset-4 hover:underline',
 }
 
