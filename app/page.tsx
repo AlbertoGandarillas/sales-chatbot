@@ -137,7 +137,7 @@ export default function Home() {
       {/* Header flotante glass */}
       <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
         <div className="glass-panel mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2.5 sm:px-6">
-          <UruLogo size="md" />
+          <UruLogo size="lg" />
           <nav className="flex items-center gap-1 text-sm sm:gap-2">
             <div className="mr-1 hidden items-center gap-0.5 md:flex">
               {NAV_LINKS.map((l) => (
@@ -415,7 +415,7 @@ export default function Home() {
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <UruLogo variant="isotipo" size="sm" href={false} />
+            <UruLogo variant="isotipo" size="md" href={false} />
             <p>© {new Date().getFullYear()} Uru — Vende sin parar.</p>
           </div>
           <div className="flex gap-6">

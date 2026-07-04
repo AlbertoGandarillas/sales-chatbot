@@ -25,7 +25,7 @@ export default async function DashboardLayout({
       <header className="sticky top-0 z-10 border-b border-border bg-surface">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
-            <UruLogo variant="isotipo" size="sm" href={false} />
+            <UruLogo variant="isotipo" size="md" href={false} />
             <div className="min-w-0">
               <span className="block truncate text-sm font-semibold text-foreground">
                 {business.name}

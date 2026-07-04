@@ -2,9 +2,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const SIZES = {
-  sm: { icon: 40, wordmark: 'text-lg' },
-  md: { icon: 44, wordmark: 'text-xl' },
-  lg: { icon: 52, wordmark: 'text-2xl' },
+  sm: { icon: 48, wordmark: 'text-lg' },
+  md: { icon: 56, wordmark: 'text-xl' },
+  lg: { icon: 68, wordmark: 'text-2xl' },
 } as const
 
 type UruLogoProps = {
