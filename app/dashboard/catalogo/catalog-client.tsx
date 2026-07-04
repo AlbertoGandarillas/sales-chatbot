@@ -343,7 +343,7 @@ function FilterChip({
       className={cn(
         'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
         active
-          ? 'bg-primary text-primary-foreground'
+          ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)]'
           : 'bg-surface text-muted ring-1 ring-border hover:bg-surface-muted hover:text-foreground'
       )}
     >

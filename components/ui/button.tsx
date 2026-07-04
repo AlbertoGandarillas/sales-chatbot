@@ -17,7 +17,7 @@ const base =
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-primary text-primary-foreground hover:bg-primary-hover active:translate-y-px shadow-sm',
+    'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-fg)] hover:bg-[var(--btn-primary-hover)] active:translate-y-px shadow-sm',
   secondary:
     'bg-secondary text-secondary-foreground hover:brightness-110 active:translate-y-px',
   outline:

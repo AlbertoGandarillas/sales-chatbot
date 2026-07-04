@@ -101,7 +101,7 @@ export function ProductImageField({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={onFileChange}
-            className="max-w-xs text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
+            className="max-w-xs text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--btn-primary-bg)] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[var(--btn-primary-fg)]"
           />
           {selectedFileLabel && (
             <p className="text-xs text-muted" role="status">

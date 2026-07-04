@@ -87,6 +87,9 @@
 
   --btn-success-bg: var(--success);
   --btn-success-fg: #ffffff;
+  --btn-primary-bg: var(--primary);
+  --btn-primary-fg: var(--primary-foreground);
+  --btn-primary-hover: var(--primary-hover);
   --btn-wa-header-bg: #ffffff;
   --btn-wa-header-fg: #1a1a1e;
   --wa-bubble-human-border: transparent;
@@ -104,18 +107,18 @@
   --border-strong: #4a4a52;
 
   /* Marca: teal como primario — sin azul en componentes sólidos */
-  --primary: #00b496;
+  --primary: #7ad9c4;
   --primary-foreground: #ffffff;
-  --primary-hover: #00a084;
+  --primary-hover: #6bc9b4;
 
-  --secondary: #00b496;
-  --secondary-foreground: #ffffff;
+  --secondary: #7ad9c4;
+  --secondary-foreground: #1a1a1e;
 
   --accent: #ebe182;
   --accent-foreground: #1a1a1e;
   --accent-rose: #f0b4aa;
 
-  --ring: #00b496;
+  --ring: #7ad9c4;
 
   --success: #00b496;
   --success-surface: #1f4038;
@@ -156,8 +159,11 @@
   --badge-info-fg: #8aebd4;
   --badge-info-dot: #00b496;
 
-  --btn-success-bg: #00b496;
+  --btn-success-bg: #007a66;
   --btn-success-fg: #ffffff;
+  --btn-primary-bg: #007a66;
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover: #006656;
   --btn-wa-header-bg: #f0e6dc;
   --btn-wa-header-fg: #1a1a1e;
 

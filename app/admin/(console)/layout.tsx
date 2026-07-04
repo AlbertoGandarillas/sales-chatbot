@@ -16,7 +16,7 @@ export default async function AdminConsoleLayout({
       <header className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--btn-primary-bg)] text-sm font-bold text-[var(--btn-primary-fg)]">
               U
             </span>
             <span className="text-sm font-semibold text-foreground">Uru Admin</span>
