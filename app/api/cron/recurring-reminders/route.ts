@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { processRecurringRemindersForBusiness } from '@/lib/recurring-orders'
 import type { Business } from '@/lib/business-resolver'
-
-const BUSINESS_COLUMNS =
-  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id'
+import { BUSINESS_COLUMNS } from '@/lib/business-resolver'
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET

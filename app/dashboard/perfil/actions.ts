@@ -19,17 +19,13 @@ export async function updateProfile(
   const name = String(formData.get('name') ?? '').trim()
   if (!name) return { error: 'El nombre es obligatorio.', ok: false }
 
-  const systemPrompt = String(formData.get('system_prompt_custom') ?? '').trim()
   const ownerWhatsapp = String(formData.get('owner_whatsapp_number') ?? '').trim()
   const shopify = String(formData.get('shopify_domain') ?? '').trim()
 
   const payload: Record<string, unknown> = {
     name,
-    system_prompt_custom: systemPrompt || null,
     owner_whatsapp_number: ownerWhatsapp || null,
     supports_custom_orders: formData.get('supports_custom_orders') != null,
-    // El dominio Shopify se puede agregar en cualquier momento (catálogo propio →
-    // Shopify). El cambio de catalog_source ocurre al sincronizar el catálogo.
     shopify_domain: shopify || null,
   }
 

@@ -212,6 +212,40 @@ const confirmarPedidoRecurrente: ChatCompletionTool = {
   },
 }
 
+const buscarConocimientoNegocio: ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'buscar_conocimiento_negocio',
+    description:
+      'Busca en las preguntas frecuentes, políticas y artículos configurados por el negocio. Usar cuando el cliente pregunte por envíos, pagos, devoluciones, horario, tienda física, ofertas generales u otras políticas del negocio.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Pregunta o tema en lenguaje natural del cliente',
+        },
+        categoria: {
+          type: 'string',
+          enum: [
+            'general',
+            'producto',
+            'envios',
+            'pagos',
+            'devoluciones',
+            'horario',
+            'tienda',
+            'ofertas',
+            'otros',
+          ],
+          description: 'Opcional. Filtrar por categoría si el tema es obvio.',
+        },
+      },
+      required: ['query'],
+    },
+  },
+}
+
 export interface ToolsContext {
   catalog_source: CatalogSource
   supports_custom_orders: boolean
@@ -227,6 +261,12 @@ export function getToolsFor(business: ToolsContext): ChatCompletionTool[] {
     tools.push(iniciarEncargoPersonalizado)
   }
 
-  tools.push(consultarEstadoPedido, escalarAHumano, consultarPedidoRecurrente, confirmarPedidoRecurrente)
+  tools.push(
+    buscarConocimientoNegocio,
+    consultarEstadoPedido,
+    escalarAHumano,
+    consultarPedidoRecurrente,
+    confirmarPedidoRecurrente
+  )
   return tools
 }

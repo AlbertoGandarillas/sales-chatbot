@@ -11,7 +11,7 @@ export default async function PerfilPage() {
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <PageHeader
         title="Perfil del negocio"
-        description="Ajusta la información que el agente usa al conversar con tus clientes."
+        description="Datos operativos del negocio. La voz y conocimiento del bot están en Bot Studio."
       />
 
       <Card>

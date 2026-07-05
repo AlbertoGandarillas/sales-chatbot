@@ -4,7 +4,19 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
-## 2026-07-03 — Dashboard dark mode fixes
+## 2026-07-05 — Bot Studio (BK-1 + BK-2 + BK-3)
+
+- Migración `20260705160000_bot_studio.sql`: columnas bot en `businesses`, tablas `business_faqs` y `business_knowledge_articles`.
+- `system_prompt_custom` migrado a `bot_extra_notes` (sin pérdida); `resolveExtraNotes` sigue leyendo legacy si hace falta.
+- `buildSystemPrompt()` refactorizado: núcleo Uru → capacidades → config negocio → operativo → runtime.
+- Defaults de tono/saludo/pagos replican comportamiento previo cuando campos vacíos.
+- Dashboard `/dashboard/bot`: identidad, políticas, FAQs, artículos, reglas del sistema, vista previa.
+- Tool `buscar_conocimiento_negocio` (FAQs + políticas + artículos FTS).
+- Admin: campos Bot Studio + import JSON; script `scripts/import-bot-knowledge.mjs`.
+- Perfil: textarea `system_prompt_custom` movido a Bot Studio.
+- Spec: `bot-knowledge-spec.md`.
+
+---
 
 - Tokens dark: `--primary` / `--info` / `--wa-header` teal (`#00B496` / `#008f77`); sin azul sólido.
 - Badges semánticos `--badge-*` (light mantiene valores previos vía `:root`).

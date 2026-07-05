@@ -14,10 +14,18 @@ export interface Business {
   system_prompt_custom: string | null
   shopify_domain: string | null
   owner_user_id: string | null
+  bot_name: string | null
+  bot_greeting: string | null
+  bot_tone: string | null
+  policy_shipping: string | null
+  policy_payment: string | null
+  policy_returns: string | null
+  bot_extra_notes: string | null
+  bot_use_legacy_prompt: boolean | null
 }
 
-const BUSINESS_COLUMNS =
-  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id'
+export const BUSINESS_COLUMNS =
+  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
 
 export async function getBusinessByPhoneNumberId(
   phoneNumberId: string

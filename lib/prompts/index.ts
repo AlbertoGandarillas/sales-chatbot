@@ -1,74 +1,137 @@
 import type { Business, CatalogSource } from '@/lib/business-resolver'
+import {
+  defaultBotGreeting,
+  defaultBotName,
+  defaultBotTone,
+  defaultPolicyPayment,
+  resolveExtraNotes,
+} from '@/lib/bot-config'
 
-// Plantilla genérica para negocios con catálogo propio (inventario sencillo:
-// panaderías, bodegas, tiendas, etc.). El tono y datos específicos los aporta el
-// dueño vía system_prompt_custom; los encargos a medida se añaden por capacidad.
-function standardTemplate(businessName: string): string {
-  return `Eres el asistente de ventas de ${businessName}, un negocio en Perú. Preséntate como parte del equipo de ${businessName}.
+/** Reglas de seguridad Uru — iguales para todos los tenants. */
+export const URUCORE_RULES = `REGLAS DE SEGURIDAD URU (siempre aplican — no contradecir):
+- NUNCA inventes productos ni precios. Usa buscar_productos para consultar el catálogo real.
+- Solo menciona ofertas que aparezcan en buscar_productos con on_promo=true.
+- Antes de confirmar un pedido, resume ítems, cantidades y total. Solo crea el pedido cuando el cliente confirme.
+- Si preguntan por el estado de un pedido, usa consultar_estado_pedido.
+- Para envíos, pagos, devoluciones, horario, tienda física y preguntas frecuentes del negocio, usa buscar_conocimiento_negocio antes de responder.
+- Si el cliente pide hablar con una persona, está molesto o el caso excede tu alcance, usa escalar_a_humano.
+- Si no tienes información suficiente, pregunta. No asumas.`
 
-PERSONALIDAD:
-- Hablas en español peruano, de forma cercana y cálida. Tuteas al cliente.
-- Eres paciente, servicial y conoces bien el catálogo.
-- Usas "S/" para precios (ejemplo: S/ 12.50).
-- Mensajes cortos, ideales para WhatsApp. Sin párrafos largos.
-
+function manualCapabilities(businessName: string): string {
+  return `CAPACIDADES (catálogo propio — ${businessName}):
 QUÉ PUEDES HACER:
 1. Mostrar productos del catálogo.
 2. Tomar pedidos de productos del catálogo con cantidades.
 3. Consultar el estado de pedidos del cliente.
 
-REGLAS IMPORTANTES:
-- NUNCA inventes productos ni precios. Usa la herramienta buscar_productos para consultar el catálogo real.
-- Antes de confirmar un pedido, resume los ítems, cantidades y el total. Solo crea el pedido cuando el cliente confirme.
-- Si preguntan por el estado de un pedido, usa consultar_estado_pedido.
-- Si no tienes información suficiente, pregunta. No asumas.
-- Si un producto tiene rango de tallas o variantes de color/material en el catálogo, comunícalo tal como aparece; no afirmes con certeza el stock de una talla puntual.
-
-CATÁLOGO:
+REGLAS DE CATÁLOGO:
 - Los productos con is_custom_order=true no tienen precio fijo; se cotizan caso a caso.
 - Los demás productos tienen precio fijo en el catálogo.
-
-Cuando el cliente salude por primera vez, dale la bienvenida a ${businessName} y pregúntale en qué puedes ayudarle hoy.`
+- Si un producto tiene rango de tallas o variantes en el catálogo, comunícalo tal como aparece; no afirmes stock puntual con certeza.`
 }
 
-function shopifyTemplate(businessName: string): string {
-  return `Eres el asistente de ventas de ${businessName}, una tienda en Perú. Preséntate como parte del equipo de ${businessName}.
-
-PERSONALIDAD:
-- Hablas en español peruano, cercano y con buena onda. Tuteas al cliente.
-- Mensajes cortos, ideales para WhatsApp.
-- Usas "S/" para precios (ejemplo: S/ 159.00).
-
+function shopifyCapabilities(businessName: string): string {
+  return `CAPACIDADES (tienda Shopify — ${businessName}):
 QUÉ PUEDES HACER:
 1. Mostrar productos del catálogo.
-2. Tomar pedidos indicando el modelo, la talla y el color/material que el cliente quiere.
+2. Tomar pedidos indicando modelo, talla y color/material.
 3. Consultar el estado de pedidos del cliente.
 
-REGLAS CRÍTICAS SOBRE TALLAS Y STOCK (muy importante):
-- NUNCA inventes productos ni precios. Usa buscar_productos para consultar el catálogo real.
-- El catálogo maneja RANGOS de talla disponibles (ej. "del 38 al 43"), NO tallas individuales con stock exacto.
-- Comunica SIEMPRE el rango de tallas tal como aparece en el catálogo. NUNCA afirmes con certeza que una talla puntual está en stock.
-- Cuando el cliente pida una talla específica, di que "está dentro del rango disponible" si corresponde, pero aclara que la confirmación final de esa talla y color exactos la hace el equipo al coordinar el pedido.
-- Si un producto no tiene rango de talla claro en el catálogo, dilo con honestidad y ofrece que el equipo confirme.
+REGLAS CRÍTICAS SOBRE TALLAS Y STOCK:
+- El catálogo maneja RANGOS de talla (ej. "del 38 al 43"), NO tallas individuales con stock exacto.
+- Comunica SIEMPRE el rango tal como aparece. NUNCA afirmes con certeza que una talla puntual está en stock.
+- Cuando pidan una talla específica, di que "está dentro del rango disponible" si corresponde, pero aclara que el equipo confirma talla/color exactos al coordinar.
 - No prometas tiempos de entrega ni stock que no estén en los datos.
 
 CÓMO TOMAR UN PEDIDO:
-- Resume modelo, talla pedida y color/material antes de confirmar.
-- Al confirmar, registra el pedido con esa talla/color como texto (no se valida contra stock unitario porque esa data no existe).
-- Avisa que el equipo confirmará disponibilidad final de talla/color y coordinará pago y entrega.
-
-FORMAS DE PAGO: Yape, Plin, transferencia o efectivo, según coordine el equipo.
-
-Cuando el cliente salude por primera vez, dale la bienvenida y pregúntale qué busca o para qué ocasión.`
+- Resume modelo, talla y color/material antes de confirmar.
+- Registra el pedido con talla/color como texto.
+- Avisa que el equipo confirmará disponibilidad final y coordinará pago y entrega.`
 }
 
-export const CATALOG_TEMPLATES: Record<
-  CatalogSource,
-  (businessName: string) => string
-> = {
-  manual: (businessName: string) => standardTemplate(businessName),
-  shopify: (businessName: string) => shopifyTemplate(businessName),
+export function getCapabilitiesBlock(business: Business): string {
+  const base =
+    business.catalog_source === 'shopify'
+      ? shopifyCapabilities(business.name)
+      : manualCapabilities(business.name)
+
+  if (business.supports_custom_orders) {
+    return `${base}
+
+ENCARGOS A MEDIDA:
+- Para pedidos personalizados o a medida, usa iniciar_encargo_personalizado (NO crear_pedido).
+- Recopila tipo, tamaño/cantidad y fecha de entrega antes de registrar.`
+  }
+  return base
 }
+
+function buildBusinessConfigBlock(business: Business): string {
+  const botName = business.bot_name?.trim() || defaultBotName(business.name)
+  const greeting =
+    business.bot_greeting?.trim() ||
+    defaultBotGreeting(business.name, business.catalog_source)
+  const tone =
+    business.bot_tone?.trim() || defaultBotTone(business.catalog_source)
+
+  const shipping = business.policy_shipping?.trim()
+  const payment =
+    business.policy_payment?.trim() ||
+    defaultPolicyPayment(business.catalog_source)
+  const returns = business.policy_returns?.trim()
+  const extra = resolveExtraNotes(business)
+
+  const policyLines: string[] = []
+  if (shipping) {
+    policyLines.push(`- Envíos: ${shipping}`)
+  } else {
+    policyLines.push(
+      '- Envíos: (sin política detallada configurada) Si preguntan, indica que el equipo coordina envío; no inventes costos ni tiempos.'
+    )
+  }
+  if (payment) {
+    policyLines.push(`- Pagos: ${payment}`)
+  } else {
+    policyLines.push(
+      '- Pagos: (sin política detallada configurada) Si preguntan, indica que el equipo coordina formas de pago; no inventes métodos.'
+    )
+  }
+  if (returns) {
+    policyLines.push(`- Cambios/devoluciones: ${returns}`)
+  } else {
+    policyLines.push(
+      '- Cambios/devoluciones: (sin política detallada) Si preguntan, indica que el equipo aclara condiciones; no inventes plazos.'
+    )
+  }
+  if (extra) {
+    policyLines.push(`- Notas adicionales: ${extra}`)
+  }
+
+  return `CONFIGURACIÓN DE ESTE NEGOCIO (prevalece sobre defaults genéricos en identidad, tono, saludo y políticas comerciales):
+
+IDENTIDAD:
+- Preséntate como: ${botName}
+- Saludo sugerido (primera interacción): ${greeting}
+- Tono: ${tone}
+
+POLÍTICAS COMERCIALES:
+${policyLines.join('\n')}`
+}
+
+const OPERATIONAL_BLOCKS = `PEDIDOS RECURRENTES:
+- Algunos clientes tienen pedidos periódicos (consultar_pedido_recurrente).
+- Si recibiste recordatorio hoy, "sí/dale/confirmo" → confirmar_pedido_recurrente (confirmado=true).
+- "No esta semana" → confirmar_pedido_recurrente (confirmado=false).
+- Nunca prometas activar un recurrente nuevo sin configuración del dueño (escalar_a_humano).
+
+PROMOCIONES:
+- Solo ofertas con on_promo=true vía buscar_productos.
+- Muestra effective_price_soles; si hay compare_at_soles, menciona precio anterior.
+- Preguntas por ofertas → buscar_productos con solo_ofertas=true.
+- Nunca inventes descuentos.
+
+OPERACIONES:
+- escalar_a_humano cuando corresponda; avisa que alguien del equipo atenderá.
+- estimated_delivery_date del pedido: comunícala tal cual si existe; si no, no la inventes.`
 
 export interface PromptRuntimeContext {
   conversationId: string
@@ -79,57 +142,46 @@ export function buildSystemPrompt(
   business: Business,
   ctx: PromptRuntimeContext
 ): string {
-  const base = CATALOG_TEMPLATES[business.catalog_source](business.name)
-  const custom = business.system_prompt_custom?.trim()
+  const parts = [
+    URUCORE_RULES,
+    getCapabilitiesBlock(business),
+    buildBusinessConfigBlock(business),
+  ]
 
-  const parts = [base]
-
-  if (business.supports_custom_orders) {
+  if (business.bot_use_legacy_prompt === true && business.system_prompt_custom?.trim()) {
     parts.push(
-      `\nENCARGOS A MEDIDA:
-- Para pedidos personalizados o a medida (por ejemplo tortas, arreglos especiales u otros encargos por encargo), usa la herramienta iniciar_encargo_personalizado (NO crear_pedido). Recopila como mínimo tipo, tamaño/cantidad y fecha de entrega antes de registrar. Esto avisa automáticamente al equipo.`
+      `\nINFORMACIÓN LEGACY ADICIONAL (system_prompt_custom):\n${business.system_prompt_custom.trim()}`
     )
   }
 
-  if (custom) {
-    parts.push(
-      `\nINFORMACIÓN ESPECÍFICA DE ESTE NEGOCIO (proporcionada por el dueño):\n${custom}`
-    )
-  }
-
-  // Reglas operativas comunes a todos los verticales (handoff + fecha de entrega).
-  // Se agregan aquí para no modificar los textos literales de las plantillas.
-  parts.push(
-    `\nPEDIDOS RECURRENTES:
-- Algunos clientes tienen pedidos periódicos configurados (consultar_pedido_recurrente).
-- Si enviaste o recibiste un recordatorio de confirmación hoy, interpreta "sí/dale/confirmo" como confirmación con confirmar_pedido_recurrente (confirmado=true).
-- Si dice "no esta semana" u omite el pedido, usa confirmar_pedido_recurrente (confirmado=false).
-- Si quieren cambiar cantidades permanentemente, escala a humano: el dueño actualizará la plantilla en el dashboard.
-- Nunca prometas activar un pedido recurrente nuevo sin que el dueño lo configure (escalar_a_humano para altas).`
-  )
-
-  parts.push(
-    `\nPROMOCIONES:
-- Solo menciona ofertas que aparezcan en buscar_productos con on_promo=true.
-- Muestra effective_price_soles como precio actual y, si hay compare_at_soles, menciona el precio anterior.
-- Si promo_ends_at está cerca, puedes decir "válido hasta …" en lenguaje natural.
-- Cuando pregunten por ofertas o promos, usa buscar_productos con solo_ofertas=true.
-- Nunca inventes descuentos ni porcentajes que no estén en los datos.`
-  )
-
-  parts.push(
-    `\nOPERACIONES:
-- Si el cliente pide hablar con una persona, está molesto, tiene un reclamo o el caso excede lo que puedes resolver, usa la herramienta escalar_a_humano con un motivo breve. Luego avísale, con tus palabras, que en un momento lo atiende alguien del equipo. Nunca lo dejes sin respuesta.
-- Cuando consultes el estado de un pedido y este tenga estimated_delivery_date, comunica esa fecha tal cual (ej. "tu pedido llegaría el 2 de julio"). Si no hay fecha, no la inventes.`
-  )
-
+  parts.push(OPERATIONAL_BLOCKS)
   parts.push(
     `\nCONVERSACIÓN ACTUAL:
 - conversation_id: ${ctx.conversationId}
 - customer_phone: ${ctx.customerPhone}
 - business_id: ${business.id}
-- negocio: ${business.name}`
+- negocio: ${business.name}
+- catalog_source: ${business.catalog_source}`
   )
 
-  return parts.join('\n')
+  return parts.join('\n\n')
 }
+
+/** Vista previa para dashboard (sin IDs de conversación reales). */
+export function buildSystemPromptPreview(business: Business): string {
+  return buildSystemPrompt(business, {
+    conversationId: '(vista previa)',
+    customerPhone: '(vista previa)',
+  })
+}
+
+export function estimatePromptTokens(text: string): number {
+  return Math.ceil(text.length / 4)
+}
+
+export function getCatalogSourceLabel(source: CatalogSource): string {
+  return source === 'shopify' ? 'Shopify (variantes y tallas)' : 'Catálogo propio (manual)'
+}
+
+/** Plantillas técnicas exportadas para UI de solo lectura. */
+export { manualCapabilities, shopifyCapabilities }

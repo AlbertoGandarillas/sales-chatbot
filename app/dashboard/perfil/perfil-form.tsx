@@ -1,9 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useEffect, useState } from 'react'
 import type { OwnerBusiness } from '@/lib/dashboard'
 import { updateProfile, type ProfileState } from './actions'
-import { Alert, Button, Field, Input, Textarea } from '@/components/ui'
+import { Alert, Button, Field, Input } from '@/components/ui'
 
 const initialState: ProfileState = { error: null, ok: false }
 
@@ -26,19 +27,13 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
         <Input id="name" name="name" required defaultValue={business.name} />
       </Field>
 
-      <Field
-        label="Información específica del negocio"
-        htmlFor="system_prompt_custom"
-        hint="Horario, políticas, tono, datos de entrega/pago. El agente usa esto como contexto adicional. Las reglas base del bot no se editan aquí."
-      >
-        <Textarea
-          id="system_prompt_custom"
-          name="system_prompt_custom"
-          rows={6}
-          defaultValue={business.system_prompt_custom ?? ''}
-          placeholder="Ej: Atendemos de lunes a sábado 9–18h. Envíos a todo Lima. Pagos por Yape al 999..."
-        />
-      </Field>
+      <div className="rounded-lg bg-surface-muted p-3 text-sm text-muted">
+        La voz, políticas y preguntas frecuentes del bot se configuran en{' '}
+        <Link href="/dashboard/bot" className="font-medium text-primary hover:underline">
+          Bot Studio
+        </Link>
+        .
+      </div>
 
       <Field
         label="WhatsApp del dueño"

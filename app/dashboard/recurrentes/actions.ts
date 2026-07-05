@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase'
+import { EMPTY_BOT_FIELDS } from '@/lib/bot-config'
 import {
   advanceNextRunOn,
   createOrderFromRecurring,
@@ -244,6 +245,7 @@ export async function sendRecurringReminderNow(
         system_prompt_custom: null,
         shopify_domain: null,
         owner_user_id: null,
+        ...EMPTY_BOT_FIELDS,
       },
       row,
       scheduledFor

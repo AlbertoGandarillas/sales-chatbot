@@ -20,6 +20,7 @@ import {
 import { notifyOwner, sendWhatsAppMessage } from '@/lib/whatsapp'
 import type { Business } from '@/lib/business-resolver'
 import { buildSystemPrompt } from '@/lib/prompts'
+import { searchBusinessKnowledge } from '@/lib/knowledge-search'
 import { getToolsFor } from '@/lib/tools'
 import { logUsage } from '@/lib/usage-tracking'
 import {
@@ -447,6 +448,12 @@ async function executeTool(
         ctx,
         args.confirmado === true,
         args.notas_cliente ? String(args.notas_cliente) : undefined
+      )
+    case 'buscar_conocimiento_negocio':
+      return searchBusinessKnowledge(
+        ctx.business,
+        String(args.query ?? ''),
+        args.categoria ? String(args.categoria) : null
       )
     default:
       throw new Error(`Tool desconocida: ${name}`)

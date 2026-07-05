@@ -7,6 +7,7 @@ import type { AdminBusinessRow } from '@/lib/admin-data'
 import { maskSecret } from '@/lib/mask-secret'
 import {
   assignBusinessOwner,
+  importBusinessBotKnowledge,
   updateBusinessGeneral,
   updateBusinessWhatsApp,
   type AdminBusinessState,
@@ -87,14 +88,82 @@ function GeneralForm({ business }: { business: AdminBusinessRow }) {
           defaultValue={business.owner_whatsapp_number ?? ''}
         />
       </Field>
-      <Field label="Prompt custom" htmlFor="system_prompt_custom">
+
+      <div className="border-t border-border pt-4">
+        <p className="mb-3 text-sm font-semibold text-foreground">Bot Studio</p>
+        <div className="space-y-3">
+          <Field label="Nombre del bot" htmlFor="bot_name">
+            <Input id="bot_name" name="bot_name" defaultValue={business.bot_name ?? ''} />
+          </Field>
+          <Field label="Saludo" htmlFor="bot_greeting">
+            <Textarea
+              id="bot_greeting"
+              name="bot_greeting"
+              rows={3}
+              defaultValue={business.bot_greeting ?? ''}
+            />
+          </Field>
+          <Field label="Tono" htmlFor="bot_tone">
+            <Textarea
+              id="bot_tone"
+              name="bot_tone"
+              rows={2}
+              defaultValue={business.bot_tone ?? ''}
+            />
+          </Field>
+          <Field label="Envíos" htmlFor="policy_shipping">
+            <Textarea
+              id="policy_shipping"
+              name="policy_shipping"
+              rows={3}
+              defaultValue={business.policy_shipping ?? ''}
+            />
+          </Field>
+          <Field label="Pagos" htmlFor="policy_payment">
+            <Textarea
+              id="policy_payment"
+              name="policy_payment"
+              rows={2}
+              defaultValue={business.policy_payment ?? ''}
+            />
+          </Field>
+          <Field label="Devoluciones" htmlFor="policy_returns">
+            <Textarea
+              id="policy_returns"
+              name="policy_returns"
+              rows={2}
+              defaultValue={business.policy_returns ?? ''}
+            />
+          </Field>
+          <Field label="Notas" htmlFor="bot_extra_notes">
+            <Textarea
+              id="bot_extra_notes"
+              name="bot_extra_notes"
+              rows={2}
+              defaultValue={business.bot_extra_notes ?? ''}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="bot_use_legacy_prompt"
+          defaultChecked={business.bot_use_legacy_prompt === true}
+          className="h-4 w-4 accent-primary"
+        />
+        Usar prompt legacy adicional (rollback)
+      </label>
+      <Field label="Prompt legacy" htmlFor="system_prompt_custom">
         <Textarea
           id="system_prompt_custom"
           name="system_prompt_custom"
-          rows={5}
+          rows={3}
           defaultValue={business.system_prompt_custom ?? ''}
         />
       </Field>
+
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -118,6 +187,67 @@ function GeneralForm({ business }: { business: AdminBusinessRow }) {
         {pending ? 'Guardando…' : 'Guardar general'}
       </Button>
     </form>
+  )
+}
+
+function ImportKnowledgeForm({ business }: { business: AdminBusinessRow }) {
+  const [state, formAction, pending] = useActionState(
+    importBusinessBotKnowledge,
+    initialState
+  )
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (state.ok) {
+      setSaved(true)
+      const t = setTimeout(() => setSaved(false), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [state.ok])
+
+  return (
+    <form action={formAction} className="mt-8 space-y-4 border-t border-border pt-6">
+      <input type="hidden" name="id" value={business.id} />
+      <p className="text-sm font-semibold text-foreground">Importar conocimiento (JSON)</p>
+      <Field label="JSON" htmlFor="import_json">
+        <Textarea
+          id="import_json"
+          name="import_json"
+          rows={8}
+          placeholder='{"bot_name":"…","faqs":[{"question":"…","answer":"…"}]}'
+        />
+      </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="replace_faqs" className="h-4 w-4 accent-primary" />
+        Reemplazar FAQs existentes
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="replace_articles" className="h-4 w-4 accent-primary" />
+        Reemplazar artículos existentes
+      </label>
+      {state.error && (
+        <Alert tone="danger" live>
+          {state.error}
+        </Alert>
+      )}
+      {saved && (
+        <Alert tone="success" live>
+          Importación completada.
+        </Alert>
+      )}
+      <Button type="submit" disabled={pending}>
+        {pending ? 'Importando…' : 'Importar JSON'}
+      </Button>
+    </form>
+  )
+}
+
+function GeneralTab({ business }: { business: AdminBusinessRow }) {
+  return (
+    <>
+      <GeneralForm business={business} />
+      <ImportKnowledgeForm business={business} />
+    </>
   )
 }
 
@@ -270,7 +400,7 @@ export function BusinessEditClient({ business }: { business: AdminBusinessRow })
         ) : tab === 'owner' ? (
           <OwnerForm business={business} />
         ) : (
-          <GeneralForm business={business} />
+          <GeneralTab business={business} />
         )}
       </div>
     </>

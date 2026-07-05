@@ -4,7 +4,9 @@ import { requirePlatformAdminWithClient } from '@/lib/admin-auth'
 
 export { maskSecret }
 
-export interface AdminBusinessRow {
+import type { BotStudioFields } from '@/lib/bot-config'
+
+export interface AdminBusinessRow extends BotStudioFields {
   id: string
   name: string
   slug: string
@@ -12,12 +14,14 @@ export interface AdminBusinessRow {
   supports_custom_orders: boolean
   owner_whatsapp_number: string | null
   shopify_domain: string | null
-  system_prompt_custom: string | null
   whatsapp_phone_number_id: string | null
   whatsapp_token: string | null
   owner_user_id: string | null
   created_at: string
 }
+
+const ADMIN_BUSINESS_COLUMNS =
+  'id, name, slug, catalog_source, supports_custom_orders, owner_whatsapp_number, shopify_domain, system_prompt_custom, whatsapp_phone_number_id, whatsapp_token, owner_user_id, created_at, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
 
 export interface ErrorLogRow {
   id: string
@@ -79,9 +83,7 @@ export async function listAdminBusinesses(): Promise<AdminBusinessRow[]> {
   const { supabase } = await requirePlatformAdminWithClient()
   const { data } = await supabase
     .from('businesses')
-    .select(
-      'id, name, slug, catalog_source, supports_custom_orders, owner_whatsapp_number, shopify_domain, system_prompt_custom, whatsapp_phone_number_id, whatsapp_token, owner_user_id, created_at'
-    )
+    .select(ADMIN_BUSINESS_COLUMNS)
     .order('name')
 
   return (data as AdminBusinessRow[] | null) ?? []
@@ -91,9 +93,7 @@ export async function getAdminBusiness(id: string): Promise<AdminBusinessRow | n
   const { supabase } = await requirePlatformAdminWithClient()
   const { data } = await supabase
     .from('businesses')
-    .select(
-      'id, name, slug, catalog_source, supports_custom_orders, owner_whatsapp_number, shopify_domain, system_prompt_custom, whatsapp_phone_number_id, whatsapp_token, owner_user_id, created_at'
-    )
+    .select(ADMIN_BUSINESS_COLUMNS)
     .eq('id', id)
     .maybeSingle()
 

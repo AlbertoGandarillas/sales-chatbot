@@ -4,6 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { requirePlatformAdminWithClient } from '@/lib/admin-auth'
 import { logAdminAction } from '@/lib/admin-audit'
 import { createServiceClient } from '@/lib/supabase'
+import {
+  importBotKnowledge,
+  parseBotConfigFromForm,
+  type BotKnowledgeImportPayload,
+} from '@/lib/knowledge-import'
 
 export type AdminBusinessState = { error: string | null; ok: boolean }
 
@@ -22,8 +27,11 @@ export async function updateBusinessGeneral(
   const catalogSource = String(formData.get('catalog_source') ?? 'manual')
   const shopifyDomain = String(formData.get('shopify_domain') ?? '').trim() || null
   const ownerWhatsapp = String(formData.get('owner_whatsapp_number') ?? '').trim() || null
-  const systemPrompt = String(formData.get('system_prompt_custom') ?? '').trim() || null
   const supportsCustom = formData.get('supports_custom_orders') === 'on'
+  const botConfig = parseBotConfigFromForm(formData)
+  const useLegacy = formData.get('bot_use_legacy_prompt') === 'on'
+  const legacyPrompt =
+    String(formData.get('system_prompt_custom') ?? '').trim() || null
 
   if (!name || !slug) {
     return { error: 'Nombre y slug son obligatorios.', ok: false }
@@ -37,8 +45,10 @@ export async function updateBusinessGeneral(
       catalog_source: catalogSource === 'shopify' ? 'shopify' : 'manual',
       shopify_domain: shopifyDomain,
       owner_whatsapp_number: ownerWhatsapp,
-      system_prompt_custom: systemPrompt,
       supports_custom_orders: supportsCustom,
+      ...botConfig,
+      bot_use_legacy_prompt: useLegacy,
+      system_prompt_custom: useLegacy ? legacyPrompt : null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -156,6 +166,44 @@ export async function assignBusinessOwner(
     owner_email: ownerEmail,
     owner_user_id: ownerUserId,
   })
+
+  revalidatePath('/admin/negocios')
+  revalidatePath(`/admin/negocios/${id}`)
+  return { ...initial, ok: true }
+}
+
+export async function importBusinessBotKnowledge(
+  _prev: AdminBusinessState,
+  formData: FormData
+): Promise<AdminBusinessState> {
+  const { session } = await requirePlatformAdminWithClient()
+  const id = String(formData.get('id') ?? '')
+  const jsonRaw = String(formData.get('import_json') ?? '').trim()
+  const replaceFaqs = formData.get('replace_faqs') === 'on'
+  const replaceArticles = formData.get('replace_articles') === 'on'
+
+  if (!id) return { error: 'ID inválido.', ok: false }
+  if (!jsonRaw) return { error: 'Pega el JSON de importación.', ok: false }
+
+  let payload: BotKnowledgeImportPayload
+  try {
+    payload = JSON.parse(jsonRaw) as BotKnowledgeImportPayload
+  } catch {
+    return { error: 'JSON inválido.', ok: false }
+  }
+
+  try {
+    const result = await importBotKnowledge(id, payload, {
+      replaceFaqs,
+      replaceArticles,
+    })
+    await logAdminAction(session.userId, 'business.import_bot_knowledge', 'business', id, {
+      faqsImported: result.faqsImported,
+      articlesImported: result.articlesImported,
+    })
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Error al importar.', ok: false }
+  }
 
   revalidatePath('/admin/negocios')
   revalidatePath(`/admin/negocios/${id}`)
