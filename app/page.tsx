@@ -136,9 +136,16 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Header flotante glass */}
       <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
-        <div className="glass-panel mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-2.5 sm:px-6">
-          <UruLogo size="lg" />
-          <nav className="flex items-center gap-1 text-sm sm:gap-2">
+        <div className="glass-panel mx-auto flex max-w-6xl items-center justify-between gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-6 sm:py-2.5">
+          <div className="min-w-0 shrink">
+            <div className="sm:hidden">
+              <UruLogo size="md" />
+            </div>
+            <div className="hidden sm:block">
+              <UruLogo size="lg" />
+            </div>
+          </div>
+          <nav className="flex shrink-0 items-center gap-1 text-sm sm:gap-2">
             <div className="mr-1 hidden items-center gap-0.5 md:flex">
               {NAV_LINKS.map((l) => (
                 <a
@@ -161,10 +168,11 @@ export default function Home() {
               href="/signup"
               className={cn(
                 buttonVariants({ variant: 'primary', size: 'sm' }),
-                'pill shadow-md'
+                'pill shrink-0 whitespace-nowrap px-2.5 text-xs shadow-md sm:px-3 sm:text-sm'
               )}
             >
-              Crear cuenta gratis
+              <span className="sm:hidden">Registrarse</span>
+              <span className="hidden sm:inline">Crear cuenta gratis</span>
             </Link>
           </nav>
         </div>
