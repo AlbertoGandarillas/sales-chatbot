@@ -278,6 +278,41 @@ body {
   border: 1px solid var(--wa-bubble-human-border);
 }
 
+/* Isotipo Uru — geometría única, colores por tema */
+.uru-isotipo__bubble-light {
+  fill: #58a882;
+}
+.uru-isotipo__bubble-dark {
+  display: none;
+}
+.uru-isotipo__u-light {
+  fill: #ffffff;
+}
+.uru-isotipo__spark-ring {
+  display: none;
+}
+.uru-isotipo__spark-core {
+  fill: #ffffff;
+}
+
+[data-theme='dark'] .uru-isotipo__bubble-light {
+  display: none;
+}
+[data-theme='dark'] .uru-isotipo__bubble-dark {
+  display: block;
+  fill: #ffffff;
+}
+[data-theme='dark'] .uru-isotipo__u-light {
+  display: none;
+}
+[data-theme='dark'] .uru-isotipo__spark-ring {
+  display: block;
+  fill: #ffffff;
+}
+[data-theme='dark'] .uru-isotipo__spark-core {
+  fill: #5baf82;
+}
+
 .glow-blue {
   background: radial-gradient(circle, rgba(0, 120, 200, 0.35) 0%, transparent 70%);
 }

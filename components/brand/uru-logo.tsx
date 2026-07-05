@@ -1,10 +1,10 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import { UruIsotipo } from '@/components/brand/uru-isotipo'
 
 const SIZES = {
-  sm: { icon: 48, wordmark: 'text-lg' },
-  md: { icon: 56, wordmark: 'text-xl' },
-  lg: { icon: 68, wordmark: 'text-2xl' },
+  sm: { icon: 38, wordmark: 'text-lg' },
+  md: { icon: 45, wordmark: 'text-xl' },
+  lg: { icon: 54, wordmark: 'text-2xl' },
 } as const
 
 type UruLogoProps = {
@@ -24,17 +24,8 @@ function LogoContent({
 
   return (
     <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
-      {/* Asset oficial: public/brand/uru-isotipo.svg (brandbook v3) */}
-      <Image
-        src="/brand/uru-isotipo.svg"
-        alt=""
-        width={icon}
-        height={icon}
-        className="shrink-0"
-        priority
-      />
+      <UruIsotipo size={icon} />
       {variant === 'full' && (
-        /* Wordmark tipográfico — Nunito Black, siempre minúsculas */
         <span className={`font-brand font-black tracking-tight ${wordmark}`}>uru</span>
       )}
     </span>
