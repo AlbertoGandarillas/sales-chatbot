@@ -67,15 +67,38 @@ async function ensureUser(email) {
 }
 
 async function main() {
-  const { data: business, error: bizErr } = await admin
+  let business = null
+
+  const { data: exact, error: exactErr } = await admin
     .from('businesses')
     .select('id, name, owner_user_id')
     .ilike('name', businessName)
     .maybeSingle()
 
-  if (bizErr || !business) {
-    console.error(`Negocio "${businessName}" no encontrado.`)
-    process.exit(1)
+  if (!exactErr && exact) {
+    business = exact
+  } else {
+    const { data: all, error: allErr } = await admin
+      .from('businesses')
+      .select('id, name, owner_user_id')
+      .order('name')
+
+    if (allErr || !all?.length) {
+      console.error('No hay negocios en la base de datos.')
+      process.exit(1)
+    }
+
+    business =
+      all.find((b) => b.name.toLowerCase().includes(businessName.toLowerCase())) ??
+      all[0]
+
+    if (business.name.toLowerCase() !== businessName.toLowerCase()) {
+      console.log(
+        `Negocio "${businessName}" no encontrado. Usando "${business.name}" (primer match o el primero de la lista).`
+      )
+      console.log('Disponibles:', all.map((b) => b.name).join(', '))
+      console.log('Tip: npm run db:setup-catalog-user -- --business "NombreExacto"\n')
+    }
   }
 
   const { user, created } = await ensureUser(testEmail)

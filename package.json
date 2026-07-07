@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx --test lib/pricing.test.ts lib/whatsapp-phone.test.ts lib/whatsapp-session.test.ts lib/observability.test.ts lib/mask-secret.test.ts"
+    "test": "npx tsx --test lib/pricing.test.ts lib/whatsapp-phone.test.ts lib/whatsapp-session.test.ts lib/observability.test.ts lib/mask-secret.test.ts",
+    "db:verify-team": "node scripts/verify-team-migration.mjs",
+    "db:apply-team": "node scripts/apply-team-migration.mjs",
+    "db:setup-catalog-user": "node scripts/setup-catalog-test-user.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
