@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { Button, Field, Input } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
@@ -10,6 +10,7 @@ export function CatalogConfirmDialog({
   open,
   variant,
   count,
+  productLabel,
   isShopify,
   confirmInput,
   onConfirmInputChange,
@@ -20,6 +21,7 @@ export function CatalogConfirmDialog({
   open: boolean
   variant: DialogVariant
   count: number
+  productLabel?: string | null
   isShopify: boolean
   confirmInput: string
   onConfirmInputChange: (v: string) => void
@@ -27,14 +29,19 @@ export function CatalogConfirmDialog({
   onCancel: () => void
   pending: boolean
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
   useEffect(() => {
-    const el = dialogRef.current
-    if (!el) return
-    if (open && !el.open) el.showModal()
-    if (!open && el.open) el.close()
-  }, [open])
+    if (!open) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !pending) onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open, pending, onCancel])
 
   if (!open) return null
 
@@ -42,27 +49,36 @@ export function CatalogConfirmDialog({
   const deleteReady = confirmInput === 'ELIMINAR'
 
   return (
-    <dialog
-      ref={dialogRef}
-      onCancel={(e) => {
-        e.preventDefault()
-        onCancel()
-      }}
-      className={cn(
-        'fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-md',
-        'rounded-card border border-border bg-surface p-0 shadow-lg backdrop:bg-foreground/40'
-      )}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      role="presentation"
     >
-      <div className="p-5">
-        <h2 className="text-lg font-semibold text-foreground">
+      <button
+        type="button"
+        className="absolute inset-0 bg-foreground/50"
+        aria-label="Cerrar"
+        onClick={pending ? undefined : onCancel}
+        tabIndex={-1}
+      />
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="catalog-dialog-title"
+        className={cn(
+          'relative z-10 w-full max-w-md rounded-card border border-border bg-surface p-5 shadow-xl'
+        )}
+      >
+        <h2 id="catalog-dialog-title" className="text-lg font-semibold text-foreground">
           {isDelete
-            ? `Eliminar ${count} producto${count === 1 ? '' : 's'}`
+            ? count === 1 && productLabel
+              ? `Eliminar «${productLabel}»`
+              : `Eliminar ${count} producto${count === 1 ? '' : 's'}`
             : `Confirmar ${count} por revisar`}
         </h2>
 
         {isDelete ? (
           <div className="mt-3 space-y-2 text-sm text-muted">
-            <p>Esta acción no se puede deshacer. El bot dejará de ofrecer estos productos.</p>
+            <p>Esta acción no se puede deshacer. El bot dejará de ofrecer este producto.</p>
             {isShopify && (
               <p>
                 Los productos de Shopify pueden volver a aparecer si resincronizas el catálogo.
@@ -75,6 +91,7 @@ export function CatalogConfirmDialog({
                 onChange={(e) => onConfirmInputChange(e.target.value)}
                 placeholder="ELIMINAR"
                 autoComplete="off"
+                autoFocus
               />
             </Field>
           </div>
@@ -104,6 +121,6 @@ export function CatalogConfirmDialog({
           </Button>
         </div>
       </div>
-    </dialog>
+    </div>
   )
 }

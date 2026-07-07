@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { deleteProduct, markProductReviewed } from './actions'
+import { markProductReviewed } from './actions'
 import { useCatalogSelection } from './catalog-selection-context'
 import type { CatalogProduct } from './catalog-types'
 import { ProductRowQuickControls } from './product-row-quick-controls'
@@ -19,10 +19,12 @@ export function CatalogProductCard({
   product,
   canWrite,
   onEdit,
+  onRequestDelete,
 }: {
   product: CatalogProduct
   canWrite: boolean
   onEdit: () => void
+  onRequestDelete: (product: CatalogProduct) => void
 }) {
   const router = useRouter()
   const { selectionMode, isSelected, toggleId } = useCatalogSelection()
@@ -141,12 +143,14 @@ export function CatalogProductCard({
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
                 Editar
               </Button>
-              <form action={deleteProduct}>
-                <input type="hidden" name="id" value={product.id} />
-                <Button type="submit" variant="danger" size="sm">
-                  Eliminar
-                </Button>
-              </form>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={() => onRequestDelete(product)}
+              >
+                Eliminar
+              </Button>
             </>
           )}
         </div>

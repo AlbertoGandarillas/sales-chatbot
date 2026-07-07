@@ -331,7 +331,8 @@ function CatalogClientInner({
   const [feedback, setFeedback] = useState<{ message: string; tone: 'success' | 'danger' } | null>(
     null
   )
-  const [dialog, setDialog] = useState<'mark_all' | 'delete_bulk' | null>(null)
+  const [dialog, setDialog] = useState<'mark_all' | null>(null)
+  const [deleteTargets, setDeleteTargets] = useState<CatalogProduct[] | null>(null)
   const [deleteConfirmInput, setDeleteConfirmInput] = useState('')
   const [bulkPending, startBulk] = useTransition()
 
@@ -358,8 +359,14 @@ function CatalogClientInner({
 
   const closeDialog = useCallback(() => {
     setDialog(null)
+    setDeleteTargets(null)
     setDeleteConfirmInput('')
   }, [])
+
+  function openDeleteDialog(targets: CatalogProduct[]) {
+    setDeleteConfirmInput('')
+    setDeleteTargets(targets)
+  }
 
   function showFeedback(message: string, tone: 'success' | 'danger') {
     setFeedback({ message, tone })
@@ -382,8 +389,9 @@ function CatalogClientInner({
     })
   }
 
-  function confirmBulkDelete() {
-    const ids = selectedProducts.map((p) => p.id)
+  function confirmDelete() {
+    if (!deleteTargets?.length) return
+    const ids = deleteTargets.map((p) => p.id)
     const fd = new FormData()
     fd.set('action', 'delete')
     fd.set('ids', JSON.stringify(ids))
@@ -397,7 +405,7 @@ function CatalogClientInner({
           'success'
         )
         closeDialog()
-        exitSelectionMode()
+        if (deleteTargets.length > 1 || selectionMode) exitSelectionMode()
         router.refresh()
       } else {
         showFeedback(result.error ?? 'Error al eliminar', 'danger')
@@ -497,6 +505,7 @@ function CatalogClientInner({
                   setShowCreate(false)
                   setEditingId(p.id)
                 }}
+                onRequestDelete={(product) => openDeleteDialog([product])}
               />
             )
           )}
@@ -507,7 +516,7 @@ function CatalogClientInner({
         <CatalogFloatingBar
           visibleProducts={visible}
           selectedProducts={selectedProducts}
-          onRequestDelete={() => setDialog('delete_bulk')}
+          onRequestDelete={() => openDeleteDialog(selectedProducts)}
           onFeedback={(message, tone) => {
             setFeedback({ message, tone })
             setTimeout(() => setFeedback(null), 4000)
@@ -528,13 +537,18 @@ function CatalogClientInner({
       />
 
       <CatalogConfirmDialog
-        open={dialog === 'delete_bulk'}
+        open={deleteTargets !== null && deleteTargets.length > 0}
         variant="delete_bulk"
-        count={selectedCount}
-        isShopify={selectionHasShopify}
+        count={deleteTargets?.length ?? 0}
+        productLabel={
+          deleteTargets?.length === 1 ? deleteTargets[0].name : null
+        }
+        isShopify={
+          deleteTargets?.some((p) => p.source === 'shopify') ?? false
+        }
         confirmInput={deleteConfirmInput}
         onConfirmInputChange={setDeleteConfirmInput}
-        onConfirm={confirmBulkDelete}
+        onConfirm={confirmDelete}
         onCancel={closeDialog}
         pending={bulkPending}
       />
