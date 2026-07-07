@@ -4,6 +4,18 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-07-06 — Equipo, notificaciones y catálogo inline (IMPLEMENTADO)
+
+- Migración `20260706160000_team_notifications_catalog.sql`: `business_members`, RLS por membership, `notify_new_orders`.
+- Roles: `owner`, `catalog`, `operator`; invitaciones en `/dashboard/perfil` → Equipo.
+- Guards en rutas, nav filtrado por rol, Server Actions con `requireOwnerRole` / `requireCatalogWrite` / `requireOpsRole`.
+- TN-2: `crear_pedido` notifica por WhatsApp al dueño (toggle en perfil).
+- TN-4: edición inline de precio y disponibilidad en catálogo (`patchProductQuick`).
+- Spec: `team-notifications-catalog-spec.md`.
+
+
+---
+
 ## 2026-07-05 — Bot Studio (BK-1 + BK-2 + BK-3)
 
 - Migración `20260705160000_bot_studio.sql`: columnas bot en `businesses`, tablas `business_faqs` y `business_knowledge_articles`.

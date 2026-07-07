@@ -5,11 +5,11 @@ import type { CatalogSource } from '@/lib/business-resolver'
 import {
   saveProduct,
   deleteProduct,
-  toggleAvailable,
   resyncCatalog,
   type CatalogState,
   type ResyncState,
 } from './actions'
+import { ProductRowQuickControls } from './product-row-quick-controls'
 import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
 import { ProductImageField } from '@/components/catalog/product-image-field'
 import { ProductThumbnail } from '@/components/catalog/product-thumbnail'
@@ -82,31 +82,6 @@ const CATEGORY_SUGGESTIONS = [
 
 function formatSoles(n: number) {
   return `S/ ${Number(n).toFixed(2)}`
-}
-
-function ProductPriceDisplay({ product }: { product: Product }) {
-  if (product.is_custom_order) {
-    return <span className="mr-1 text-sm font-semibold text-foreground">—</span>
-  }
-
-  const pricing = effectivePrice(product)
-
-  if (pricing.onPromo) {
-    return (
-      <span className="mr-1 flex flex-col items-end text-sm font-semibold text-foreground sm:flex-row sm:items-center sm:gap-1.5">
-        <span className="text-xs font-normal text-muted line-through">
-          {formatSoles(pricing.compareAt!)}
-        </span>
-        <span className="text-success">{formatSoles(pricing.price)}</span>
-      </span>
-    )
-  }
-
-  return (
-    <span className="mr-1 text-sm font-semibold text-foreground">
-      {formatSoles(product.price_soles)}
-    </span>
-  )
 }
 
 function ProductPromoFields({ product }: { product?: Product }) {
@@ -356,10 +331,12 @@ export function CatalogClient({
   products,
   catalogSource,
   shopifyDomain,
+  canWrite = true,
 }: {
   products: Product[]
   catalogSource: CatalogSource
   shopifyDomain: string | null
+  canWrite?: boolean
 }) {
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -374,16 +351,18 @@ export function CatalogClient({
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2">
-          {canResync && <ResyncButton />}
-          <Button
-            type="button"
-            onClick={() => {
-              setEditingId(null)
-              setShowCreate((v) => !v)
-            }}
-          >
-            Nuevo producto
-          </Button>
+          {canWrite && canResync && <ResyncButton />}
+          {canWrite && (
+            <Button
+              type="button"
+              onClick={() => {
+                setEditingId(null)
+                setShowCreate((v) => !v)
+              }}
+            >
+              Nuevo producto
+            </Button>
+          )}
         </div>
       </div>
 
@@ -396,7 +375,7 @@ export function CatalogClient({
         </FilterChip>
       </div>
 
-      {showCreate && (
+      {canWrite && showCreate && (
         <div className="mb-5">
           <ProductForm onDone={() => setShowCreate(false)} />
         </div>
@@ -410,7 +389,7 @@ export function CatalogClient({
         <div className="space-y-2">
           {visible.map((p) => {
             const pricing = effectivePrice(p)
-            return editingId === p.id ? (
+            return editingId === p.id && canWrite ? (
               <ProductForm
                 key={p.id}
                 product={p}
@@ -453,32 +432,34 @@ export function CatalogClient({
                   </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ProductPriceDisplay product={p} />
-                  <form action={toggleAvailable}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <input type="hidden" name="next" value={String(!p.available)} />
-                    <Button type="submit" variant="outline" size="sm">
-                      {p.available ? 'Ocultar' : 'Mostrar'}
-                    </Button>
-                  </form>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowCreate(false)
-                      setEditingId(p.id)
-                    }}
-                  >
-                    Editar
-                  </Button>
-                  <form action={deleteProduct}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <Button type="submit" variant="danger" size="sm">
-                      Eliminar
-                    </Button>
-                  </form>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ProductRowQuickControls product={p} canWrite={canWrite} />
+                  {pricing.onPromo && (
+                    <span className="text-xs text-success">
+                      Oferta: {formatSoles(pricing.price)}
+                    </span>
+                  )}
+                  {canWrite && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowCreate(false)
+                          setEditingId(p.id)
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <form action={deleteProduct}>
+                        <input type="hidden" name="id" value={p.id} />
+                        <Button type="submit" variant="danger" size="sm">
+                          Eliminar
+                        </Button>
+                      </form>
+                    </>
+                  )}
                 </div>
               </article>
             )

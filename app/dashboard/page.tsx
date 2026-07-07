@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { getMembership } from '@/lib/team-access'
 import { Badge, Card, EmptyState, PageHeader } from '@/components/ui'
 
 function formatSoles(amount: number) {
@@ -41,9 +42,60 @@ function MetricCard({
 }
 
 export default async function DashboardResumen() {
+  const membership = await getMembership()
   const business = await getOwnerBusiness()
-  if (!business) return null
+  if (!business || !membership) return null
   const supabase = await createServerSupabase()
+
+  if (membership.role === 'catalog') {
+    const [
+      { count: totalProducts },
+      { count: reviewCount },
+      { count: unavailableCount },
+    ] = await Promise.all([
+      supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', business.id),
+      supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', business.id)
+        .eq('needs_review', true),
+      supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', business.id)
+        .eq('available', false),
+    ])
+
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <PageHeader
+          title="Resumen"
+          description="Vista rápida del catálogo. Usa la sección Catálogo para actualizar precios y disponibilidad."
+        />
+        <section className="mt-6 grid gap-4 sm:grid-cols-3">
+          <MetricCard label="Productos" value={String(totalProducts ?? 0)} />
+          <MetricCard
+            label="Por revisar"
+            value={String(reviewCount ?? 0)}
+            hint="Requieren atención"
+          />
+          <MetricCard
+            label="No disponibles"
+            value={String(unavailableCount ?? 0)}
+            hint="Ocultos para clientes"
+          />
+        </section>
+        <p className="mt-8 text-sm text-muted">
+          <Link href="/dashboard/catalogo" className="font-medium text-primary hover:underline">
+            Ir al catálogo →
+          </Link>
+        </p>
+      </main>
+    )
+  }
 
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()

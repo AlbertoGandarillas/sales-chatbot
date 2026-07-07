@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { getMembership } from '@/lib/team-access'
 import { UruLogo } from '@/components/brand/uru-logo'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { Badge, Button } from '@/components/ui'
@@ -16,6 +17,9 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup')
+
+  const membership = await getMembership()
+  if (!membership) redirect('/onboarding')
 
   const business = await getOwnerBusiness()
   if (!business) redirect('/onboarding')
@@ -47,7 +51,7 @@ export default async function DashboardLayout({
             </form>
           </div>
         </div>
-        <DashboardNav />
+        <DashboardNav role={membership.role} />
       </header>
       {children}
     </div>

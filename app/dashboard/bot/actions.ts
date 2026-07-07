@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { BOT_FIELD_LIMITS, FAQ_CATEGORIES } from '@/lib/bot-config'
 import { parseBotConfigFromForm } from '@/lib/knowledge-import'
+import { requireOwnerRole } from '@/lib/team-access'
 
 export type BotStudioState = { error: string | null; ok: boolean }
 
@@ -13,10 +14,8 @@ const fail = (error: string): BotStudioState => ({ error, ok: false })
 async function requireBusinessId(): Promise<
   { businessId: string } | { error: string }
 > {
-  const supabase = await createServerSupabase()
-  const { data: business } = await supabase.from('businesses').select('id').maybeSingle()
-  if (!business) return { error: 'Sesión sin negocio.' }
-  return { businessId: business.id }
+  const membership = await requireOwnerRole()
+  return { businessId: membership.businessId }
 }
 
 export async function updateBotConfig(

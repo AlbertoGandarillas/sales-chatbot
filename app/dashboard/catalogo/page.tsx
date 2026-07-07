@@ -1,10 +1,13 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { assertRouteAccess } from '@/lib/team-access'
+import { canWriteCatalog } from '@/lib/team-roles'
 import { CatalogClient, type Product } from './catalog-client'
 
 export const maxDuration = 60
 
 export default async function CatalogoPage() {
+  const membership = await assertRouteAccess('/dashboard/catalogo')
   const business = await getOwnerBusiness()
   if (!business) return null
   const supabase = await createServerSupabase()
@@ -24,6 +27,7 @@ export default async function CatalogoPage() {
         products={(data as Product[]) ?? []}
         catalogSource={business.catalog_source}
         shopifyDomain={business.shopify_domain}
+        canWrite={canWriteCatalog(membership.role)}
       />
     </main>
   )

@@ -11,6 +11,7 @@ export interface OwnerBusiness extends BotStudioFields {
   description: string | null
   owner_whatsapp_number: string | null
   shopify_domain: string | null
+  notify_new_orders: boolean
 }
 
 export interface BusinessFaqRow {
@@ -31,7 +32,7 @@ export interface KnowledgeArticleRow {
 }
 
 const OWNER_BUSINESS_COLUMNS =
-  'id, name, slug, catalog_source, supports_custom_orders, description, system_prompt_custom, owner_whatsapp_number, shopify_domain, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
+  'id, name, slug, catalog_source, supports_custom_orders, description, system_prompt_custom, owner_whatsapp_number, shopify_domain, notify_new_orders, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
 
 export async function getOwnerBusiness(): Promise<OwnerBusiness | null> {
   const supabase = await createServerSupabase()

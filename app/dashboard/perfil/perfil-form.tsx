@@ -38,7 +38,7 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
       <Field
         label="WhatsApp del dueño"
         htmlFor="owner_whatsapp_number"
-        hint="Para recibir notificaciones (encargos, escalamientos). Formato internacional, ej. 51999000111."
+        hint="Para recibir notificaciones (pedidos, encargos, escalamientos). Formato internacional, ej. 51999000111."
       >
         <Input
           id="owner_whatsapp_number"
@@ -46,6 +46,21 @@ export function PerfilForm({ business }: { business: OwnerBusiness }) {
           defaultValue={business.owner_whatsapp_number ?? ''}
         />
       </Field>
+
+      <label className="flex items-start gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          name="notify_new_orders"
+          defaultChecked={business.notify_new_orders !== false}
+          className="mt-0.5 h-4 w-4 accent-primary"
+        />
+        <span>
+          Avisarme por WhatsApp cuando entra un pedido nuevo
+          <span className="block text-xs text-muted">
+            Encargos y escalamientos siempre se notifican si tienes WhatsApp configurado.
+          </span>
+        </span>
+      </label>
 
       <label className="flex items-start gap-2 text-sm text-foreground">
         <input

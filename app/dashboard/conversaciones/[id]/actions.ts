@@ -3,12 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { sendWhatsAppSessionMessage, isWhatsAppSessionClosedError } from '@/lib/whatsapp'
+import { requireOpsRole } from '@/lib/team-access'
 
 function detailPath(conversationId: string) {
   return `/dashboard/conversaciones/${conversationId}`
 }
 
 export async function toggleMode(formData: FormData) {
+  await requireOpsRole()
   const conversationId = String(formData.get('conversationId') ?? '')
   const nextMode = String(formData.get('nextMode') ?? '')
   if (!conversationId || (nextMode !== 'bot' && nextMode !== 'human')) return
@@ -29,6 +31,7 @@ export async function sendManualReply(
   _prev: ReplyState,
   formData: FormData
 ): Promise<ReplyState> {
+  await requireOpsRole()
   const conversationId = String(formData.get('conversationId') ?? '')
   const text = String(formData.get('text') ?? '').trim()
   if (!conversationId) return { error: 'Conversación inválida.' }
@@ -85,6 +88,7 @@ export async function sendManualReply(
 }
 
 export async function setDeliveryDate(formData: FormData) {
+  await requireOpsRole()
   const orderId = String(formData.get('orderId') ?? '')
   const conversationId = String(formData.get('conversationId') ?? '')
   const date = String(formData.get('date') ?? '').trim()
@@ -100,6 +104,7 @@ export async function setDeliveryDate(formData: FormData) {
 }
 
 export async function confirmPayment(formData: FormData) {
+  await requireOpsRole()
   const orderId = String(formData.get('orderId') ?? '')
   const conversationId = String(formData.get('conversationId') ?? '')
   const note = String(formData.get('note') ?? '').trim()
@@ -162,6 +167,7 @@ async function applyOrderStatus(
 }
 
 export async function confirmOrder(formData: FormData) {
+  await requireOpsRole()
   const orderId = String(formData.get('orderId') ?? '')
   const conversationId = String(formData.get('conversationId') ?? '')
   if (!orderId || !conversationId) return
@@ -174,6 +180,7 @@ export async function updateOrderStatus(
   _prev: OrderActionState,
   formData: FormData
 ): Promise<OrderActionState> {
+  await requireOpsRole()
   const orderId = String(formData.get('orderId') ?? '')
   const conversationId = String(formData.get('conversationId') ?? '')
   const cancelReason = String(formData.get('cancelReason') ?? '').trim()
@@ -190,6 +197,7 @@ export async function updateOrderStatus(
 }
 
 export async function markOrderDelivered(formData: FormData) {
+  await requireOpsRole()
   const orderId = String(formData.get('orderId') ?? '')
   const conversationId = String(formData.get('conversationId') ?? '')
   if (!orderId || !conversationId) return

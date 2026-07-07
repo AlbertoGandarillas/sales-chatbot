@@ -3,26 +3,21 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/cn'
-
-const NAV = [
-  { href: '/dashboard', label: 'Resumen' },
-  { href: '/dashboard/conversaciones', label: 'Conversaciones' },
-  { href: '/dashboard/catalogo', label: 'Catálogo' },
-  { href: '/dashboard/recurrentes', label: 'Recurrentes' },
-  { href: '/dashboard/bot', label: 'Bot' },
-  { href: '/dashboard/perfil', label: 'Perfil' },
-]
+import type { TeamRole } from '@/lib/team-roles'
+import { navItemsForRole } from '@/lib/team-roles'
 
 function isActive(pathname: string, href: string) {
   if (href === '/dashboard') return pathname === '/dashboard'
   return pathname === href || pathname.startsWith(href + '/')
 }
 
-export function DashboardNav() {
+export function DashboardNav({ role }: { role: TeamRole }) {
   const pathname = usePathname()
+  const items = navItemsForRole(role)
+
   return (
     <nav className="flex gap-0.5 overflow-x-auto border-t border-border/60 px-3 sm:px-4">
-      {NAV.map((item) => {
+      {items.map((item) => {
         const active = isActive(pathname, item.href)
         return (
           <Link

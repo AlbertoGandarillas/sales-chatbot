@@ -16,15 +16,19 @@ import {
 } from '@/lib/recurring-orders'
 import { isValidPeruWhatsAppPhone } from '@/lib/whatsapp-phone'
 
+import { requireOwnerRole } from '@/lib/team-access'
+
 export type RecurringState = { error: string | null; ok: boolean }
 
 async function ownerContext() {
+  const membership = await requireOwnerRole()
   const supabase = await createServerSupabase()
   const { data: business } = await supabase
     .from('businesses')
     .select(
       'id, name, whatsapp_token, whatsapp_phone_number_id, owner_whatsapp_number'
     )
+    .eq('id', membership.businessId)
     .maybeSingle()
   return { supabase, business }
 }
@@ -239,6 +243,7 @@ export async function sendRecurringReminderNow(
         whatsapp_token: business.whatsapp_token,
         whatsapp_phone_number_id: business.whatsapp_phone_number_id,
         owner_whatsapp_number: business.owner_whatsapp_number,
+        notify_new_orders: true,
         slug: '',
         catalog_source: 'manual',
         supports_custom_orders: false,

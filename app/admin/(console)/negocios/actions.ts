@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requirePlatformAdminWithClient } from '@/lib/admin-auth'
 import { logAdminAction } from '@/lib/admin-audit'
+import { findAuthUserIdByEmail } from '@/lib/auth-lookup'
 import { createServiceClient } from '@/lib/supabase'
 import {
   importBotKnowledge,
@@ -97,27 +98,6 @@ export async function updateBusinessWhatsApp(
   return { ...initial, ok: true }
 }
 
-async function findAuthUserIdByEmail(email: string): Promise<string | null> {
-  const db = createServiceClient()
-  let page = 1
-  const perPage = 200
-
-  while (page <= 10) {
-    const { data, error } = await db.auth.admin.listUsers({ page, perPage })
-    if (error || !data?.users?.length) return null
-
-    const match = data.users.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    )
-    if (match?.id) return match.id
-
-    if (data.users.length < perPage) break
-    page++
-  }
-
-  return null
-}
-
 export async function assignBusinessOwner(
   _prev: AdminBusinessState,
   formData: FormData
@@ -161,6 +141,17 @@ export async function assignBusinessOwner(
     .eq('id', id)
 
   if (error) return { error: error.message, ok: false }
+
+  await db.from('business_members').delete().eq('business_id', id).eq('role', 'owner')
+  await db.from('business_members').upsert(
+    {
+      business_id: id,
+      user_id: ownerUserId,
+      role: 'owner',
+      invited_email: ownerEmail,
+    },
+    { onConflict: 'business_id,user_id' }
+  )
 
   await logAdminAction(session.userId, 'business.assign_owner', 'business', id, {
     owner_email: ownerEmail,

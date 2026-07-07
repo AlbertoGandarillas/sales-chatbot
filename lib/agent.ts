@@ -6,7 +6,7 @@ import type {
 import { createServiceClient } from '@/lib/supabase'
 import { resolveProductImage } from '@/lib/product-image'
 import { mapProductForSearch } from '@/lib/pricing'
-import { createCatalogOrder, type OrderLineItem } from '@/lib/order-create'
+import { createCatalogOrder, formatOrderItemsSummary, formatSoles, type OrderLineItem } from '@/lib/order-create'
 import {
   advanceNextRunOn,
   createOrderFromRecurring,
@@ -217,6 +217,25 @@ async function crearPedido(ctx: AgentContext, items: CrearPedidoItem[]) {
     items,
     source: 'chat',
   })
+
+  if (ctx.business.notify_new_orders !== false) {
+    try {
+      const summary = formatOrderItemsSummary(result.items)
+      const ownerMessage = `🛒 Nuevo pedido — ${ctx.business.name}
+
+Total: ${formatSoles(result.total_soles)}
+Cliente: ${ctx.customerPhone}
+Ítems: ${summary}
+ID: ${result.order_id}`
+
+      await notifyOwner(ownerMessage, {
+        ownerNumber: ctx.business.owner_whatsapp_number,
+        ...waCreds(ctx.business),
+      })
+    } catch (err) {
+      console.error('[agent] notifyOwner new order failed:', err)
+    }
+  }
 
   return {
     order_id: result.order_id,

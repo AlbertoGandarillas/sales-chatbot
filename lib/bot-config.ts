@@ -121,6 +121,7 @@ export function ownerBusinessAsPromptBusiness(
     whatsapp_phone_number_id: null,
     whatsapp_token: null,
     owner_whatsapp_number: null,
+    notify_new_orders: true,
     shopify_domain: null,
     owner_user_id: null,
     system_prompt_custom: b.system_prompt_custom,

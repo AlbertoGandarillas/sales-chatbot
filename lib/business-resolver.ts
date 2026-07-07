@@ -11,6 +11,7 @@ export interface Business {
   whatsapp_phone_number_id: string | null
   whatsapp_token: string | null
   owner_whatsapp_number: string | null
+  notify_new_orders: boolean
   system_prompt_custom: string | null
   shopify_domain: string | null
   owner_user_id: string | null
@@ -25,7 +26,7 @@ export interface Business {
 }
 
 export const BUSINESS_COLUMNS =
-  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, system_prompt_custom, shopify_domain, owner_user_id, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
+  'id, name, slug, catalog_source, supports_custom_orders, whatsapp_phone_number_id, whatsapp_token, owner_whatsapp_number, notify_new_orders, system_prompt_custom, shopify_domain, owner_user_id, bot_name, bot_greeting, bot_tone, policy_shipping, policy_payment, policy_returns, bot_extra_notes, bot_use_legacy_prompt'
 
 export async function getBusinessByPhoneNumberId(
   phoneNumberId: string

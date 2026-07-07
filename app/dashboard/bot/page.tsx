@@ -4,10 +4,12 @@ import {
   getOwnerBusiness,
   getOwnerFaqs,
 } from '@/lib/dashboard'
+import { requireOwnerRole } from '@/lib/team-access'
 import { Card, CardContent, PageHeader } from '@/components/ui'
 import { BotStudioClient } from './bot-studio-client'
 
 export default async function BotStudioPage() {
+  await requireOwnerRole()
   const business = await getOwnerBusiness()
   if (!business) return null
 

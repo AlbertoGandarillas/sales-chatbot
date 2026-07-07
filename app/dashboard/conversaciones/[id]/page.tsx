@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { summarizeRecurringItems } from '@/lib/recurring-orders'
+import { assertRouteAccess } from '@/lib/team-access'
 import {
   ModeToggle,
   OrderCard,
@@ -49,6 +50,7 @@ export default async function ConversationDetail({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await assertRouteAccess('/dashboard/conversaciones')
   const { id } = await params
   const supabase = await createServerSupabase()
 

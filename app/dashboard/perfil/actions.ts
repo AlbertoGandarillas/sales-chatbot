@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { requireOwnerRole } from '@/lib/team-access'
 
 export type ProfileState = { error: string | null; ok: boolean }
 
@@ -9,10 +10,12 @@ export async function updateProfile(
   _prev: ProfileState,
   formData: FormData
 ): Promise<ProfileState> {
+  const membership = await requireOwnerRole()
   const supabase = await createServerSupabase()
   const { data: business } = await supabase
     .from('businesses')
     .select('id')
+    .eq('id', membership.businessId)
     .maybeSingle()
   if (!business) return { error: 'Sesión sin negocio.', ok: false }
 
@@ -27,6 +30,7 @@ export async function updateProfile(
     owner_whatsapp_number: ownerWhatsapp || null,
     supports_custom_orders: formData.get('supports_custom_orders') != null,
     shopify_domain: shopify || null,
+    notify_new_orders: formData.get('notify_new_orders') != null,
   }
 
   const { error } = await supabase

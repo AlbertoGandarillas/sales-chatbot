@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { assertRouteAccess } from '@/lib/team-access'
 import { Badge, EmptyState, PageHeader } from '@/components/ui'
 
 function formatDate(iso: string) {
@@ -11,6 +12,7 @@ function formatDate(iso: string) {
 }
 
 export default async function ConversacionesList() {
+  await assertRouteAccess('/dashboard/conversaciones')
   const business = await getOwnerBusiness()
   if (!business) return null
   const supabase = await createServerSupabase()

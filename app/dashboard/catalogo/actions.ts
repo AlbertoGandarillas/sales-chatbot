@@ -9,6 +9,7 @@ import {
 import { ingestShopifyCatalog, type IngestResult } from '@/lib/shopify-ingestion'
 import { getSupabaseProjectUrl } from '@/lib/product-image'
 import { parsePromoFromFormData } from '@/lib/promo-form'
+import { requireCatalogWrite, requireOwnerRole } from '@/lib/team-access'
 
 export type CatalogState = { error: string | null; ok: boolean }
 
@@ -21,10 +22,14 @@ function nullable(formData: FormData, key: string): string | null {
   return v ? v : null
 }
 
-async function ownerBusiness() {
+async function memberBusiness() {
+  const membership = await requireCatalogWrite()
   const supabase = await createServerSupabase()
-  const { data } = await supabase.from('businesses').select('id').maybeSingle()
-  return { supabase, business: data as { id: string } | null }
+  return {
+    supabase,
+    business: { id: membership.businessId },
+    membership,
+  }
 }
 
 function imageFileFromForm(formData: FormData): File | null {
@@ -87,7 +92,7 @@ export async function saveProduct(
   _prev: CatalogState,
   formData: FormData
 ): Promise<CatalogState> {
-  const { supabase, business } = await ownerBusiness()
+  const { supabase, business } = await memberBusiness()
   if (!business) return { error: 'Sesión sin negocio.', ok: false }
 
   const id = str(formData, 'id')
@@ -210,7 +215,7 @@ export async function deleteProduct(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '')
   if (!id) return
 
-  const { supabase, business } = await ownerBusiness()
+  const { supabase, business } = await memberBusiness()
   if (!business) return
 
   const { data: product } = await supabase
@@ -237,12 +242,73 @@ export async function deleteProduct(formData: FormData): Promise<void> {
   revalidatePath('/dashboard/catalogo')
 }
 
+export async function patchProductQuick(
+  _prev: CatalogState,
+  formData: FormData
+): Promise<CatalogState> {
+  const { supabase, business } = await memberBusiness()
+  if (!business) return { error: 'Sesión sin negocio.', ok: false }
+
+  const id = str(formData, 'id')
+  if (!id) return { error: 'Producto inválido.', ok: false }
+
+  const hasPrice = formData.has('price_soles')
+  const hasAvailable = formData.has('available')
+
+  if (!hasPrice && !hasAvailable) {
+    return { error: 'Nada que actualizar.', ok: false }
+  }
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('products')
+    .select('is_custom_order')
+    .eq('id', id)
+    .eq('business_id', business.id)
+    .maybeSingle()
+
+  if (fetchError || !existing) {
+    return { error: 'Producto no encontrado.', ok: false }
+  }
+
+  const updates: Record<string, unknown> = {}
+
+  if (hasPrice) {
+    if (existing.is_custom_order) {
+      return { error: 'Los encargos a medida no tienen precio fijo.', ok: false }
+    }
+    const price = Number(formData.get('price_soles'))
+    if (Number.isNaN(price) || price < 0) {
+      return { error: 'Precio inválido.', ok: false }
+    }
+    updates.price_soles = price
+  }
+
+  if (hasAvailable) {
+    updates.available = String(formData.get('available')) === 'true'
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .update(updates)
+    .eq('id', id)
+    .eq('business_id', business.id)
+
+  if (error) return { error: error.message, ok: false }
+
+  revalidatePath('/dashboard/catalogo')
+  return { error: null, ok: true }
+}
+
 export async function toggleAvailable(formData: FormData): Promise<void> {
+  const { supabase, business } = await memberBusiness()
   const id = String(formData.get('id') ?? '')
   const next = String(formData.get('next') ?? '') === 'true'
   if (!id) return
-  const supabase = await createServerSupabase()
-  await supabase.from('products').update({ available: next }).eq('id', id)
+  await supabase
+    .from('products')
+    .update({ available: next })
+    .eq('id', id)
+    .eq('business_id', business.id)
   revalidatePath('/dashboard/catalogo')
 }
 
@@ -252,10 +318,12 @@ export async function resyncCatalog(
   _prev: ResyncState,
   _formData: FormData
 ): Promise<ResyncState> {
+  const membership = await requireOwnerRole()
   const supabase = await createServerSupabase()
   const { data: business } = await supabase
     .from('businesses')
     .select('id, shopify_domain')
+    .eq('id', membership.businessId)
     .maybeSingle()
 
   if (!business) return { error: 'Sesión sin negocio.', result: null }

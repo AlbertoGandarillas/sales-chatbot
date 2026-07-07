@@ -1,8 +1,10 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
+import { assertRouteAccess } from '@/lib/team-access'
 import { RecurrentesClient, type RecurringOrderView } from './recurrentes-client'
 
 export default async function RecurrentesPage() {
+  await assertRouteAccess('/dashboard/recurrentes')
   const business = await getOwnerBusiness()
   if (!business) return null
 
