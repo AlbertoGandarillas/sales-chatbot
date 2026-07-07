@@ -4,6 +4,30 @@ Registro de diferencias entre el **spec original** y la **implementación final*
 
 ---
 
+## 2026-07-07 — Acciones por lote en catálogo (IMPLEMENTADO)
+
+- Modo **Seleccionar** + barra flotante: mostrar, ocultar, eliminar, marcar revisados (manual + shopify).
+- **Confirmar los N por revisar** global; botón **Revisado** por tarjeta.
+- Modal eliminar con token `ELIMINAR`; límite 200 ids por lote.
+- Archivos: `catalog-selection-context`, `catalog-floating-bar`, `catalog-product-card`, `catalog-confirm-dialog`, `catalog-types`, actions bulk.
+
+---
+
+## 2026-07-07 — Acciones por lote en catálogo (spec rev. 2, pendiente)
+
+- Alcance: **manual + shopify** (Cruje y Betta); revisión solo donde `needs_review`; lote disponible/ocultar/eliminar para todos.
+- UX: modo **Seleccionar** + tarjetas (no grilla WordPress) + barra flotante inferior.
+- Spec: `catalog-batch-actions-spec.md` (CB-1 a CB-3).
+
+---
+
+## 2026-07-06 — Acciones por lote en catálogo (spec pendiente)
+
+- Feedback Betta: confirmar todos/selección múltiple para quitar `needs_review`; lote disponible/ocultar/eliminar.
+- Spec: `catalog-batch-actions-spec.md` (CB-1 a CB-3).
+
+---
+
 ## 2026-07-06 — Equipo, notificaciones y catálogo inline (IMPLEMENTADO)
 
 - Migración `20260706160000_team_notifications_catalog.sql`: `business_members`, RLS por membership, `notify_new_orders`.

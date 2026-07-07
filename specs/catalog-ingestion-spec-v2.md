@@ -111,3 +111,7 @@ sino:
 - [ ] Productos "Default Title" intentan extraer de `body_html`; si no, `talla_range=null` + nota.
 - [ ] Resync no duplica filas (upsert por `external_id`).
 - [ ] Botón en el dashboard dispara el resync y muestra el resultado.
+
+## Post-resync (dueño)
+
+Tras un resync con muchos productos en `needs_review`, el dueño puede usar **Confirmar los N por revisar** o selección por lote (ver `catalog-batch-actions-spec.md`). Aplica a **cualquier** cliente `shopify`, no solo un tenant piloto.

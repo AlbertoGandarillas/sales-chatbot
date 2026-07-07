@@ -86,12 +86,13 @@ Todas bajo `/dashboard/*`, protegidas: si no hay sesión → redirect a `/signup
 
 ### b. `/dashboard/catalogo`
 
-- Tabla de `products` del negocio.
+- Lista de **tarjetas** de `products` del negocio (no tabla tipo admin WordPress).
 - **CRUD**: crear, editar, eliminar, marcar disponible/no disponible (`available`).
 - Filtro **"Por revisar"** (`needs_review = true`).
-- Columnas relevantes según vertical: bakery muestra `category`/`price_soles`/`is_custom_order`; retail muestra `talla_range`/`color_o_material`/`image_url`.
-- Botón **"Resincronizar catálogo"** — visible y funcional solo si `business.shopify_domain` está configurado (ver `catalog-ingestion-spec-v2.md`). Muestra resultado del resync.
+- Campos visibles según vertical: bakery `category`/`price_soles`/`is_custom_order`; retail `talla_range`/`color_o_material`/`image_url`.
+- Botón **"Resincronizar catálogo"** — solo si `business.shopify_domain` (ver `catalog-ingestion-spec-v2.md`).
 - Al editar un producto `needs_review`, guardar lo marca `needs_review = false`.
+- **Pendiente (CB):** modo selección + acciones por lote (disponible/ocultar/eliminar para manual y shopify; revisión masiva para shopify) — ver `catalog-batch-actions-spec.md`.
 
 ### c. `/dashboard/perfil`
 

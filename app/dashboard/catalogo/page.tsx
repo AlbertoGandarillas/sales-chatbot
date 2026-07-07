@@ -2,7 +2,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { getOwnerBusiness } from '@/lib/dashboard'
 import { assertRouteAccess } from '@/lib/team-access'
 import { canWriteCatalog } from '@/lib/team-roles'
-import { CatalogClient, type Product } from './catalog-client'
+import { CatalogClient } from './catalog-client'
+import type { CatalogProduct } from './catalog-types'
 
 export const maxDuration = 60
 
@@ -24,7 +25,7 @@ export default async function CatalogoPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <CatalogClient
-        products={(data as Product[]) ?? []}
+        products={(data as CatalogProduct[]) ?? []}
         catalogSource={business.catalog_source}
         shopifyDomain={business.shopify_domain}
         canWrite={canWriteCatalog(membership.role)}

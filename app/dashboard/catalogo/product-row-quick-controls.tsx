@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { patchProductQuick } from './actions'
-import type { Product } from './catalog-client'
+import type { CatalogProduct } from './catalog-types'
 import { cn } from '@/lib/cn'
 
 type RowStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -11,7 +11,7 @@ export function ProductRowQuickControls({
   product,
   canWrite,
 }: {
-  product: Product
+  product: CatalogProduct
   canWrite: boolean
 }) {
   const [available, setAvailable] = useState(product.available)

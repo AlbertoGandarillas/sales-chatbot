@@ -1,48 +1,41 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useCallback, useEffect, useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import type { CatalogSource } from '@/lib/business-resolver'
 import {
+  bulkCatalogProducts,
+  markAllProductsReviewed,
   saveProduct,
-  deleteProduct,
   resyncCatalog,
+  type CatalogBulkState,
   type CatalogState,
   type ResyncState,
 } from './actions'
-import { ProductRowQuickControls } from './product-row-quick-controls'
-import { Alert, Badge, Button, Field, Input, Textarea } from '@/components/ui'
+import { CatalogConfirmDialog } from './catalog-confirm-dialog'
+import { CatalogFloatingBar } from './catalog-floating-bar'
+import { CatalogProductCard } from './catalog-product-card'
+import {
+  CatalogSelectionProvider,
+  useCatalogSelection,
+} from './catalog-selection-context'
+import type { CatalogProduct } from './catalog-types'
+import { Alert, Button, Field, Input, Textarea } from '@/components/ui'
 import { ProductImageField } from '@/components/catalog/product-image-field'
-import { ProductThumbnail } from '@/components/catalog/product-thumbnail'
 import { validateProductImageFile } from '@/lib/product-image'
-import { effectivePrice } from '@/lib/pricing'
 import {
   PROMO_LABEL_MAX_LENGTH,
   timestamptzToDatetimeLocal,
 } from '@/lib/promo-form'
 import { cn } from '@/lib/cn'
 
-export interface Product {
-  id: string
-  name: string
-  description: string | null
-  category: string
-  price_soles: number
-  is_custom_order: boolean
-  available: boolean
-  needs_review: boolean
-  talla_range: string | null
-  color_o_material: string | null
-  image_url: string | null
-  image_storage_path: string | null
-  source: string
-  promo_price_soles: number | null
-  promo_starts_at: string | null
-  promo_ends_at: string | null
-  promo_label: string | null
-}
+export type { CatalogProduct } from './catalog-types'
+/** @deprecated Use CatalogProduct */
+export type Product = CatalogProduct
 
 const initialState: CatalogState = { error: null, ok: false }
 const resyncInitial: ResyncState = { error: null, result: null }
+const bulkInitial: CatalogBulkState = { error: null, ok: false }
 
 function ResyncButton() {
   const [state, formAction, pending] = useActionState(resyncCatalog, resyncInitial)
@@ -80,11 +73,7 @@ const CATEGORY_SUGGESTIONS = [
   'otros',
 ]
 
-function formatSoles(n: number) {
-  return `S/ ${Number(n).toFixed(2)}`
-}
-
-function ProductPromoFields({ product }: { product?: Product }) {
+function ProductPromoFields({ product }: { product?: CatalogProduct }) {
   const hasPromo = product?.promo_price_soles != null
 
   return (
@@ -157,7 +146,7 @@ function ProductForm({
   product,
   onDone,
 }: {
-  product?: Product
+  product?: CatalogProduct
   onDone: () => void
 }) {
   const [state, formAction, pending] = useActionState(saveProduct, initialState)
@@ -237,11 +226,7 @@ function ProductForm({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field
-          label="Rango de tallas"
-          htmlFor="talla_range"
-          hint="Opcional."
-        >
+        <Field label="Rango de tallas" htmlFor="talla_range" hint="Opcional.">
           <Input
             id="talla_range"
             name="talla_range"
@@ -260,9 +245,7 @@ function ProductForm({
 
       <ProductImageField product={product} onFileError={setImageError} />
 
-      {!product?.is_custom_order && (
-        <ProductPromoFields product={product} />
-      )}
+      {!product?.is_custom_order && <ProductPromoFields product={product} />}
 
       <Field label="Descripción" htmlFor="description">
         <Textarea
@@ -327,32 +310,126 @@ function FilterChip({
   )
 }
 
-export function CatalogClient({
+function CatalogClientInner({
   products,
   catalogSource,
   shopifyDomain,
   canWrite = true,
 }: {
-  products: Product[]
+  products: CatalogProduct[]
   catalogSource: CatalogSource
   shopifyDomain: string | null
   canWrite?: boolean
 }) {
+  const router = useRouter()
+  const { selectionMode, selectedIds, selectedCount, toggleSelectionMode, exitSelectionMode } =
+    useCatalogSelection()
+
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [onlyReview, setOnlyReview] = useState(false)
+  const [feedback, setFeedback] = useState<{ message: string; tone: 'success' | 'danger' } | null>(
+    null
+  )
+  const [dialog, setDialog] = useState<'mark_all' | 'delete_bulk' | null>(null)
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('')
+  const [bulkPending, startBulk] = useTransition()
 
   const reviewCount = products.filter((p) => p.needs_review).length
   const visible = onlyReview ? products.filter((p) => p.needs_review) : products
   const canResync = catalogSource === 'shopify' || Boolean(shopifyDomain)
+  const isShopify = catalogSource === 'shopify'
+
+  const selectedProducts = useMemo(
+    () => products.filter((p) => selectedIds.has(p.id)),
+    [products, selectedIds]
+  )
+
+  const selectionHasShopify = selectedProducts.some((p) => p.source === 'shopify')
+
+  useEffect(() => {
+    if (!selectionMode) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') exitSelectionMode()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selectionMode, exitSelectionMode])
+
+  const closeDialog = useCallback(() => {
+    setDialog(null)
+    setDeleteConfirmInput('')
+  }, [])
+
+  function showFeedback(message: string, tone: 'success' | 'danger') {
+    setFeedback({ message, tone })
+    setTimeout(() => setFeedback(null), 4000)
+  }
+
+  function confirmMarkAll() {
+    startBulk(async () => {
+      const result = await markAllProductsReviewed(bulkInitial, new FormData())
+      if (result.ok) {
+        showFeedback(
+          `${result.affected ?? reviewCount} producto${(result.affected ?? reviewCount) === 1 ? '' : 's'} marcados como revisados`,
+          'success'
+        )
+        closeDialog()
+        router.refresh()
+      } else {
+        showFeedback(result.error ?? 'Error', 'danger')
+      }
+    })
+  }
+
+  function confirmBulkDelete() {
+    const ids = selectedProducts.map((p) => p.id)
+    const fd = new FormData()
+    fd.set('action', 'delete')
+    fd.set('ids', JSON.stringify(ids))
+    fd.set('confirm_token', 'ELIMINAR')
+
+    startBulk(async () => {
+      const result = await bulkCatalogProducts(bulkInitial, fd)
+      if (result.ok) {
+        showFeedback(
+          `${result.affected ?? ids.length} producto${(result.affected ?? ids.length) === 1 ? '' : 's'} eliminados`,
+          'success'
+        )
+        closeDialog()
+        exitSelectionMode()
+        router.refresh()
+      } else {
+        showFeedback(result.error ?? 'Error al eliminar', 'danger')
+      }
+    })
+  }
 
   return (
-    <div>
+    <div className={cn(selectionMode && selectedCount > 0 && 'pb-28')}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogo</h1>
         <div className="flex flex-wrap items-center gap-2">
-          {canWrite && canResync && <ResyncButton />}
           {canWrite && (
+            <Button
+              type="button"
+              variant={selectionMode ? 'primary' : 'outline'}
+              size="sm"
+              aria-pressed={selectionMode}
+              onClick={() => {
+                if (selectionMode) exitSelectionMode()
+                else {
+                  setEditingId(null)
+                  setShowCreate(false)
+                  toggleSelectionMode()
+                }
+              }}
+            >
+              {selectionMode ? 'Listo' : 'Seleccionar'}
+            </Button>
+          )}
+          {canWrite && canResync && <ResyncButton />}
+          {canWrite && !selectionMode && (
             <Button
               type="button"
               onClick={() => {
@@ -366,7 +443,7 @@ export function CatalogClient({
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <FilterChip active={!onlyReview} onClick={() => setOnlyReview(false)}>
           Todos ({products.length})
         </FilterChip>
@@ -375,7 +452,28 @@ export function CatalogClient({
         </FilterChip>
       </div>
 
-      {canWrite && showCreate && (
+      {canWrite && reviewCount > 0 && !selectionMode && (
+        <div className="mb-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setDialog('mark_all')}
+          >
+            Confirmar los {reviewCount} por revisar
+          </Button>
+        </div>
+      )}
+
+      {feedback && (
+        <div className="mb-4">
+          <Alert tone={feedback.tone} live>
+            {feedback.message}
+          </Alert>
+        </div>
+      )}
+
+      {canWrite && showCreate && !selectionMode && (
         <div className="mb-5">
           <ProductForm onDone={() => setShowCreate(false)} />
         </div>
@@ -387,85 +485,72 @@ export function CatalogClient({
         </p>
       ) : (
         <div className="space-y-2">
-          {visible.map((p) => {
-            const pricing = effectivePrice(p)
-            return editingId === p.id && canWrite ? (
-              <ProductForm
+          {visible.map((p) =>
+            editingId === p.id && canWrite && !selectionMode ? (
+              <ProductForm key={p.id} product={p} onDone={() => setEditingId(null)} />
+            ) : (
+              <CatalogProductCard
                 key={p.id}
                 product={p}
-                onDone={() => setEditingId(null)}
+                canWrite={canWrite}
+                onEdit={() => {
+                  setShowCreate(false)
+                  setEditingId(p.id)
+                }}
               />
-            ) : (
-              <article
-                key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4"
-              >
-                <div className="flex min-w-0 items-start gap-3">
-                  <ProductThumbnail product={p} size={48} />
-                  <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-foreground">{p.name}</p>
-                    {p.needs_review && (
-                      <Badge tone="warning" dot>
-                        Por revisar
-                      </Badge>
-                    )}
-                    {!p.available && <Badge tone="neutral">No disponible</Badge>}
-                    {pricing.onPromo && (
-                      <Badge tone="success" dot>
-                        En oferta
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted">
-                    {[
-                      p.talla_range && `Tallas ${p.talla_range}`,
-                      p.color_o_material,
-                      !p.talla_range && !p.color_o_material
-                        ? p.is_custom_order
-                          ? 'Encargo a medida'
-                          : p.category
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ') || '—'}
-                  </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <ProductRowQuickControls product={p} canWrite={canWrite} />
-                  {pricing.onPromo && (
-                    <span className="text-xs text-success">
-                      Oferta: {formatSoles(pricing.price)}
-                    </span>
-                  )}
-                  {canWrite && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowCreate(false)
-                          setEditingId(p.id)
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <form action={deleteProduct}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <Button type="submit" variant="danger" size="sm">
-                          Eliminar
-                        </Button>
-                      </form>
-                    </>
-                  )}
-                </div>
-              </article>
             )
-          })}
+          )}
         </div>
       )}
+
+      {canWrite && (
+        <CatalogFloatingBar
+          visibleProducts={visible}
+          selectedProducts={selectedProducts}
+          onRequestDelete={() => setDialog('delete_bulk')}
+          onFeedback={(message, tone) => {
+            setFeedback({ message, tone })
+            setTimeout(() => setFeedback(null), 4000)
+          }}
+        />
+      )}
+
+      <CatalogConfirmDialog
+        open={dialog === 'mark_all'}
+        variant="mark_all_reviewed"
+        count={reviewCount}
+        isShopify={isShopify}
+        confirmInput=""
+        onConfirmInputChange={() => {}}
+        onConfirm={confirmMarkAll}
+        onCancel={closeDialog}
+        pending={bulkPending}
+      />
+
+      <CatalogConfirmDialog
+        open={dialog === 'delete_bulk'}
+        variant="delete_bulk"
+        count={selectedCount}
+        isShopify={selectionHasShopify}
+        confirmInput={deleteConfirmInput}
+        onConfirmInputChange={setDeleteConfirmInput}
+        onConfirm={confirmBulkDelete}
+        onCancel={closeDialog}
+        pending={bulkPending}
+      />
     </div>
+  )
+}
+
+export function CatalogClient(props: {
+  products: CatalogProduct[]
+  catalogSource: CatalogSource
+  shopifyDomain: string | null
+  canWrite?: boolean
+}) {
+  return (
+    <CatalogSelectionProvider>
+      <CatalogClientInner {...props} />
+    </CatalogSelectionProvider>
   )
 }

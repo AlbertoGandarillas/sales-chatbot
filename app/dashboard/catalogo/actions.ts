@@ -344,3 +344,155 @@ export async function resyncCatalog(
   revalidatePath('/dashboard/catalogo')
   return { error: result.errors[0] ?? null, result }
 }
+
+export type BulkCatalogAction =
+  | 'mark_reviewed'
+  | 'set_available'
+  | 'set_unavailable'
+  | 'delete'
+
+export type CatalogBulkState = {
+  error: string | null
+  ok: boolean
+  affected?: number
+}
+
+const BULK_MAX_IDS = 200
+
+function parseProductIds(formData: FormData): { ids: string[] } | { error: string } {
+  const raw = str(formData, 'ids')
+  if (!raw) return { error: 'Sin productos seleccionados.' }
+  let ids: unknown
+  try {
+    ids = JSON.parse(raw)
+  } catch {
+    return { error: 'Selección inválida.' }
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: 'Sin productos seleccionados.' }
+  }
+  const parsed = ids.filter((id): id is string => typeof id === 'string' && id.length > 0)
+  if (parsed.length !== ids.length) return { error: 'Selección inválida.' }
+  if (parsed.length > BULK_MAX_IDS) {
+    return { error: `Máximo ${BULK_MAX_IDS} productos por lote.` }
+  }
+  return { ids: parsed }
+}
+
+async function validateOwnedProductIds(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  businessId: string,
+  ids: string[]
+): Promise<{ ok: true; rows: { id: string; image_storage_path: string | null; source: string }[] } | { error: string }> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, image_storage_path, source')
+    .eq('business_id', businessId)
+    .in('id', ids)
+
+  if (error) return { error: error.message }
+  if (!data || data.length !== ids.length) {
+    return { error: 'Algunos productos no pertenecen a tu negocio.' }
+  }
+  return { ok: true, rows: data }
+}
+
+export async function markProductReviewed(
+  _prev: CatalogState,
+  formData: FormData
+): Promise<CatalogState> {
+  const { supabase, business } = await memberBusiness()
+  const id = str(formData, 'id')
+  if (!id) return { error: 'Producto inválido.', ok: false }
+
+  const { error } = await supabase
+    .from('products')
+    .update({ needs_review: false })
+    .eq('id', id)
+    .eq('business_id', business.id)
+
+  if (error) return { error: error.message, ok: false }
+
+  revalidatePath('/dashboard/catalogo')
+  return { error: null, ok: true }
+}
+
+export async function markAllProductsReviewed(
+  _prev: CatalogBulkState,
+  _formData: FormData
+): Promise<CatalogBulkState> {
+  const { supabase, business } = await memberBusiness()
+
+  const { data, error } = await supabase
+    .from('products')
+    .update({ needs_review: false })
+    .eq('business_id', business.id)
+    .eq('needs_review', true)
+    .select('id')
+
+  if (error) return { error: error.message, ok: false }
+
+  revalidatePath('/dashboard/catalogo')
+  return { error: null, ok: true, affected: data?.length ?? 0 }
+}
+
+export async function bulkCatalogProducts(
+  _prev: CatalogBulkState,
+  formData: FormData
+): Promise<CatalogBulkState> {
+  const { supabase, business } = await memberBusiness()
+  const parsed = parseProductIds(formData)
+  if ('error' in parsed) return { error: parsed.error, ok: false }
+
+  const action = str(formData, 'action') as BulkCatalogAction
+  if (
+    action !== 'mark_reviewed' &&
+    action !== 'set_available' &&
+    action !== 'set_unavailable' &&
+    action !== 'delete'
+  ) {
+    return { error: 'Acción inválida.', ok: false }
+  }
+
+  if (action === 'delete' && str(formData, 'confirm_token') !== 'ELIMINAR') {
+    return { error: 'Confirmación requerida.', ok: false }
+  }
+
+  const owned = await validateOwnedProductIds(supabase, business.id, parsed.ids)
+  if ('error' in owned) return { error: owned.error, ok: false }
+
+  if (action === 'delete') {
+    for (const row of owned.rows) {
+      if (row.image_storage_path) {
+        await deleteProductImageFile(supabase, row.image_storage_path)
+      }
+    }
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('business_id', business.id)
+      .in('id', parsed.ids)
+
+    if (error) return { error: error.message, ok: false }
+    revalidatePath('/dashboard/catalogo')
+    return { error: null, ok: true, affected: parsed.ids.length }
+  }
+
+  const payload =
+    action === 'mark_reviewed'
+      ? { needs_review: false }
+      : action === 'set_available'
+        ? { available: true }
+        : { available: false }
+
+  const { error } = await supabase
+    .from('products')
+    .update(payload)
+    .eq('business_id', business.id)
+    .in('id', parsed.ids)
+
+  if (error) return { error: error.message, ok: false }
+
+  revalidatePath('/dashboard/catalogo')
+  return { error: null, ok: true, affected: parsed.ids.length }
+}

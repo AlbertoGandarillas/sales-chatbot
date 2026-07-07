@@ -27,6 +27,7 @@ Documentación **spec-driven** del agente WhatsApp de Cruje. Los specs describen
 | `dashboard-darkmode-fixes-spec.md` | Modo oscuro dashboard: auditoría + fixes (IMPLEMENTADO) |
 | `bot-knowledge-spec.md` | Bot Studio: identidad, políticas, FAQs, tool conocimiento (IMPLEMENTADO) |
 | `team-notifications-catalog-spec.md` | Equipo (roles), notificaciones pedidos, catálogo inline (IMPLEMENTADO) |
+| `catalog-batch-actions-spec.md` | Modo selección, lote manual+shopify, revisión rápida (IMPLEMENTADO) |
 | `CHANGELOG.md` | Desvíos entre spec original e implementación real |
 
 ## Cómo mantener los specs actualizados
