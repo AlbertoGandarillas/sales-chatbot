@@ -10,18 +10,21 @@ import {
 import type { BadgeTone } from '@/components/ui'
 import { UruLogo } from '@/components/brand/uru-logo'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
+import { LEGAL } from '@/lib/legal-config'
 import { cn } from '@/lib/cn'
 
 const NAV_LINKS = [
   { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#funcionalidades', label: 'Funcionalidades' },
+  { href: '#casos', label: 'Casos' },
+  { href: '#para-quien', label: 'Negocios' },
   { href: '#faq', label: 'Preguntas' },
 ]
 
 const STEPS = [
   {
-    title: 'Conecta tu WhatsApp',
-    body: 'Usa tu número de WhatsApp Business sobre la API oficial de Meta (Cloud API). Nada de bots no oficiales.',
+    title: 'Crea tu cuenta y conectamos tu WhatsApp',
+    body: 'Regístrate, arma tu catálogo y nosotros vinculamos tu número con la API oficial de Meta (Cloud API). Nada de bots no oficiales.',
   },
   {
     title: 'Arma tu catálogo',
@@ -29,11 +32,11 @@ const STEPS = [
   },
   {
     title: 'El agente atiende',
-    body: 'Responde, cotiza, toma pedidos y registra encargos personalizados 24/7, con la info real de tu catálogo.',
+    body: 'Responde con tus FAQs y políticas del Bot Studio, cotiza, toma pedidos y registra encargos personalizados 24/7.',
   },
   {
     title: 'Tú supervisas',
-    body: 'Sigues todo desde el dashboard y tomas el control de cualquier conversación cuando lo necesites.',
+    body: 'Sigues todo desde el dashboard, confirmas pedidos, pagos y entregas, y tomas el control de cualquier conversación.',
   },
 ]
 
@@ -42,37 +45,55 @@ const FEATURES: { title: string; body: string; tone: BadgeTone; tag: string }[] 
     tag: 'IA',
     tone: 'primary',
     title: 'Agente de ventas con IA',
-    body: 'Busca productos, cotiza, toma pedidos y consulta el estado con fecha estimada de entrega — sin inventar precios.',
+    body: 'Busca productos, aplica promos vigentes, cotiza, toma pedidos y consulta el estado — sin inventar precios.',
   },
   {
     tag: 'IA',
     tone: 'primary',
-    title: 'Encargos y variantes',
-    body: 'Gestiona encargos personalizados en panaderías y comunica rangos de talla y color en retail.',
+    title: 'Bot Studio',
+    body: 'Personaliza saludo, tono, políticas de envío y pago, FAQs y artículos de conocimiento. Vista previa del prompt incluida.',
   },
   {
     tag: 'Operación',
     tone: 'info',
-    title: 'Control humano cuando hace falta',
-    body: 'Pausa el bot y responde tú desde el dashboard; o el agente escala solo cuando algo se sale de su alcance.',
+    title: 'Encargos y variantes',
+    body: 'Encargos a medida en panaderías; talla y color en retail Shopify.',
+  },
+  {
+    tag: 'Operación',
+    tone: 'info',
+    title: 'Pedidos recurrentes',
+    body: 'Plantillas para clientes fieles: recordatorios por WhatsApp y confirmación con el bot.',
+  },
+  {
+    tag: 'Operación',
+    tone: 'info',
+    title: 'Control humano',
+    body: 'Pausa el bot y responde tú; o el agente escala solo y te avisa por WhatsApp.',
   },
   {
     tag: 'Operación',
     tone: 'info',
     title: 'Dashboard de operación',
-    body: 'Resumen de pedidos y ventas del mes, conversaciones en vivo estilo chat, catálogo y perfil del negocio.',
+    body: 'Resumen de ventas, conversaciones estilo chat y ciclo completo de pedidos: confirmar, cancelar, entregar y pagos.',
   },
   {
     tag: 'Catálogo',
     tone: 'neutral',
-    title: 'Catálogo sincronizado con Shopify',
-    body: 'Lee tus productos desde Shopify y se actualiza con un botón. Solo para tiendas Shopify.',
+    title: 'Catálogo con imágenes y promos',
+    body: 'Carga manual o sync Shopify; edición rápida de precio y stock; ofertas con fecha de vigencia.',
+  },
+  {
+    tag: 'Catálogo',
+    tone: 'neutral',
+    title: 'Equipo',
+    body: 'Invita a alguien solo para catálogo u operación, sin acceso a configuración sensible.',
   },
   {
     tag: 'Pagos',
     tone: 'success',
     title: 'Confirmación de pagos',
-    body: 'Marca pagos de Yape o depósito como confirmados, con una nota de referencia. Verificación manual, sin procesar comprobantes.',
+    body: 'Marca Yape o depósito como pagado con nota de referencia. Verificación manual.',
   },
 ]
 
@@ -80,23 +101,23 @@ const USE_CASES: { badge: string; tone: BadgeTone; name: string; kind: string; b
   {
     badge: 'Catálogo propio',
     tone: 'primary',
-    name: 'Cruje',
+    name: 'Panadería La Espiga',
     kind: 'Panadería y pastelería',
-    body: 'Carga su catálogo a mano, toma pedidos y arma encargos de tortas con fecha de entrega, avisando al dueño cuando entra un pedido especial.',
+    body: 'Catálogo a mano, encargos de tortas con fecha de entrega, promociones de la semana y pedidos recurrentes para clientes fieles. El dueño recibe aviso cuando entra un encargo especial.',
   },
   {
     badge: 'Tienda Shopify',
     tone: 'info',
-    name: 'Betta',
-    kind: 'Retail de zapatillas en Shopify',
-    body: 'Sincroniza el catálogo desde Shopify y atiende consultas de modelo, talla y color, armando el pedido para que el equipo confirme disponibilidad.',
+    name: 'Tienda de zapatillas',
+    kind: 'Retail en Shopify',
+    body: 'Sincroniza el catálogo desde Shopify y atiende consultas de modelo, talla y color. El bot arma el pedido para que el equipo confirme disponibilidad.',
   },
 ]
 
 const BUSINESS_TYPES = [
   {
     title: 'Negocios con catálogo propio',
-    body: 'Panaderías, bodegas, tiendas y cualquier negocio con inventario sencillo. Cargas tu catálogo a mano y, si quieres, recibes encargos a medida.',
+    body: 'Panaderías, bodegas, tiendas y cualquier negocio con inventario sencillo. Cargas tu catálogo a mano, recibes encargos a medida y pedidos recurrentes para clientes que compran cada semana.',
   },
   {
     title: 'Tiendas Shopify',
@@ -114,8 +135,24 @@ const FAQS = [
     a: 'Sí. Puedes arrancar con tu catálogo propio y, cuando migres a Shopify, conectarlo desde tu perfil y sincronizar. Tus productos cargados a mano se conservan y no se reconfigura tu WhatsApp.',
   },
   {
+    q: '¿Cómo conecto mi número de WhatsApp?',
+    a: 'Creas tu cuenta y catálogo en Uru; nuestro equipo vincula tu número con la API oficial de Meta. No necesitas tocar configuración técnica.',
+  },
+  {
+    q: '¿Puedo personalizar cómo habla el bot?',
+    a: 'Sí. En Bot Studio configuras saludo, tono, políticas, preguntas frecuentes y artículos. El agente busca esa información antes de inventar respuestas.',
+  },
+  {
+    q: '¿Me avisan cuando entra un pedido?',
+    a: 'Sí. Puedes recibir un WhatsApp al número del dueño cuando entra un pedido nuevo o un encargo especial.',
+  },
+  {
     q: '¿Qué pasa si un cliente necesita algo muy particular?',
     a: 'El agente deriva la conversación a una persona, o tú tomas el control desde el dashboard y respondes directamente por WhatsApp.',
+  },
+  {
+    q: '¿Mis clientes pueden enviar fotos o audios?',
+    a: 'Por ahora el bot atiende mensajes de texto. Si envían imagen o audio, les pedimos que escriban su consulta.',
   },
   {
     q: '¿Es un WhatsApp oficial o hay riesgo de bloqueo?',
@@ -206,9 +243,9 @@ export default function Home() {
                 Tu agente de ventas por WhatsApp, atendiendo 24/7
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-white/90 sm:text-xl">
-                Uru responde a tus clientes, cotiza productos y toma pedidos
-                automáticamente. Tú te enfocas en tu negocio; nosotros nos
-                encargamos de la conversación.
+                Uru responde con la info real de tu catálogo, toma pedidos y te avisa
+                cuando necesitas intervenir. Personaliza el bot sin tocar código; nosotros
+                te acompañamos para conectar tu WhatsApp oficial.
               </p>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
@@ -306,7 +343,7 @@ export default function Home() {
                 Casos de uso
               </Badge>
               <h2 className="font-brand mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Dos negocios reales ya operando con Uru
+                Dos ejemplos de negocios con Uru
               </h2>
               <p className="mt-3 text-lg text-muted">
                 Cada uno automatiza un flujo distinto de atención y pedidos.
@@ -359,9 +396,12 @@ export default function Home() {
               </span>{' '}
               cuando crezcas, sin rehacer tu cuenta ni tu WhatsApp. ¿Tu negocio es
               distinto?{' '}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
+              <a
+                href={`mailto:${LEGAL.contactEmail}`}
+                className="font-semibold text-primary hover:underline"
+              >
                 Escríbenos
-              </Link>{' '}
+              </a>{' '}
               y lo evaluamos.
             </div>
           </div>
@@ -402,8 +442,8 @@ export default function Home() {
               Listo para automatizar tu WhatsApp
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-white/90">
-              Empieza con tu catálogo y tu número de WhatsApp; nosotros te acompañamos
-              en la conexión y la puesta en marcha.
+              Empieza gratis con tu catálogo; te acompañamos para conectar tu WhatsApp
+              oficial y poner el bot en marcha.
             </p>
             <div className="mt-10">
               <Link
