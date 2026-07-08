@@ -16,7 +16,6 @@ function LoginForm() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [magic, setMagic] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'error' | 'ok'; text: string } | null>(
     initialError ? { kind: 'error', text: 'No pudimos validar el enlace. Intenta de nuevo.' } : null
@@ -42,32 +41,10 @@ function LoginForm() {
     router.refresh()
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setMessage(null)
-    const supabase = createBrowserSupabase()
-    const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo },
-    })
-    setBusy(false)
-    if (error) {
-      setMessage({ kind: 'error', text: error.message })
-      return
-    }
-    setMessage({ kind: 'ok', text: 'Te enviamos un enlace de acceso a tu correo.' })
-  }
-
   return (
     <AuthShell
       title="Iniciar sesión"
-      subtitle={
-        magic
-          ? 'Te enviaremos un enlace mágico a tu correo.'
-          : 'Ingresa con tu correo y contraseña.'
-      }
+      subtitle="Ingresa con tu correo y contraseña."
       footer={
         <>
           ¿No tienes cuenta?{' '}
@@ -77,10 +54,7 @@ function LoginForm() {
         </>
       }
     >
-      <form
-        onSubmit={magic ? handleMagicLink : handlePasswordLogin}
-        className="space-y-4"
-      >
+      <form onSubmit={handlePasswordLogin} className="space-y-4">
         <Field label="Correo" htmlFor="email">
           <Input
             id="email"
@@ -93,47 +67,32 @@ function LoginForm() {
           />
         </Field>
 
-        {!magic && (
-          <Field htmlFor="password">
-            <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Contraseña
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-muted hover:text-foreground"
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </Field>
-        )}
+        <Field htmlFor="password">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium text-foreground">
+              Contraseña
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-muted hover:text-foreground"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </Field>
 
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? 'Procesando…' : magic ? 'Enviar enlace de acceso' : 'Iniciar sesión'}
+          {busy ? 'Procesando…' : 'Iniciar sesión'}
         </Button>
       </form>
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          setMagic((v) => !v)
-          setMessage(null)
-        }}
-        className="mt-3 w-full"
-      >
-        {magic ? 'Usar contraseña' : 'Entrar con enlace mágico'}
-      </Button>
 
       {message && (
         <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live className="mt-4">

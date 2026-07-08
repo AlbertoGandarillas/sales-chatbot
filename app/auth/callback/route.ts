@@ -4,10 +4,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { resolveTenantPostLoginPath } from '@/lib/tenant-routing'
 
 /**
- * Callback del magic link. Soporta dos formatos de Supabase:
- *  - PKCE:        /auth/callback?code=...
- *  - token_hash:  /auth/callback?token_hash=...&type=magiclink
- * Tras establecer la sesión, redirige a `next` (o /dashboard).
+ * Callback de enlaces de correo (confirmación de cuenta, recuperación de contraseña).
+ * Soporta PKCE (`?code=...`) y token_hash (`?token_hash=...&type=recovery`).
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl

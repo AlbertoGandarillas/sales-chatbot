@@ -13,7 +13,6 @@ function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [magic, setMagic] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null)
 
@@ -55,32 +54,10 @@ function SignupForm() {
     })
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setMessage(null)
-    const supabase = createBrowserSupabase()
-    const emailRedirectTo = `${window.location.origin}/auth/callback?next=/dashboard`
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo },
-    })
-    setBusy(false)
-    if (error) {
-      setMessage({ kind: 'error', text: error.message })
-      return
-    }
-    setMessage({ kind: 'ok', text: 'Te enviamos un enlace de acceso a tu correo.' })
-  }
-
   return (
     <AuthShell
       title="Crear cuenta"
-      subtitle={
-        magic
-          ? 'Te enviaremos un enlace mágico a tu correo.'
-          : 'Regístrate con tu correo y una contraseña.'
-      }
+      subtitle="Regístrate con tu correo y una contraseña."
       footer={
         <>
           ¿Ya tienes cuenta?{' '}
@@ -90,10 +67,7 @@ function SignupForm() {
         </>
       }
     >
-      <form
-        onSubmit={magic ? handleMagicLink : handlePasswordSignup}
-        className="space-y-4"
-      >
+      <form onSubmit={handlePasswordSignup} className="space-y-4">
         <Field label="Correo" htmlFor="email">
           <Input
             id="email"
@@ -106,34 +80,30 @@ function SignupForm() {
           />
         </Field>
 
-        {!magic && (
-          <>
-            <Field label="Contraseña" htmlFor="password">
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                autoComplete="new-password"
-              />
-            </Field>
-            <Field label="Confirmar contraseña" htmlFor="confirm">
-              <Input
-                id="confirm"
-                type="password"
-                required
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                autoComplete="new-password"
-              />
-            </Field>
-          </>
-        )}
+        <Field label="Contraseña" htmlFor="password">
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mínimo 6 caracteres"
+            autoComplete="new-password"
+          />
+        </Field>
+        <Field label="Confirmar contraseña" htmlFor="confirm">
+          <Input
+            id="confirm"
+            type="password"
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+          />
+        </Field>
 
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? 'Procesando…' : magic ? 'Enviar enlace de acceso' : 'Crear cuenta'}
+          {busy ? 'Procesando…' : 'Crear cuenta'}
         </Button>
 
         <p className="mt-3 text-center text-xs text-muted">
@@ -148,19 +118,6 @@ function SignupForm() {
           .
         </p>
       </form>
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          setMagic((v) => !v)
-          setMessage(null)
-        }}
-        className="mt-3 w-full"
-      >
-        {magic ? 'Usar contraseña' : 'Registrarme con enlace mágico'}
-      </Button>
 
       {message && (
         <Alert tone={message.kind === 'error' ? 'danger' : 'success'} live className="mt-4">
